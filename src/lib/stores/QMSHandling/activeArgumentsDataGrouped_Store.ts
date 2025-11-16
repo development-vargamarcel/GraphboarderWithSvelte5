@@ -280,12 +280,15 @@ export const Create_activeArgumentsDataGrouped_Store = (
 			endpointInfo: EndpointInfoStore
 		) => {
 			update((activeArgumentsDataGrouped) => {
-				return add_activeArgumentOrContainerTo_activeArgumentsDataGrouped(
+				const result = add_activeArgumentOrContainerTo_activeArgumentsDataGrouped(
 					newArgumentOrContainerData,
 					groupName,
 					parentContainerId,
-					activeArgumentsDataGrouped, endpointInfo
+					activeArgumentsDataGrouped,
+					endpointInfo
 				);
+				// Return a new array to trigger reactivity
+				return [...result];
 			});
 		}
 	};
