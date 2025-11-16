@@ -177,22 +177,33 @@ export const Create_activeArgumentsDataGrouped_Store = (
 				const group = activeArgumentsDataGrouped?.find((group) => {
 					return group.group_name == groupName;
 				});
+
+				if (!group) {
+					console.warn('Group not found for update_activeArgument', { groupName, activeArgumentData });
+					return activeArgumentsDataGrouped;
+				}
+
 				console.log('ppppp group', group);
-				const activeArgument = group.group_args?.find((arg) => {
+				const activeArgumentIndex = group.group_args?.findIndex((arg) => {
 					return arg.id == activeArgumentData.id;
 				});
+				const activeArgument = activeArgumentIndex >= 0 ? group.group_args[activeArgumentIndex] : null;
 				const activeArgumentNode = group?.group_argsNode?.[activeArgumentData.id];
+
 				if (!activeArgument && !activeArgumentNode) {
-					console.log('nothing updated');
+					console.warn('Argument not found in group, cannot update', { groupName, argumentId: activeArgumentData.id });
+					return activeArgumentsDataGrouped;
 				}
+
 				if (activeArgumentNode) {
 					console.log('updated activeArgumentNode', activeArgumentNode);
-					Object.assign(activeArgumentNode, activeArgumentData);
+					// Create new object to maintain immutability for better reactivity
+					group.group_argsNode[activeArgumentData.id] = { ...activeArgumentNode, ...activeArgumentData };
 				}
-				if (activeArgument) {
+				if (activeArgument && activeArgumentIndex >= 0) {
 					console.log('updated activeArgument', activeArgument);
-
-					Object.assign(activeArgument, activeArgumentData);
+					// Replace the argument in the array to maintain immutability
+					group.group_args[activeArgumentIndex] = { ...activeArgument, ...activeArgumentData };
 				}
 
 				return activeArgumentsDataGrouped;
@@ -200,34 +211,54 @@ export const Create_activeArgumentsDataGrouped_Store = (
 		},
 		delete_activeArgument: (activeArgumentData: ActiveArgumentData, groupName: string) => {
 			update((activeArgumentsDataGrouped) => {
-				let group = activeArgumentsDataGrouped?.filter((group) => {
+				let group = activeArgumentsDataGrouped?.find((group) => {
 					return group.group_name == groupName;
-				})[0];
+				});
+
+				if (!group) {
+					console.warn('Group not found for delete_activeArgument', { groupName, activeArgumentData });
+					return activeArgumentsDataGrouped;
+				}
+
 				const activeArgumentIndex = group.group_args?.findIndex((arg) => {
 					return arg.id == activeArgumentData.id;
 				});
+
+				if (activeArgumentIndex < 0) {
+					console.warn('Argument not found in group, cannot delete', { groupName, argumentId: activeArgumentData.id });
+					return activeArgumentsDataGrouped;
+				}
+
 				if (group.group_argsNode) {
 					let containers = Object.values(group.group_argsNode).filter((container) => {
 						return container?.items;
 					});
-					let argumentParentContainerId = containers.find((container) => {
+					let argumentParentContainer = containers.find((container) => {
 						return container.items.find((item) => {
 							return item.id == activeArgumentData.id;
 						});
-					}).id;
-					if (argumentParentContainerId) {
-						group.group_argsNode[argumentParentContainerId].items = group.group_argsNode[
-							argumentParentContainerId
+					});
+
+					if (argumentParentContainer) {
+						group.group_argsNode[argumentParentContainer.id].items = group.group_argsNode[
+							argumentParentContainer.id
 						].items.filter((item) => {
 							return item.id != activeArgumentData.id;
 						});
 					}
 
-					if (activeArgumentIndex) {
+					// Remove from group_args array
+					if (activeArgumentIndex >= 0) {
 						group.group_args.splice(activeArgumentIndex, 1);
 					}
+
+					// Remove from group_argsNode
+					delete group.group_argsNode[activeArgumentData.id];
 				} else {
-					group.group_args.splice(activeArgumentIndex, 1);
+					// Simple case: no argsNode structure
+					if (activeArgumentIndex >= 0) {
+						group.group_args.splice(activeArgumentIndex, 1);
+					}
 				}
 				return activeArgumentsDataGrouped;
 			});

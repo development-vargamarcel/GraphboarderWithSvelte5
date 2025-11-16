@@ -160,7 +160,9 @@
 
 	const handleChanged = (detail: Partial<ActiveArgumentData>): void => {
 		console.log('detail', detail);
-		Object.assign(activeArgumentData, detail);
+		// Create a new object instead of mutating the bindable prop
+		// This ensures Svelte 5 reactivity works correctly
+		activeArgumentData = { ...activeArgumentData, ...detail };
 
 		const isValid: boolean = argumentCanRunQuery(activeArgumentData);
 		const isInUse: boolean | undefined = activeArgumentData.inUse;
