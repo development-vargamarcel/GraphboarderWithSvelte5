@@ -38,8 +38,8 @@
 	let showAddEndpoint = $state(false);
 	let endpointsToShow = $state('local');
 	let selectedRows = $state([]);
-
-	const HandleRowSelectionChange = (detail) => {
+	// A function to handle row selection changes in the ExplorerTable component.
+	const handleRowSelectionChange = (detail) => {
 		console.log(detail);
 		selectedRows = detail.rows.map((row) => row.original);
 	};
@@ -52,6 +52,17 @@
 			})
 		);
 		selectedRows = [];
+	};
+	const setEndpointToShow = (type) => () => {
+		endpointsToShow = type;
+	};
+
+	const addLocalStorageEndpoint = () => {
+		endpointsToShow = 'localstorage';
+		showAddEndpoint = true;
+	};
+	const hideAddEndpoint = () => {
+		showAddEndpoint = false;
 	};
 </script>
 
@@ -71,13 +82,12 @@
 			enableMultiRowSelectionState={false}
 			data={getSortedAndOrderedEndpoints(localEndpoints, true)}
 			{columns}
-			onRowSelectionChange={(detail) => {}}
 		/>
 	</div>
 {/if}
 {#if endpointsToShow == 'localstorage'}
 	{#if showAddEndpoint}
-		<AddEndpointToLocalStorage onHide={() => (showAddEndpoint = false)} />
+		<AddEndpointToLocalStorage onHide={hideAddEndpoint} />
 	{/if}
 	{#if selectedRows.length > 0}
 		<button class="btn btn-sm btn-warning" onclick={deleteSelectedEndpoint}
@@ -87,7 +97,7 @@
 	<div class="mx-auto pl-4 pt-4 h-[50vh] ">
 		{#key $localStorageEndpoints}
 			<ExplorerTable
-				onRowSelectionChange={HandleRowSelectionChange}
+				onRowSelectionChange={handleRowSelectionChange}
 				onRowClicked={(detail) => {
 					if (browser) {
 						window.open(
@@ -138,39 +148,12 @@
 {/if}
 
 <div class="fixed bottom-1 right-1 flex space-x-2">
-	<button
-		class="btn btn-xs"
-		onclick={() => {
-			endpointsToShow = 'local';
-		}}
-	>
-		local
-	</button>
+	<button class="btn btn-xs" onclick={setEndpointToShow('local')}> local </button>
 	<div class="flex">
-		<button
-			class="btn btn-xs"
-			onclick={() => {
-				endpointsToShow = 'localstorage';
-			}}
-		>
+		<button class="btn btn-xs" onclick={setEndpointToShow('localstorage')}>
 			localstorage
 		</button>
-		<button
-			class="btn btn-xs"
-			onclick={() => {
-				endpointsToShow = 'localstorage';
-				showAddEndpoint = true;
-			}}
-		>
-			+
-		</button>
+		<button class="btn btn-xs" onclick={addLocalStorageEndpoint}> + </button>
 	</div>
-	<button
-		class="btn btn-xs"
-		onclick={() => {
-			endpointsToShow = 'remote';
-		}}
-	>
-		remote
-	</button>
+	<button class="btn btn-xs" onclick={setEndpointToShow('remote')}> remote </button>
 </div>
