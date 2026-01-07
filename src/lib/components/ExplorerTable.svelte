@@ -24,6 +24,7 @@
 		onHideColumn?: (detail: { column: string }) => void;
 		onRowClicked?: (detail: any) => void;
 		onDeleteRow?: (detail: any) => void;
+		onDuplicateRow?: (detail: any) => void;
 	}
 
 	let {
@@ -40,7 +41,8 @@
 		onRowSelectionChange,
 		onHideColumn,
 		onRowClicked,
-		onDeleteRow
+		onDeleteRow,
+		onDuplicateRow
 	}: Props = $props();
 
 	if (rowSelectionState === undefined) {
@@ -221,9 +223,26 @@
 						</td>
 					{/each}
 
-					<td class="break-no">
+					<td class="break-no space-x-2">
+						{#if onDuplicateRow}
+							<button
+								class="btn btn-sm btn-secondary"
+								onclick={(event) => {
+									event.stopPropagation();
+									onDuplicateRow(row.original);
+								}}
+							>
+								Duplicate
+							</button>
+						{/if}
 						{#if onDeleteRow}
-							<button class="btn btn-sm btn-error" onclick={() => onDeleteRow?.(row.original)}>
+							<button
+								class="btn btn-sm btn-error"
+								onclick={(event) => {
+									event.stopPropagation();
+									onDeleteRow(row.original);
+								}}
+							>
 								Delete
 							</button>
 						{/if}

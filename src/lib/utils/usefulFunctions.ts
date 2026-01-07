@@ -1616,3 +1616,12 @@ export const getSortedAndOrderedEndpoints = (endpoints: { id: number; isMantaine
 		return endpoint.isMantained;
 	});
 };
+
+export const duplicateEndpoint = (endpointToDuplicate, existingEndpoints) => {
+	const newEndpoint = {
+		...endpointToDuplicate,
+		id: Date.now(),
+		description: `Copy of ${endpointToDuplicate.description}`
+	};
+	return [...existingEndpoints, newEndpoint];
+};
