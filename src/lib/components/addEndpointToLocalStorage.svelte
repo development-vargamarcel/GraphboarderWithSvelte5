@@ -47,12 +47,12 @@
 					language="javascript"
 					onChanged={handleCodeChanged}
 					rawValue={`{
-		id: 'directus',
-		url: 'https://directus-production-c2de.up.railway.app/graphql',
-		headers: {
-			authorization: 'Bearer S4YM_Cd7Uo6laJhQV594l59EGZASSmBw'
-		},
-	}`}
+	id: 'my-endpoint',
+	url: 'https://example.com/graphql',
+	headers: {
+		authorization: 'Bearer YOUR_TOKEN'
+	},
+}`}
 				/>
 			</div>
 

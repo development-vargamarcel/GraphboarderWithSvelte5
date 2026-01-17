@@ -225,26 +225,30 @@
 
 					<td class="break-no space-x-2">
 						{#if onDuplicateRow}
-							<button
-								class="btn btn-sm btn-secondary"
-								onclick={(event) => {
-									event.stopPropagation();
-									onDuplicateRow(row.original);
-								}}
-							>
-								Duplicate
-							</button>
+							<div class="tooltip" data-tip="Duplicate">
+								<button
+									class="btn btn-sm btn-square btn-secondary"
+									onclick={(event) => {
+										event.stopPropagation();
+										onDuplicateRow(row.original);
+									}}
+								>
+									<i class="bi bi-files"></i>
+								</button>
+							</div>
 						{/if}
 						{#if onDeleteRow}
-							<button
-								class="btn btn-sm btn-error"
-								onclick={(event) => {
-									event.stopPropagation();
-									onDeleteRow(row.original);
-								}}
-							>
-								Delete
-							</button>
+							<div class="tooltip" data-tip="Delete">
+								<button
+									class="btn btn-sm btn-square btn-error"
+									onclick={(event) => {
+										event.stopPropagation();
+										onDeleteRow(row.original);
+									}}
+								>
+									<i class="bi bi-trash"></i>
+								</button>
+							</div>
 						{/if}
 					</td>
 				</tr>
