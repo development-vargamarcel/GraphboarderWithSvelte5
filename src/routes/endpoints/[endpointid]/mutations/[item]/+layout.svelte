@@ -8,7 +8,6 @@
 
 	let { children }: Props = $props();
 
-	//console.log({ item });
 </script>
 
 <Page

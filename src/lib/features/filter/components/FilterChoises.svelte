@@ -34,7 +34,6 @@
 	run(() => {
 		if (chosen || !chosen) {
 			onFilterChanged?.({ id: id, chosen: chosen });
-			//console.log('filterChanged');
 		}
 	});
 </script>
