@@ -7,14 +7,12 @@
 	}
 
 	let { children }: Props = $props();
-	//console.log('queries: ', queries);
 
 	let origin = $page.url.origin;
 	let pathname;
 
 	let pageUnsubscribe = page.subscribe((value) => {
 		pathname = value.url.pathname;
-		//console.log('value===', value);
 	});
 	onDestroy(() => {
 		pageUnsubscribe();

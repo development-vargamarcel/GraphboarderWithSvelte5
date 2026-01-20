@@ -9,7 +9,6 @@
 	let { children }: Props = $props();
 
 	let item = page.params.item;
-	//console.log({ item });
 </script>
 
 <Page
