@@ -23,18 +23,17 @@
 					: javascript()
 	);
 
-	function handleChange(e: CustomEvent<string>) {
+	$effect(() => {
 		if (onChanged) {
-			onChanged({ chd_rawValue: e.detail });
+			onChanged({ chd_rawValue: rawValue });
 		}
-	}
+	});
 </script>
 
 <CodeMirror
 	bind:value={rawValue}
 	{lang}
 	theme={oneDark}
-	on:change={handleChange}
 	styles={{
 		'&': {
 			width: '100%',
