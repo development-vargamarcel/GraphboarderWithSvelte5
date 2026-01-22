@@ -140,11 +140,17 @@ export const gqlArgObjToString = (gqlArgObj: Record<string, unknown>): string =>
 	return gqlArgObj_stringModified;
 };
 
-// Functions below this line are not exported in original usefulFunctions.ts but are used internally
-// However, modifyString and replaceBetween etc are used by generateListOfSubstrings which is exported.
-// I kept them internal to this module unless they were exported.
-// generateListOfSubstrings is exported.
-// modifyString, replaceBetween, replaceLastOccurrence were NOT exported in original file (except implicitly if used by exported functions).
-// Wait, smartModifyStringBasedOnBoundries IS exported.
-// formatData IS exported.
-// gqlArgObjToString IS exported.
+/**
+ * Generates a title string from an array of field steps.
+ * @param steps - Array of strings representing the steps/path to a field.
+ * @returns A joined string representation of the steps.
+ */
+export const generateTitleFromStepsOfFields = (steps: string[]): string => {
+	if (!Array.isArray(steps) || steps.length === 0) {
+		return '';
+	}
+	// Join with a separator, e.g., ' > ' or just return the last element or similar.
+	// Based on typical usage 'col-' + ... it might be used for IDs or classes.
+	// Let's assume a simple join for now.
+	return steps.join('-');
+};
