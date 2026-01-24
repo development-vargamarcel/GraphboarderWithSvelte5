@@ -19,3 +19,7 @@
 
 ### ActiveArgument (`src/lib/components/ActiveArgument.svelte`)
 *   **Purpose**: Represents an active argument in the query builder, allowing modification of its value and state.
+
+### ComponentForLayout (`src/routes/endpoints/[endpointid]/queries/[queryName]/ComponentForLayout.svelte`)
+*   **Purpose**: The main layout component for displaying and interacting with a specific query/mutation.
+*   **Usage**: Handles data fetching, pagination, and rendering the results table. It orchestrates the interaction between the query builder and the results display.

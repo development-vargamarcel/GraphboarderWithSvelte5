@@ -35,6 +35,10 @@ For detailed guides, please check the [guides](./guides) folder:
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) and the guides above for detailed development instructions.
 
+### Debugging
+
+We use `console.debug` for debugging critical paths like data fetching and pagination. These logs are visible in the browser console.
+
 ## Building
 
 To build the library:
