@@ -97,6 +97,10 @@ export interface FieldWithDerivedData extends GraphQLField, DerivedData {}
 export interface InputFieldWithDerivedData extends GraphQLInputField, DerivedData {}
 
 // Schema Data Types
+
+/**
+ * Represents the reactive state value of the schema data store.
+ */
 export interface SchemaDataValue {
 	rootTypes: RootType[];
 	queryFields: FieldWithDerivedData[];
@@ -106,6 +110,10 @@ export interface SchemaDataValue {
 	isReady: boolean;
 }
 
+/**
+ * Represents the schema data store, including both the reactive value methods (subscribe, set, update)
+ * and helper methods for schema manipulation and retrieval.
+ */
 export interface SchemaDataStore {
 	subscribe: (run: (value: SchemaDataValue) => void) => () => void;
 	set: (value: SchemaDataValue) => void;
