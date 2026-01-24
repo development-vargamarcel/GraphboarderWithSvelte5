@@ -40,6 +40,7 @@ export const endpoints = derived(localStorageEndpoints, ($localStorageEndpoints)
 });
 
 export const addEndpoint = (endpoint: AvailableEndpoint) => {
+	console.debug('Adding endpoint:', endpoint);
 	localStorageEndpoints.update((current) => {
 		const filtered = current.filter((e) => e.id !== endpoint.id);
 		return [...filtered, endpoint];
@@ -47,6 +48,7 @@ export const addEndpoint = (endpoint: AvailableEndpoint) => {
 };
 
 export const removeEndpoint = (id: string) => {
+	console.debug('Removing endpoint with id:', id);
 	localStorageEndpoints.update((current) => {
 		return current.filter((e) => e.id !== id);
 	});
