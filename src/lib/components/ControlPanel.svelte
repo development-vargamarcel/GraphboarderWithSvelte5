@@ -15,7 +15,7 @@
 	let {
 		type,
 		prefix = '',
-		column_stepsOfFields,
+		column_stepsOfFields = $bindable(),
 		addColumnFromInput,
 		dd_relatedRoot,
 		QMSName,

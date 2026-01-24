@@ -24,6 +24,11 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import GraphqlCodeDisplay from '$lib/components/GraphqlCodeDisplay.svelte';
 	import ControlPanel from '$lib/components/ControlPanel.svelte';
+	import type {
+		QMSWraperContext,
+		QMSMainWraperContext,
+		FieldWithDerivedData
+	} from '$lib/types/index';
 
 	// Props interface and destructuring MUST come before getContext calls that use prefix
 	interface Props {
@@ -47,12 +52,12 @@
 	}: Props = $props();
 
 	// Now we can safely use prefix in getContext calls
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const schemaData = QMSMainWraperContext?.schemaData;
-	const urqlCoreClient = QMSMainWraperContext?.urqlCoreClient;
+	let qmsMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const endpointInfo = qmsMainWraperContext?.endpointInfo;
+	const schemaData = qmsMainWraperContext?.schemaData;
+	const urqlCoreClient = qmsMainWraperContext?.urqlCoreClient;
 
-	const QMSWraperContext = getContext(`${prefix}QMSWraperContext`);
+	const qmsWraperContext = getContext(`${prefix}QMSWraperContext`) as QMSWraperContext;
 	const {
 		QMS_bodyPart_StoreDerived_rowsCount,
 		activeArgumentsDataGrouped_Store,
@@ -63,13 +68,12 @@
 		paginationOptions,
 		paginationState,
 		QMSName
-	} = QMSWraperContext;
+	} = qmsWraperContext;
 
 	// Handle currentQMS_info default value - now that schemaData is available
 	if (!currentQMS_info) {
 		currentQMS_info = schemaData.get_QMS_Field(QMSName, 'query', schemaData);
 	}
-
 
 	onDestroy(() => {
 		document.getElementById('my-drawer-3')?.click();
@@ -89,7 +93,7 @@
 		// Just to react to changes, empty body or logging if needed
 		// But this was causing syntax error due to incorrect structure in previous content
 		const _ = {
-			QMSWraperContext,
+			qmsWraperContext,
 			val: $activeArgumentsDataGrouped_Store
 		};
 
@@ -99,21 +103,26 @@
 	//
 	let { scalarFields } = getFields_Grouped(dd_relatedRoot, [], schemaData);
 
-	let queryData = $state();
-	let rows = $state([]);
-	let rowsCurrent = [];
-	let loadedF;
-	let completeF;
+	let queryData: { fetching: boolean; error: any; data: any } = $state({
+		fetching: false,
+		error: null,
+		data: null
+	});
+	let rows: any[] = $state([]);
+	let rowsCurrent: any[] = [];
+	let loadedF: (() => void) | undefined;
+	let completeF: (() => void) | undefined;
 	let infiniteId = $state(Math.random());
-	function infiniteHandler({ detail: { loaded, complete } }) {
+	function infiniteHandler({ detail: { loaded, complete } }: { detail: { loaded: () => void, complete: () => void } }) {
+		console.debug('infiniteHandler triggered', { loaded, complete });
 		loadedF = loaded;
 		completeF = complete;
 		const rowLimitingArgNames = paginationTypeInfo?.get_rowLimitingArgNames(
 			currentQMS_info.dd_paginationArgs
 		);
 		if (
-			rowLimitingArgNames?.some((argName) => {
-				return rows.length / $paginationState?.[argName] >= 1; //means that all previous pages contained nr of items == page items size
+			rowLimitingArgNames?.some((argName: string) => {
+				return rows.length / ($paginationState?.[argName] as number) >= 1; //means that all previous pages contained nr of items == page items size
 			}) ||
 			paginationTypeInfo?.name == 'pageBased'
 		) {
@@ -126,14 +135,15 @@
 		// 	paginationState.nextPage(queryData?.data, QMSName, 'query');
 		// }
 	}
-	const runQuery = (queryBody) => {
+	const runQuery = (queryBody: string) => {
+		console.debug('runQuery called', queryBody);
 		let fetching = true;
-		let error = false;
-		let data = false;
+		let error: any = false;
+		let data: any = false;
 		$urqlCoreClient
 			.query(queryBody)
 			.toPromise()
-			.then((result) => {
+			.then((result: any) => {
 				fetching = false;
 
 				if (result.error) {
@@ -177,8 +187,8 @@
 						0 &&
 						paginationTypeInfo
 							?.get_rowLimitingArgNames(currentQMS_info.dd_paginationArgs)
-							.some((argName) => {
-								return rowsCurrent?.length == $paginationState?.[argName];
+							.some((argName: string) => {
+								return rowsCurrent?.length == ($paginationState?.[argName] as number);
 							})) ||
 					paginationTypeInfo?.name == 'pageBased'
 				) {
@@ -190,7 +200,7 @@
 				rowsCurrent = [];
 			});
 	};
-	QMS_bodyPartsUnifier_StoreDerived.subscribe((QMS_body) => {
+	QMS_bodyPartsUnifier_StoreDerived.subscribe((QMS_body: string) => {
 		if (QMS_body && QMS_body !== '') {
 			runQuery(QMS_body);
 		}
@@ -202,14 +212,14 @@
 		queryData = { fetching: true, error: false, data: false };
 	}
 
-	const hideColumn = (e) => {
+	const hideColumn = (e: any) => {
 		tableColsData_Store.removeColumn(e.detail.column);
 	};
-	tableColsData_Store.subscribe((data) => {
+	tableColsData_Store.subscribe((data: any) => {
 	});
 
 	let column_stepsOfFields = $state('');
-	const addColumnFromInput = (e) => {
+	const addColumnFromInput = (e: any) => {
 		if (e.key == 'Enter') {
 			let stepsOfFields = column_stepsOfFields.replace(/\s/g, '').replace(/\./g, '>').split('>');
 			let tableColData = {
@@ -253,7 +263,7 @@
 		{dd_relatedRoot}
 		{QMSName}
 		{currentQMS_info}
-		onNewColumnAddRequest={(tableColData) => {
+		onNewColumnAddRequest={(tableColData: any) => {
 			tableColsData_Store.addColumn(tableColData);
 		}}
 	/>
@@ -265,7 +275,7 @@
 		{dd_relatedRoot}
 		{QMSName}
 		QMS_info={currentQMS_info}
-		onNewColumnAddRequest={(tableColData) => {
+		onNewColumnAddRequest={(tableColData: any) => {
 			tableColsData_Store.addColumn(tableColData);
 		}}
 	/>
@@ -274,7 +284,7 @@
 			<Modal
 				modalIdetifier={'activeArgumentsDataModal'}
 				showApplyBtn={false}
-				onCancel={(detail) => {
+				onCancel={(detail: any) => {
 					if (detail.modalIdetifier == 'activeArgumentsDataModal') {
 						showModal = false;
 					}
@@ -368,7 +378,7 @@
 		{infiniteHandler}
 		colsData={$tableColsData_Store}
 		{rows}
-		onHideColumn={(detail) => {
+		onHideColumn={(detail: any) => {
 			hideColumn({ detail });
 		}}
 		{onRowSelectionChange}
