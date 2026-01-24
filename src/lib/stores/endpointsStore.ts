@@ -5,10 +5,20 @@ import { getSortedAndOrderedEndpoints } from '$lib/utils/usefulFunctions';
 import type { AvailableEndpoint } from '$lib/types';
 import { browser } from '$app/environment';
 
+/**
+ * Store for user-defined endpoints that are persisted in local storage.
+ * Note: 'userEndpoints' was the old key, kept for potential migration logic if needed,
+ * but 'localStorageEndpoints' is the primary store used now.
+ */
 export const userEndpoints: Writable<AvailableEndpoint[]> = persisted<AvailableEndpoint[]>(
 	'userEndpoints',
 	[]
 );
+
+/**
+ * Primary store for persisting user-added endpoints.
+ * This store synchronizes with the browser's localStorage.
+ */
 export const localStorageEndpoints: Writable<AvailableEndpoint[]> = persisted<AvailableEndpoint[]>(
 	'localStorageEndpoints',
 	[]
@@ -17,6 +27,7 @@ export const localStorageEndpoints: Writable<AvailableEndpoint[]> = persisted<Av
 const migrateLegacyEndpoints = () => {
 	if (!browser) return;
 
+	console.debug('Checking for legacy endpoints migration...');
 	const legacyEndpoints = localStorage.getItem('endpoints');
 	if (legacyEndpoints) {
 		try {

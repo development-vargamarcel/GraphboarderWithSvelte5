@@ -46,6 +46,12 @@
 
 			endpointConfiguration = found;
 
+			if (!endpointConfiguration) {
+				console.debug(`Endpoint configuration not found for id: ${endpointid}`);
+			} else {
+				console.debug(`Loaded configuration for endpoint: ${endpointConfiguration.id}`);
+			}
+
 			// Redirect to explorer if we are on the root endpoint page
 			// We do this here because +page.svelte (children) might not render if Introspection fails in MainWraper
 			if (browser && endpointConfiguration) {
