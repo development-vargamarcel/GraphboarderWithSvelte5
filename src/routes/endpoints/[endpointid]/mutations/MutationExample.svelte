@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import AddColumn from './../../../../lib/components/AddColumn.svelte';
 	import { page } from '$app/stores';
 	import Table from '$lib/components/Table.svelte';
@@ -55,7 +53,7 @@
 		QMSName
 	} = QMSWraperContext;
 
-	run(() => {
+	$effect(() => {
 	});
 	onDestroy(() => {
 		document.getElementById('my-drawer-3')?.click();
@@ -71,7 +69,7 @@
 		return pagType.name == QMS_info?.dd_paginationType;
 	});
 	let activeArgumentsDataGrouped_Store_IS_SET = $state(false);
-	run(() => {
+	$effect(() => {
 		activeArgumentsDataGrouped_Store_IS_SET =
 			$activeArgumentsDataGrouped_Store.length > 0 ? true : false;
 	});
@@ -79,13 +77,14 @@
 
 	let { scalarFields } = getFields_Grouped(dd_relatedRoot, [], schemaData);
 
-	let queryData = $state();
-	let rows = $state([]);
-	let rowsCurrent = [];
-	let loadedF;
-	let completeF;
+	let queryData = $state({ fetching: false, error: null, data: null });
+	let rows = $state<any[]>([]);
+	let rowSelectionState = $state({});
+	let rowsCurrent: any[] = [];
+	let loadedF: any;
+	let completeF: any;
 	let infiniteId = $state(Math.random());
-	function infiniteHandler({ detail: { loaded, complete } }) {
+	function infiniteHandler({ detail: { loaded, complete } }: any) {
 		loadedF = loaded;
 		completeF = complete;
 		const rowLimitingArgNames = paginationTypeInfo?.get_rowLimitingArgNames(
@@ -106,14 +105,14 @@
 		// 	paginationState.nextPage(queryData?.data, QMSName, 'query');
 		// }
 	}
-	const runQuery = (queryBody) => {
+	const runQuery = (queryBody: any) => {
 		let fetching = true;
-		let error = false;
-		let data = false;
+		let error: any = false;
+		let data: any = false;
 		$urqlCoreClient
 			.mutation(queryBody)
 			.toPromise()
-			.then((result) => {
+			.then((result: any) => {
 				fetching = false;
 
 				if (result.error) {
@@ -175,7 +174,7 @@
 		}
 	});
 
-	run(() => {
+	$effect(() => {
 	});
 	if (scalarFields.length == 0) {
 		queryData = { fetching: false, error: false, data: false };
@@ -183,14 +182,15 @@
 		queryData = { fetching: true, error: false, data: false };
 	}
 
-	const hideColumn = (e) => {
-		tableColsData_Store.removeColumn(e.detail.column);
+	const hideColumn = (e: any) => {
+		tableColsData_Store.removeColumn(e.detail.column); // Note: e.detail is typically from custom events, check usage
+		// If calling directly with { detail: { column } } structure.
 	};
-	tableColsData_Store.subscribe((data) => {
+	tableColsData_Store.subscribe((data: any) => {
 	});
 
 	let column_stepsOfFields = $state('');
-	const addColumnFromInput = (e) => {
+	const addColumnFromInput = (e: any) => {
 		if (e.key == 'Enter') {
 			let stepsOfFields = column_stepsOfFields.replace(/\s/g, '').replace(/\./g, '>').split('>');
 			let tableColData = {
@@ -311,12 +311,11 @@
 				{infiniteHandler}
 				colsData={$tableColsData_Store}
 				{rows}
-				on:addColumnDropdown={() => {
+				onHideColumn={(e) => {
+					hideColumn({ detail: e }); // wrapper to match hideColumn expectation of event object
 				}}
-				on:hideColumn={(e) => {
-					hideColumn(e);
-				}}
-				on:rowClicked={(e) => {}}
+				onRowClicked={(e) => {}}
+				{rowSelectionState}
 			/>
 		</div>
 	{/if}

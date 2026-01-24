@@ -85,7 +85,7 @@
 	}
 	//
 	let activeArgumentsData = [];
-	const paginationTypeInfo = get_paginationTypes(endpointInfo, schemaData).find((pagType) => {
+	const paginationTypeInfo = get_paginationTypes(endpointInfo, schemaData).find((pagType: any) => {
 		return pagType.name == currentQMS_info.dd_paginationType;
 	});
 	let activeArgumentsDataGrouped_Store_IS_SET = $state(false);
@@ -263,9 +263,6 @@
 		{dd_relatedRoot}
 		{QMSName}
 		{currentQMS_info}
-		onNewColumnAddRequest={(tableColData: any) => {
-			tableColsData_Store.addColumn(tableColData);
-		}}
 	/>
 </div>
 <div class="flex space-x-2 mx-2">

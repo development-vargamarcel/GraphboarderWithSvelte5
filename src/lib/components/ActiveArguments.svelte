@@ -1,16 +1,14 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { getContext, setContext } from 'svelte';
 	import ActiveArgumentsGroupWraper from '$lib/components/ActiveArgumentsGroupWraper.svelte';
 
 	interface Props {
-		isControlPanelChild: any;
-		stepsOfFieldsThisAppliesTo: any;
+		isControlPanelChild?: any;
+		stepsOfFieldsThisAppliesTo?: any;
 		prefix?: string;
-		QMSarguments: any;
-		activeArgumentsDataGrouped_Store: any;
-		QMS_info: any;
+		QMSarguments?: any;
+		activeArgumentsDataGrouped_Store?: any;
+		QMS_info?: any;
 		onUpdateQuery?: () => void;
 	}
 
@@ -41,8 +39,6 @@
 
 	let activeArgumentsDataGrouped = [];
 
-	run(() => {
-	});
 	const update_activeArgumentsDataGrouped = (groupNewData) => {
 		activeArgumentsDataGrouped_Store.update_groups(groupNewData);
 	};

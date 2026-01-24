@@ -25,11 +25,15 @@ A Svelte 5 library for exploring and visualizing GraphQL endpoints.
 
 For detailed guides, please check the [guides](./guides) folder:
 
+-   [Usage Guide](./guides/usage.md)
 -   [Setup Guide](./guides/setup.md)
 -   [Architecture Guide](./guides/architecture.md)
+-   [Project Structure](./guides/project_structure.md)
+-   [State Management](./guides/state_management.md)
+-   [Components Guide](./guides/components.md)
+-   [Utilities Guide](./guides/utilities.md)
 -   [Testing Guide](./guides/testing.md)
 -   [Contribution Guide](./guides/contribution.md)
--   [Components Guide](./guides/components.md)
 
 ## Development
 

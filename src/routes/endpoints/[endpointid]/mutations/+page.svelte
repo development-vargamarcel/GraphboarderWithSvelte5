@@ -4,17 +4,17 @@
 	import Page from '$lib/components/Page.svelte';
 
 	let QMSName = $state();
-	let input = $state();
+	let input = $state<HTMLInputElement>();
 </script>
 
-<Page MenuItem={true} CustomId="fdsfds" backPath={`/`}>
+<Page MenuItem={true} CustomId="fdsfds" backPath={`/`} title="Mutations">
 	<div class="overflow-auto h-full">
 		<input
 			class="input input-xs w-32 m-5"
 			type="text"
 			bind:this={input}
 			onchange={(e) => {
-				QMSName = input.value;
+				if (input) QMSName = input.value;
 			}}
 		/>
 		{#key QMSName}
