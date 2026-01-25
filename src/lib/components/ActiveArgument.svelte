@@ -5,7 +5,7 @@
 	import AutoInterface from '$lib/components/fields/AutoInterface.svelte';
 	import { SHADOW_ITEM_MARKER_PROPERTY_NAME } from 'svelte-dnd-action';
 	import { getContext, setContext } from 'svelte';
-	import type { ActiveArgumentData, ActiveArgumentGroup, ContainerData } from '$lib/types/index';
+	import type { ActiveArgumentData, ActiveArgumentGroup, ContainerData, QMSWraperContext, QMSMainWraperContext } from '$lib/types/index';
 	import Toggle from '$lib/components/fields/Toggle.svelte';
 	import { clickOutside } from '$lib/actions/clickOutside';
 	import Modal from './Modal.svelte';
@@ -37,13 +37,13 @@
 		type: string;
 		parentNodeId: string;
 		availableOperators: string[];
-		startDrag: () => void;
+		startDrag: (e: any) => void;
 		onChanged?: (detail: any) => void;
 		onInUseChanged?: () => void;
 		onContextmenuUsed?: () => void;
 		onUpdateQuery?: () => void;
 		onDeleteSubNode?: (detail: { id: string }) => void;
-		onChildrenStartDrag?: () => void;
+		onChildrenStartDrag?: (e?: any) => void;
 	}
 
 	let {
@@ -70,8 +70,8 @@
 		onChildrenStartDrag
 	}: Props = $props();
 
-	const { activeArgumentsDataGrouped_Store } = getContext(`${prefix}QMSWraperContext`);
-	const { finalGqlArgObj_Store } = getContext(`${prefix}QMSWraperContext`);
+	const { activeArgumentsDataGrouped_Store } = getContext(`${prefix}QMSWraperContext`) as QMSWraperContext;
+	const { finalGqlArgObj_Store } = getContext(`${prefix}QMSWraperContext`) as QMSWraperContext;
 	//
 	let idColNameOfSelectedRow: string | undefined;
 	//
@@ -96,26 +96,35 @@
 
 	$effect(() => {
 		if (shadowHeight && shadowEl) {
-			if (shadowEl.style.height == 0) {
+			if (shadowEl.style.height == '0px' || shadowEl.style.height == '') {
 				shadowEl.style.height = `${shadowHeight + 18}px`;
 				shadowEl.style.width = `${shadowWidth}px`;
 
-				labelElClone = labelEl.cloneNode(true);
-				labelElClone.classList.remove('dnd-item');
-				labelElClone.classList.add('border-2', 'border-accent');
-
-				shadowEl.appendChild(labelElClone);
+				if (labelEl) {
+					labelElClone = labelEl.cloneNode(true);
+					// Casting to Element to access classList
+					(labelElClone as Element).classList.remove('dnd-item');
+					(labelElClone as Element).classList.add('border-2', 'border-accent');
+					shadowEl.appendChild(labelElClone);
+				}
 			}
 		}
 	});
 	let get_valueToDisplay = (): string | undefined => {
 		let value: string | undefined;
 		if (getPreciseType(activeArgumentData.chd_dispatchValue) == 'number') {
-			value = activeArgumentData.chd_dispatchValue;
+			value = String(activeArgumentData.chd_dispatchValue);
 		}
 		if (activeArgumentData.dd_displayInterface == 'ENUM') {
 			let chd_dispatchValue = activeArgumentData.chd_dispatchValue;
-			value = chd_dispatchValue?.length > 0 ? chd_dispatchValue : undefined;
+			// check if array
+			if (Array.isArray(chd_dispatchValue) && chd_dispatchValue.length > 0) {
+				value = chd_dispatchValue.join(', ');
+			} else if (typeof chd_dispatchValue === 'string' && chd_dispatchValue.length > 0) {
+				value = chd_dispatchValue;
+			} else {
+				value = undefined;
+			}
 		} else {
 			if (Array.isArray(activeArgumentData.chd_dispatchValue)) {
 				value = activeArgumentData.chd_dispatchValue.join(', ');
@@ -132,9 +141,9 @@
 
 		return value;
 	};
-	const CPItemContext = getContext(`${prefix}CPItemContext`);
+	const CPItemContext = getContext(`${prefix}CPItemContext`) as any;
 	const CPItem = CPItemContext?.CPItem;
-	let expandedVersion: boolean = $state();
+	let expandedVersion: boolean = $state(false);
 	let valueToDisplay: string | undefined = $state(undefined);
 	$effect(() => {
 		if (true || activeArgumentData?.inUse) {
@@ -147,7 +156,7 @@
 			expandedVersion = true;
 		}
 	});
-	const outermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`);
+	const outermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as QMSWraperContext;
 	const { mergedChildren_QMSWraperCtxData_Store } = outermostQMSWraperContext;
 
 	const handleChanged = (detail: Partial<ActiveArgumentData>): void => {
@@ -182,7 +191,7 @@
 		//update the activeArgumentsDataGrouped_StoreForCPItem and related
 		if (CPItem) {
 			const QMSWraperCtxData_StoreForCPItem = $mergedChildren_QMSWraperCtxData_Store.find(
-				(currCtx) => {
+				(currCtx: any) => {
 					return currCtx.stepsOfFields.join() == CPItem.stepsOfFieldsThisAppliesTo.join();
 				}
 			);
@@ -210,11 +219,11 @@
 	const showInputField = getContext('showInputField');
 
 	let activeArgumentsContext = getContext(`${prefix}activeArgumentsContext`);
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const schemaData = QMSMainWraperContext?.schemaData;
-	const nodeRootType = getRootType(null, activeArgumentData.dd_rootName, schemaData);
+	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const schemaData = MainWraperContext?.schemaData;
+	// const nodeRootType = getRootType(null, activeArgumentData.dd_rootName, schemaData); // schemaData might be null here if context is missing, careful
 	let showSelectModal: boolean = $state(false);
-	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`);
+	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as QMSWraperContext;
 
 	const { QMSFieldToQMSGetMany_Store } = OutermostQMSWraperContext;
 	let selectedQMS = $state();
@@ -225,13 +234,13 @@
 			})?.getMany?.selectedQMS;
 		}
 	});
-	const nodeContext_forDynamicData = getContext(`${prefix}nodeContext_forDynamicData`);
-	let selectedRowsColValues = nodeContext_forDynamicData.selectedRowsColValues;
+	const nodeContext_forDynamicData = getContext(`${prefix}nodeContext_forDynamicData`) as any;
+	let selectedRowsColValues = nodeContext_forDynamicData?.selectedRowsColValues;
 </script>
 
 <SelectModal
 	onDeleteSubNode={(detail) => {
-		deleteItem({ detail });
+		onDeleteSubNode?.(detail);
 		//
 	}}
 	bind:showSelectModal

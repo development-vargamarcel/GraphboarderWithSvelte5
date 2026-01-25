@@ -8,7 +8,6 @@ import type {
 	FieldsGrouped
 } from '$lib/types';
 import { get_paginationTypes } from '$lib/stores/pagination/paginationTypes';
-import { sortingFunctionMutipleColumnsGivenArray } from './data-processing';
 
 // Helper to reverse an array without mutating the original
 const toReversed = <T>(arr: T[]): T[] => {
@@ -105,23 +104,24 @@ export const getFields_Grouped = (
 ): FieldsGrouped => {
 	const node_rootType = schemaData?.get_rootType(
 		null,
-		node?.dd_rootName || (node as any).parent_node?.dd_rootName,
+		node?.dd_rootName || (node as any).parent_node?.dd_rootName || 'unknown',
 		schemaData
 	);
 	let scalarFields: FieldWithDerivedData[] = [];
 	let non_scalarFields: FieldWithDerivedData[] = [];
-	let enumFields: FieldWithDerivedData[] = [];
+	let enumFields: (RootType & FieldWithDerivedData)[] = [];
 
 	let fieldsArray: FieldWithDerivedData[] | undefined;
-	if (node?.args) {
-		fieldsArray = node.args;
+	if ((node as FieldWithDerivedData)?.args) {
+		fieldsArray = (node as FieldWithDerivedData).args;
 	} else if (node_rootType?.fields) {
 		fieldsArray = node_rootType.fields;
 	} else if (node_rootType?.inputFields) {
-		fieldsArray = node_rootType.inputFields;
+		// Casting to match the expected array type, though input fields differ slightly they are treated similarly here
+		fieldsArray = node_rootType.inputFields as unknown as FieldWithDerivedData[];
 	} else if (node_rootType?.enumValues) {
 		// enumValues might have different shape, but treated as fields here
-		fieldsArray = node.enumValues as any;
+		fieldsArray = node.enumValues as unknown as FieldWithDerivedData[];
 	}
 
 	if (fieldsArray) {
@@ -130,10 +130,13 @@ export const getFields_Grouped = (
 			.forEach((field) => {
 				const kinds = get_KindsArray(field);
 				if (kinds.includes('ENUM')) {
-					enumFields.push({
-						...schemaData.get_rootType(null, field.dd_rootName, schemaData),
-						...field
-					});
+					const rootType = schemaData.get_rootType(null, field.dd_rootName, schemaData);
+					if (rootType) {
+						enumFields.push({
+							...rootType,
+							...field
+						});
+					}
 				} else if (kinds.includes('SCALAR')) {
 					scalarFields.push(field);
 				} else {
@@ -175,7 +178,7 @@ export const mark_paginationArgs = (
 	args: FieldWithDerivedData[],
 	endpointInfo: EndpointInfoStore
 ): void => {
-	const paginationPossibleNames = get(endpointInfo).paginationArgsPossibleNames;
+	const paginationPossibleNames = get(endpointInfo).paginationArgsPossibleNames || {};
 	const paginationPossibleNamesKeys = Object.keys(paginationPossibleNames);
 	args.forEach((arg) => {
 		let matchingKey = paginationPossibleNamesKeys.find((key) => {
@@ -202,7 +205,7 @@ export const get_paginationType = (
 	endpointInfo: EndpointInfoStore,
 	schemaData: SchemaData
 ): string => {
-	const standsForArray = paginationArgs.map((arg) => arg.dd_standsFor);
+	const standsForArray = paginationArgs.map((arg) => arg.dd_standsFor || '');
 	const paginationType = get_paginationTypes(endpointInfo, schemaData).find((pt) => {
 		return pt.check(standsForArray);
 	})?.name;
@@ -240,7 +243,7 @@ export const generate_derivedData = (
 	derivedData.dd_namesArray = get_NamesArray(type);
 	derivedData.dd_rootName = get_rootName(derivedData.dd_namesArray);
 	derivedData.dd_displayName = get_displayName(derivedData.dd_namesArray);
-	derivedData.dd_relatedRoot = getRootType(rootTypes, derivedData.dd_rootName, schemaData);
+	derivedData.dd_relatedRoot = getRootType(rootTypes, derivedData.dd_rootName, schemaData) || 'unknown';
 
 	derivedData.dd_kindEl = undefined;
 	derivedData.dd_kindEl_NON_NULL = false;
@@ -266,14 +269,17 @@ export const generate_derivedData = (
 
 	let displayInterface = get_displayInterface(derivedData, endpointInfo);
 
-	if (['text', undefined].includes(derivedData.dd_displayInterface)) {
+	if (!derivedData.dd_displayInterface || ['text'].includes(derivedData.dd_displayInterface)) {
 		derivedData.dd_displayInterface = displayInterface || undefined; // Normalize null to undefined if interface expects it
 	}
 
 	derivedData.dd_isArg = !type?.args;
-	derivedData.dd_relatedRoot_inputFields_allScalar = derivedData.dd_relatedRoot?.inputFields?.every(
+
+	const relatedRoot = typeof derivedData.dd_relatedRoot === 'string' ? null : derivedData.dd_relatedRoot;
+	derivedData.dd_relatedRoot_inputFields_allScalar = relatedRoot?.inputFields?.every(
 		(field) => get_KindsArray(field).includes('SCALAR')
-	);
+	) || false;
+
 	derivedData.dd_canExpand =
 		!derivedData.dd_kindsArray?.includes('SCALAR') && derivedData.dd_kindsArray.length > 0;
 
@@ -298,11 +304,11 @@ export const generate_derivedData = (
 		}
 
 		derivedData.dd_isRootArg = !(
-			derivedData.dd_canExpand && !derivedData?.dd_relatedRoot?.enumValues
+			derivedData.dd_canExpand && !relatedRoot?.enumValues
 		);
 	}
 
-	derivedData.dd_shouldExpand = derivedData.dd_canExpand && !derivedData.dd_relatedRoot?.enumValues;
+	derivedData.dd_shouldExpand = derivedData.dd_canExpand && !relatedRoot?.enumValues;
 	derivedData.dd_isQMSField = isQMSField;
 
 	derivedData.dd_castType = 'implement this.possible values:string,number,graphqlGeoJson...';
@@ -350,8 +356,8 @@ export const getDeepField = (
 	let currentObj: Partial<FieldWithDerivedData> | undefined = obj;
 	for (let i = 0; i < propertyPath.length; i++) {
 		const prop = propertyPath[i];
-		const currentObjRootType = schemaData.get_rootType(null, currentObj?.dd_rootName, schemaData);
-		const currentObjRootTypeFields = currentObjRootType?.[fieldsType];
+		const currentObjRootType = schemaData.get_rootType(null, currentObj?.dd_rootName || '', schemaData);
+		const currentObjRootTypeFields = currentObjRootType?.[fieldsType] as FieldWithDerivedData[] | undefined;
 		const nextObj = currentObjRootTypeFields?.find((field) => field.dd_displayName === prop);
 
 		if (!nextObj) {
@@ -469,7 +475,7 @@ const _localStepsOfFieldsToQueryFragmentObject = (
 		_stepsOfFields.shift();
 	}
 	let _stepsOfFields_length = _stepsOfFields.length;
-	let queryObject = {};
+	let queryObject: any = {};
 	let queryObjectCurrLevel: any = queryObject;
 	_stepsOfFields.forEach((fieldName, index) => {
 		if (_stepsOfFields_length == index + 1) {

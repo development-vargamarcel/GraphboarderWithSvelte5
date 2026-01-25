@@ -96,7 +96,10 @@ export const generate_gqlArgObj = (group_argumentsData: ActiveArgumentData[]): G
 		let { chd_dispatchValue, stepsOfFields, dd_displayName } = argData;
 
 		let curr_gqlArgObj: any = gqlArgObj;
-		curr_gqlArgObj[dd_displayName] = chd_dispatchValue;
+		if (dd_displayName) {
+			curr_gqlArgObj[dd_displayName] = chd_dispatchValue;
+		}
+		return true;
 	});
 
 	return {
@@ -192,8 +195,8 @@ export const generate_group_gqlArgObj_forHasOperators = (
 	spreadOutItems.forEach((item) => {
 		let itemData = nodes[item.id];
 		const isContainer = itemData.hasOwnProperty('items');
-		const nodeStep = itemData?.stepsOfNodes[itemData?.stepsOfNodes.length - 1];
-		const nodeStepClean = filterElFromArr(nodeStep, [null, undefined, 'bonded', 'list']);
+		const nodeStep = itemData?.stepsOfNodes?.[itemData?.stepsOfNodes.length - 1];
+		const nodeStepClean = filterElFromArr(nodeStep as any, [null, undefined, 'bonded', 'list']);
 
 		const operator = itemData.operator;
 		let itemObj = {};
@@ -233,7 +236,7 @@ export const generate_group_gqlArgObj_forHasOperators = (
 		if (resultingGqlArgObj == undefined) {
 			// let itemObjectTest2 = 'set'
 			//itemObjectTest2 = dataToAssign
-			resultingGqlArgObj = dataToAssign;
+			resultingGqlArgObj = dataToAssign as Record<string, unknown>;
 			itemObjectTestCurr = dataToAssign;
 		}
 
@@ -255,7 +258,7 @@ export const generate_group_gqlArgObj_forHasOperators = (
 				itemObjCurr['_not'] = dataToAssign;
 				itemObjCurr = itemObjCurr['_not'];
 			} else {
-				itemObj = dataToAssign;
+				itemObj = dataToAssign as any;
 			}
 		}
 
@@ -277,9 +280,13 @@ export const generate_group_gqlArgObjAndCanRunQuery_forHasOperators = (
 	let { group_argsNode, group_name, group_hasAllArgs } = group;
 
 	let group_canRunQuery = true;
+	if (!group_argsNode) {
+		return { group_gqlArgObj: {}, group_gqlArgObj_string: '{}', group_canRunQuery: true };
+	}
+
 	let nodes = JSON.parse(JSON.stringify(group_argsNode));
 	let nodesArray = Object.values(nodes);
-	let mainContainer = (nodesArray as any).filter((node) => {
+	let mainContainer = (nodesArray as any).filter((node: any) => {
 		return node.isMain;
 	})[0];
 
@@ -353,11 +360,16 @@ export const getQMSLinks = (
 		});
 	};
 
-	queryLinks = sortIt($schemaData?.[`${QMSName}Fields`])?.map((query) => {
+	let fieldsKey = `${QMSName}Fields` as keyof typeof $schemaData;
+	let fields = $schemaData[fieldsKey] as FieldWithDerivedData[];
+
+	queryLinks = sortIt(fields)?.map((query) => {
 		let queryName = query.name;
 		let queryNameDisplay = queryName;
 
 		let currentQMS_info = schemaData.get_QMS_Field(queryName, QMSName, schemaData);
+		if (!currentQMS_info) return { url: '', title: '' };
+
 		const rowsLocation = endpointInfo.get_rowsLocation(currentQMS_info, schemaData);
 		const nodeFieldsQMS_info = get_nodeFieldsQMS_info(currentQMS_info, rowsLocation, schemaData);
 		let scalarFields = get_scalarColsData(
@@ -372,10 +384,10 @@ export const getQMSLinks = (
 		let ID_Args = query?.args?.filter((arg) => {
 			return arg.dd_rootName == 'ID';
 		});
-		if (mandatoryArgs?.length > 0) {
+		if (mandatoryArgs && mandatoryArgs.length > 0) {
 			queryNameDisplay = `${queryNameDisplay} (${mandatoryArgs.length}) `;
 		}
-		if (ID_Args?.length > 0) {
+		if (ID_Args && ID_Args.length > 0) {
 			queryNameDisplay = `${queryNameDisplay} <${ID_Args.length}> `;
 		}
 		if (scalarFields.length == 0) {
@@ -384,7 +396,7 @@ export const getQMSLinks = (
 		let queryLink = { url: `${parentURL}/${queryName}`, title: queryNameDisplay };
 		return queryLink;
 	});
-	return queryLinks;
+	return queryLinks || [];
 };
 
 export const stepsOfFieldsToQueryFragmentObject = (
@@ -397,7 +409,7 @@ export const stepsOfFieldsToQueryFragmentObject = (
 		_stepsOfFields.shift();
 	}
 	let _stepsOfFields_length = _stepsOfFields.length;
-	let queryObject = {};
+	let queryObject: any = {};
 	let queryObjectCurrLevel: any = queryObject;
 	_stepsOfFields.forEach((fieldName, index) => {
 		if (_stepsOfFields_length == index + 1) {
@@ -438,10 +450,11 @@ export const nodeAddDefaultFields = (
 	endpointInfo: EndpointInfoStore
 ): void => {
 	const group_argsNode = group.group_argsNode;
+	if (!group_argsNode) return;
 
 	const dd_displayNameToExclude = [
 		...node.items.map((item) => {
-			return group_argsNode?.[item.id]?.dd_displayName;
+			return group_argsNode[item.id]?.dd_displayName;
 		}),
 		'_and',
 		'_or',
@@ -451,14 +464,14 @@ export const nodeAddDefaultFields = (
 		'not'
 	];
 
-	let fields_Grouped = getFields_Grouped(node, dd_displayNameToExclude, schemaData);
+	let fields_Grouped = getFields_Grouped(node, dd_displayNameToExclude as string[], schemaData);
 	let scalarFields = fields_Grouped.scalarFields;
 	let non_scalarFields = fields_Grouped.non_scalarFields;
 	let enumFields = fields_Grouped.enumFields;
 
 	[...scalarFields, ...enumFields].forEach((element) => {
 		let stepsOfFields = [
-			group.group_name || node.dd_displayName || node.parent_node.dd_displayName,
+			group.group_name || node.dd_displayName || (node as any).parent_node?.dd_displayName || 'unknown',
 			element.dd_displayName
 		];
 		let newArgData = {
@@ -483,17 +496,17 @@ export const nodeAddDefaultFields = (
 		})
 		?.forEach((element) => {
 			let stepsOfFields = [
-				group.group_name || node.dd_displayName || node.parent_node.dd_displayName,
+				group.group_name || node.dd_displayName || (node as any).parent_node?.dd_displayName || 'unknown',
 				element.dd_displayName
 			];
 
-			let newContainerData = {
+			let newContainerData: any = {
 				stepsOfFields,
 				stepsOfFieldsStringified: JSON.stringify(stepsOfFields),
 				id: `${JSON.stringify(stepsOfFields)}${Math.random()}`,
 				...element
 			};
-			let randomNr = Math.random();
+			let randomNr = Math.random().toString();
 			let newContainerDataRootType = schemaData.get_rootType(
 				null,
 				newContainerData.dd_rootName,
@@ -501,7 +514,7 @@ export const nodeAddDefaultFields = (
 			);
 
 			let isListContainer = newContainerData?.dd_kindList;
-			let operator;
+			let operator: any;
 			if (!operator && isListContainer) {
 				operator = 'list';
 			}
@@ -510,7 +523,7 @@ export const nodeAddDefaultFields = (
 				operator = 'bonded';
 			}
 
-			group.group_argsNode[`${randomNr}`] = {
+			group.group_argsNode![`${randomNr}`] = {
 				items: [],
 				...newContainerData,
 				inputFields: newContainerDataRootType?.inputFields,
@@ -521,7 +534,7 @@ export const nodeAddDefaultFields = (
 			};
 			if (node?.items) {
 				node.items.push({ id: randomNr });
-			} else {
+			} else if (group.group_argsNode?.['mainContainer']) {
 				group.group_argsNode['mainContainer'].items.push({ id: randomNr });
 			}
 		});
@@ -529,7 +542,7 @@ export const nodeAddDefaultFields = (
 		return data;
 	}); //force update
 
-	node.addDefaultFields = false;
+	(node as any).addDefaultFields = false;
 };
 
 export const generate_finalGqlArgObjAndCanRunQuery = (
@@ -549,5 +562,5 @@ export const generate_finalGqlArgObjAndCanRunQuery = (
 			return generate_group_gqlArgObj(group);
 		}
 	});
-	return generate_finalGqlArgObj_fromGroups(groups_gqlArgObj);
+	return generate_finalGqlArgObj_fromGroups(groups_gqlArgObj as any);
 };

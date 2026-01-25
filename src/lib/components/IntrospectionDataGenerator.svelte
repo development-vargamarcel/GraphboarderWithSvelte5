@@ -3,31 +3,33 @@
 </script>
 
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { endpointsSchemaData } from '$lib/stores/testData/endpointsSchemaData';
 	import { fetchExchange } from '@urql/core';
 	import { browser } from '$app/environment';
 	import { queryStore, gql, getContextClient } from '@urql/svelte';
 	import { getContext } from 'svelte';
+	import type { QMSMainWraperContext } from '$lib/types';
+
 	interface Props {
 		prefix?: string;
 		children?: import('svelte').Snippet;
 	}
 
 	let { prefix = '', children }: Props = $props();
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const urqlCoreClient = QMSMainWraperContext?.urqlCoreClient;
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const schemaData = QMSMainWraperContext?.schemaData;
 
-	const endpointInfoUrl = $endpointInfo?.Url;
-	const getStoredSchemaData = (endpointInfoUrl) => {
+	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const urqlCoreClient = MainWraperContext?.urqlCoreClient;
+	const endpointInfo = MainWraperContext?.endpointInfo;
+	const schemaData = MainWraperContext?.schemaData;
+
+	const endpointInfoUrl = $endpointInfo?.url;
+	const getStoredSchemaData = (endpointInfoUrl: string | undefined) => {
+		if (!endpointInfoUrl) return undefined;
 		return endpointsSchemaData.find((item) => item.url === endpointInfoUrl);
 	};
 	const storedSchemaData = getStoredSchemaData(endpointInfoUrl);
-	if (storedSchemaData) {
-		$schemaData = storedSchemaData;
+	if (storedSchemaData && schemaData) {
+		$schemaData = storedSchemaData as any; // Casting as test data might not perfectly match interface
 	}
 	//setClient(urqlCoreClient);
 	//ds
@@ -142,20 +144,25 @@
 	let queries = [];
 	let mutations = [];
 	let schema = {};
-	let sortingInputValue = '';
-	let sortingArray = $state([]);
-	run(() => {
+	let sortingInputValue = $state('');
+	let sortingArray = $state<string[]>([]);
+
+	$effect(() => {
 		sortingArray = sortingInputValue.split(' ');
 	});
-	$schemaData = {};
-	$schemaData.isReady = false;
+
+	if (schemaData) {
+		$schemaData = { ...$schemaData, isReady: false };
+	}
+
 	const handleData = () => {
+		if (!schemaData || !endpointInfo) return;
 		schema = $queryStoreRes?.data?.__schema;
 		$schemaData.schema = schema;
 		schemaData.set_fields(endpointInfo);
 	};
-	run(() => {});
-	run(() => {
+
+	$effect(() => {
 		if (!$queryStoreRes.fetching) {
 			if ($queryStoreRes?.data) {
 				handleData();
@@ -166,7 +173,7 @@
 	});
 </script>
 
-{#if ($queryStoreRes?.data || storedSchemaData) && $schemaData.isReady}
+{#if ($queryStoreRes?.data || storedSchemaData) && $schemaData?.isReady}
 	<!-- content here -->
 	{@render children?.()}
 {/if}
@@ -192,7 +199,7 @@
 							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
 						/></svg
 					>
-					<span>{$queryStoreRes?.error}</span>
+					<span>{$queryStoreRes?.error.message}</span>
 				</div>
 			</div>
 			<div class="mt-4 alert alert-info shadow-lg">

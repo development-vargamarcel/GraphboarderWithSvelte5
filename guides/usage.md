@@ -77,7 +77,7 @@ For mutations (creating/updating data):
 3.  Click **Submit** to execute the mutation.
 4.  View the result (success/error) and returned data.
 
-## 7. Troubleshooting & Debugging
+## 9. Troubleshooting & Debugging
 
 - **Loading States**: If the application takes time to load an endpoint configuration, a loading spinner will appear. If it fails to load, an error message with a "Retry" button will be displayed.
 - **Console Logs**: For advanced debugging, open your browser's developer console (F12). The application logs detailed information about data fetching, pagination logic, and configuration parsing using `console.debug`.
