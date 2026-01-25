@@ -7,12 +7,15 @@
 		stepsOfFieldsToQueryFragmentObject
 	} from '$lib/utils/usefulFunctions';
 	import { setContext, getContext } from 'svelte';
-	import { get, writable } from 'svelte/store';
+	import { get, writable, type Writable } from 'svelte/store';
 	import Type from './Type.svelte';
+
+	/**
+	 * Props for AddColumn component.
+	 */
 	interface Props {
 		prefix?: string;
 		column_stepsOfFields: any;
-		addColumnFromInput: any;
 		dd_relatedRoot: any;
 		QMSName: any;
 		QMS_info: any;
@@ -22,7 +25,6 @@
 	let {
 		prefix = '',
 		column_stepsOfFields = $bindable(),
-		addColumnFromInput,
 		dd_relatedRoot,
 		QMSName,
 		QMS_info,
@@ -30,28 +32,30 @@
 	}: Props = $props();
 	//stepsOfFieldsOBJ
 	setContext(`${prefix}stepsOfFieldsOBJ`, writable({}));
-	const stepsOfFieldsOBJ = getContext(`${prefix}stepsOfFieldsOBJ`);
+	const stepsOfFieldsOBJ = getContext(`${prefix}stepsOfFieldsOBJ`) as Writable<any>;
 	stepsOfFieldsOBJ.subscribe((value) => {});
 	setContext(`${prefix}stepsOfFieldsOBJFull`, writable({}));
-	const stepsOfFieldsOBJFull = getContext(`${prefix}stepsOfFieldsOBJFull`);
+	const stepsOfFieldsOBJFull = getContext(`${prefix}stepsOfFieldsOBJFull`) as Writable<any>;
 	//activeArgumentsDataGrouped_Store
 	setContext(`${prefix}activeArgumentsDataGrouped_Store`, writable({}));
-	const activeArgumentsDataGrouped_Store = getContext(`${prefix}activeArgumentsDataGrouped_Store`);
+	const activeArgumentsDataGrouped_Store = getContext(
+		`${prefix}activeArgumentsDataGrouped_Store`
+	) as Writable<any>;
 	activeArgumentsDataGrouped_Store.subscribe((value) => {});
 
-	const tableColsData_Store = getContext(`${prefix}QMSWraperContext`).tableColsData_Store;
-	tableColsData_Store.subscribe((cols) => {
+	const tableColsData_Store = (getContext(`${prefix}QMSWraperContext`) as any).tableColsData_Store;
+	tableColsData_Store.subscribe((cols: any) => {
 		$stepsOfFieldsOBJFull = _.merge(
 			{},
-			...cols.map((col) => {
+			...cols.map((col: any) => {
 				return col.stepsOfFieldsOBJ;
 			})
 		);
 	});
 	stepsOfFieldsOBJFull.subscribe((stepsOfFieldsOBJFull) => {});
 	setContext(`${prefix}StepsOfFieldsSelected`, writable(new Set([])));
-	const StepsOfFieldsSelected = getContext(`${prefix}StepsOfFieldsSelected`);
-	StepsOfFieldsSelected.subscribe((value) => {});
+	const StepsOfFieldsSelected = getContext(`${prefix}StepsOfFieldsSelected`) as Writable<any>;
+	StepsOfFieldsSelected.subscribe((value: any) => {});
 </script>
 
 <div class="dropdown grow">
@@ -81,7 +85,7 @@
 					<button
 						class="btn w-min btn-xs btn-primary"
 						onclick={() => {
-							let stepsOfFields = [];
+							let stepsOfFields: string[] = [];
 							let tableColData = {
 								title: `col-${Math.floor(Math.random() * 200)},${generateTitleFromStepsOfFields(
 									stepsOfFields
@@ -99,7 +103,13 @@
 				</div>
 
 				{#if dd_relatedRoot?.fields}
-					<Type type={QMS_info} template="columnAddDisplay" depth={0} isOnMainList={true} />
+					<Type
+						type={QMS_info}
+						template="columnAddDisplay"
+						depth={0}
+						isOnMainList={true}
+						index={0}
+					/>
 					<!-- <TypeList
 						types={dd_relatedRoot.fields}
 						template="columnAddDisplay"

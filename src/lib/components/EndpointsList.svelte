@@ -20,6 +20,9 @@
 	import GraphqlCodeDisplay from './GraphqlCodeDisplay.svelte';
 	import type { QMSWraperContext, QMSMainWraperContext } from '$lib/types';
 
+	/**
+	 * Props for EndpointsList
+	 */
 	interface Props {
 		prefix?: string;
 		QMSName: any;
@@ -59,7 +62,11 @@
 
 	let { scalarFields } = getFields_Grouped(dd_relatedRoot || {}, [], schemaData);
 
-	let queryData = $state<{ fetching: boolean; error: any; data: any }>({ fetching: false, error: null, data: null });
+	let queryData = $state<{ fetching: boolean; error: any; data: any }>({
+		fetching: false,
+		error: null,
+		data: null
+	});
 	let rows = $state<any[]>([]);
 	let rowsCurrent: any[] = [];
 	let loadedF: any;
@@ -75,7 +82,7 @@
 		completeF = complete;
 		if (!currentQMS_info || !paginationTypeInfo) return;
 
-		const rowLimitingArgNames = paginationTypeInfo?.get_rowLimitingArgNames(
+		const rowLimitingArgNames = paginationTypeInfo?.get_rowLimitingArgNames?.(
 			currentQMS_info.dd_paginationArgs || []
 		);
 		if (
@@ -96,18 +103,25 @@
 		let error: any = false;
 		let data = false;
 
-		if (!urqlCoreClient || !currentQMS_info) return;
+		console.debug('Running query:', queryBody);
+
+		if (!urqlCoreClient || !currentQMS_info) {
+			console.warn('Missing client or QMS info');
+			return;
+		}
 
 		urqlCoreClient
-			.query(queryBody)
+			.query(queryBody, {})
 			.toPromise()
 			.then((result: any) => {
 				fetching = false;
 
 				if (result.error) {
+					console.error('Query error:', result.error);
 					error = result.error.message;
 				}
 				if (result.data) {
+					console.debug('Query data received');
 					data = result.data;
 				}
 				queryData = { fetching, error, data };
@@ -116,11 +130,14 @@
 					...endpointInfo.get_rowsLocation(currentQMS_info!, schemaData)
 				];
 				const rawData = getDataGivenStepsOfFields(undefined, queryData.data, stepsOfFieldsInput);
-				rowsCurrent = Array.isArray(rawData) ? rawData : (rawData ? [rawData] : []);
+				rowsCurrent = Array.isArray(rawData) ? rawData : rawData ? [rawData] : [];
 
 				if ($paginationOptions.infiniteScroll) {
 					if (
-						paginationTypeInfo?.isFirstPage?.(paginationState, currentQMS_info!.dd_paginationArgs || []) &&
+						paginationTypeInfo?.isFirstPage?.(
+							paginationState,
+							currentQMS_info!.dd_paginationArgs || []
+						) &&
 						rowsCurrent?.length > 0
 					) {
 						infiniteId += 1;
@@ -130,7 +147,10 @@
 							rows = [...rows, ...rowsCurrent];
 						}
 						if (
-							paginationTypeInfo?.isFirstPage?.(paginationState, currentQMS_info!.dd_paginationArgs || []) &&
+							paginationTypeInfo?.isFirstPage?.(
+								paginationState,
+								currentQMS_info!.dd_paginationArgs || []
+							) &&
 							rowsCurrent?.length == 0
 						) {
 							rows = rowsCurrent;
@@ -140,13 +160,16 @@
 					rows = rowsCurrent;
 				}
 
-				const limitingArgs = paginationTypeInfo?.get_rowLimitingArgNames?.(currentQMS_info!.dd_paginationArgs || []) || [];
+				const limitingArgs =
+					paginationTypeInfo?.get_rowLimitingArgNames?.(
+						currentQMS_info!.dd_paginationArgs || []
+					) || [];
 
 				if (
 					(limitingArgs.length > 0 &&
 						limitingArgs.some((argName: any) => {
-								return rowsCurrent?.length == ($paginationState as any)?.[argName];
-							})) ||
+							return rowsCurrent?.length == ($paginationState as any)?.[argName];
+						})) ||
 					paginationTypeInfo?.name == 'pageBased'
 				) {
 					loadedF && loadedF();
@@ -197,7 +220,7 @@
 			<Modal
 				modalIdentifier={'activeArgumentsDataModal'}
 				showApplyBtn={false}
-				onCancel={(detail) => {
+				onCancel={(detail: any) => {
 					if (detail.modalIdentifier == 'activeArgumentsDataModal') {
 						showModal = false;
 					}
@@ -228,7 +251,7 @@
 		</div>
 	{/if}
 
-	<button class="btn btn-xs btn-primary">
+	<button class="btn btn-xs btn-primary" aria-label="Add">
 		<i class="bi bi-plus-circle-fill"></i>
 	</button>
 </div>
@@ -238,7 +261,7 @@
 	<div class="mx-auto mb-2 px-4">
 		<div class="alert alert-error shadow-lg">
 			<div>
-				<button class="btn p-0 btn-ghost btn-sm">
+				<button class="btn p-0 btn-ghost btn-sm" aria-label="Dismiss error">
 					<svg
 						onclick={() => {
 							queryData.error = null;

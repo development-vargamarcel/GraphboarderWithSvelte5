@@ -64,9 +64,11 @@
 	}
 	//
 	let activeArgumentsData = [];
-	const paginationTypeInfo = get_paginationTypes(endpointInfo as any, schemaData as any).find((pagType: any) => {
-		return pagType.name == QMS_info?.dd_paginationType;
-	});
+	const paginationTypeInfo = get_paginationTypes(endpointInfo as any, schemaData as any).find(
+		(pagType: any) => {
+			return pagType.name == QMS_info?.dd_paginationType;
+		}
+	);
 	let activeArgumentsDataGrouped_Store_IS_SET = $state(false);
 	$effect(() => {
 		activeArgumentsDataGrouped_Store_IS_SET =
@@ -190,28 +192,12 @@
 		queryData = { fetching: true, error: null, data: null };
 	}
 
-	const hideColumn = (e: any) => {
-		tableColsData_Store.removeColumn(e.detail.column); // Note: e.detail is typically from custom events, check usage
-		// If calling directly with { detail: { column } } structure.
+	const hideColumn = (detail: { column: string }) => {
+		tableColsData_Store.removeColumn(detail.column);
 	};
 	tableColsData_Store.subscribe((data: any) => {});
 
 	let column_stepsOfFields = $state('');
-	const addColumnFromInput = (e: any) => {
-		if (e.key == 'Enter') {
-			let stepsOfFields = column_stepsOfFields.replace(/\s/g, '').replace(/\./g, '>').split('>');
-			let tableColData = {
-				title: `col-${Math.floor(Math.random() * 200)},${generateTitleFromStepsOfFields(
-					stepsOfFields
-				)}`,
-				stepsOfFields: [QMSName, ...stepsOfFields],
-				stepsOfFieldsOBJ: stepsOfFieldsToQueryFragmentObject([QMSName, ...stepsOfFields], false)
-			};
-
-			tableColsData_Store.addColumn(tableColData);
-			column_stepsOfFields = '';
-		}
-	};
 
 	//Active arguments logic
 	let showQMSBody = $state(false);
@@ -248,7 +234,6 @@
 	<div class="mx-2 flex space-x-2">
 		<AddColumn
 			bind:column_stepsOfFields
-			{addColumnFromInput}
 			{dd_relatedRoot}
 			{QMSName}
 			{QMS_info}
@@ -318,9 +303,7 @@
 				{infiniteHandler}
 				colsData={$tableColsData_Store}
 				{rows}
-				onHideColumn={(e) => {
-					hideColumn({ detail: e }); // wrapper to match hideColumn expectation of event object
-				}}
+				onHideColumn={hideColumn}
 				onRowClicked={(e) => {}}
 				{rowSelectionState}
 			/>
