@@ -3,6 +3,7 @@
 	import TabContainer from '$lib/components/TabContainer.svelte';
 	import { getContext } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import type { QMSMainWraperContext } from '$lib/types';
 
 	interface Props {
 		forceVisibleSidebar?: boolean;
@@ -12,25 +13,19 @@
 	}
 
 	let {
-		forceVisibleSidebar = $bindable(),
+		forceVisibleSidebar = $bindable(false),
 		portalSelector = undefined,
 		links = undefined,
 		prefix = ''
 	}: Props = $props();
 
-	if (forceVisibleSidebar === undefined) {
-		forceVisibleSidebar = false;
-	}
+	// if (forceVisibleSidebar === undefined) {
+	// 	forceVisibleSidebar = false;
+	// }
 
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
+	let QMSContext = getContext<QMSMainWraperContext>(`${prefix}QMSMainWraperContext`);
+	const endpointInfo = QMSContext?.endpointInfo;
 </script>
-
-<!-- on:click_outside={() => {
-		if (forceVisibleSidebar) {
-			forceVisibleSidebar = false;
-		}
-	}} -->
 
 <div
 	class="h-screen w-full {forceVisibleSidebar
@@ -45,8 +40,8 @@
 {#if forceVisibleSidebar}
 	<div
 		class=" fixed top-0 z-50 h-screen w-screen bg-base-100/50 md:hidden"
-		in:fade|global={{ duration: 300, opacity: 1 }}
-		out:fade|global={{ duration: 300, opacity: 1 }}
+		in:fade|global={{ duration: 300 }}
+		out:fade|global={{ duration: 300 }}
 	></div>
 	<div
 		class="fixed top-0 z-50 md:hidden"
