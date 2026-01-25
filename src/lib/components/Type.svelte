@@ -38,10 +38,10 @@
 	}
 
 	// Now we can access the context and use type
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	let mainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
 	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as any;
 	const isForExplorer = OutermostQMSWraperContext?.extraInfo?.isForExplorer;
-	const schemaData = QMSMainWraperContext?.schemaData;
+	const schemaData = mainWraperContext?.schemaData;
 
 	// Destructure type properties
 	let {
@@ -122,7 +122,13 @@
 				<div class="border-l-2 border-secondary bg-accent/5">
 					<div class="">
 						{#each type?.args as arg, index}
-							<Arg {index} type={arg} {template} />
+							<Arg
+								{index}
+								type={arg}
+								{template}
+								predefinedFirstSteps={[]}
+								groupName={'default'}
+							/>
 						{/each}
 					</div>
 				</div>

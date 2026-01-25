@@ -11,8 +11,8 @@
 	let { type, i, prefix = '' }: Props = $props();
 
 	const QMSWraperContext = getContext(`${prefix}QMSWraperContext`);
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
-	const schemaData = QMSMainWraperContext?.schemaData;
+	let mainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const schemaData = mainWraperContext?.schemaData;
 </script>
 
 <tr>

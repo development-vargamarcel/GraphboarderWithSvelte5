@@ -340,7 +340,7 @@
 					<AddNodeToControlPanel {node} />
 				{/if}
 				{#if CPItemContext}
-					<GroupDescriptionAndControls />
+					<GroupDescriptionAndControls hasGroup_argsNode={undefined} />
 				{/if}
 			</div>
 
@@ -348,19 +348,19 @@
 				<AutoInterface
 					alwaysOn_interfacePicker
 					typeInfo={activeArgumentData}
-					onChanged={(detail) => {
+					onChanged={(detail: any) => {
 						handleChanged(detail);
 					}}
 				/>
 			</div>
-			<Description QMSInfo={activeArgumentData} />
+			<Description QMSInfo={activeArgumentData} {parentNode} {node} />
 			<div class="mt-2 w-full overflow-x-auto">
 				<Type
 					index={0}
 					type={activeArgumentData}
 					template="default"
 					depth={0}
-					on:colAddRequest={(e) => {}}
+					oncolAddRequest={(e) => {}}
 				/>
 			</div>
 		</div>
@@ -469,7 +469,7 @@
 					<div class="pl-1">
 						<AutoInterface
 							typeInfo={activeArgumentData}
-							onChanged={(detail) => {
+							onChanged={(detail: any) => {
 								handleChanged(detail);
 							}}
 						/>

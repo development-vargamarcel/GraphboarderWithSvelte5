@@ -10,6 +10,7 @@
 		activeArgumentsDataGrouped: any;
 		prefix?: string;
 		node: any;
+		onUpdateQuery?: () => void;
 	}
 
 	let {
@@ -18,7 +19,8 @@
 		update_activeArgumentsDataGrouped,
 		activeArgumentsDataGrouped,
 		prefix = '',
-		node
+		node,
+		onUpdateQuery
 	}: Props = $props();
 
 	let showDescription = $state();

@@ -25,9 +25,9 @@
 
 	const activeArgumentsContext = { stepsOfFieldsThisAppliesTo, isControlPanelChild };
 	setContext(`${prefix}activeArgumentsContext`, activeArgumentsContext);
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const schemaData = QMSMainWraperContext?.schemaData;
+	let mainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const endpointInfo = mainWraperContext?.endpointInfo;
+	const schemaData = mainWraperContext?.schemaData;
 	let QMSWraperContext = getContext(`${prefix}QMSWraperContext`) as any;
 
 	// Set defaults if not provided
@@ -72,11 +72,11 @@
 {/if}
 
 <div class="">
-	{#each $activeArgumentsDataGrouped_Store as group}
+	{#each $activeArgumentsDataGrouped_Store as _, i}
 		<ActiveArgumentsGroupWraper
 			{onUpdateQuery}
 			{update_activeArgumentsDataGrouped}
-			bind:group
+			bind:group={$activeArgumentsDataGrouped_Store[i]}
 			argsInfo={QMS_info?.args}
 			{activeArgumentsDataGrouped}
 		/>

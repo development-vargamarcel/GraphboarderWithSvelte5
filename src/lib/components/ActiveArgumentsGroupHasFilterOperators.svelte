@@ -12,7 +12,7 @@
 	} from './../utils/usefulFunctions';
 	//!!! chnage bonded to item
 	import { flip } from 'svelte/animate';
-	import { dndzone, SHADOW_PLACEHOLDER_ITEM_ID } from 'svelte-dnd-action';
+	import { dndzone, SHADOW_PLACEHOLDER_ITEM_ID, type DndEvent } from 'svelte-dnd-action';
 	import { getContext, setContext } from 'svelte';
 	import ActiveArgument from '$lib/components/ActiveArgument.svelte';
 	import ActiveArgumentsGroup_addFilterAndSortingButtonContent from '$lib/components/ActiveArgumentsGroup_addFilterAndSortingButtonContent.svelte';
@@ -263,9 +263,9 @@
 	let selectedRowsColValues = $state([]);
 
 	//------------
-	let inputColumnsLocationQMS_Info = $state();
+	let inputColumnsLocationQMS_Info = $state<any>();
 	//!! todo:before getting inputColumnsLocation value,you should check if it is a query or a mutation,and handle it accordingly
-	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find(
+	let inputColumnsLocation = $endpointInfo?.inputColumnsPossibleLocationsInArg?.find(
 		(path: string[]) => {
 			inputColumnsLocationQMS_Info = getDeepField(node as any, path, schemaData, 'inputFields');
 			return inputColumnsLocationQMS_Info;
@@ -293,7 +293,13 @@
 	$effect(() => {
 		stepsOfFieldsFull = stepsOfNodesToStepsOfFields(stepsOfNodes);
 		stepsOfFields = filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']);
-		updateNodeSteps(node, stepsOfFieldsFull, stepsOfFields, stepsOfNodes, filterElFromArr);
+		updateNodeSteps(
+			node,
+			stepsOfFieldsFull,
+			stepsOfFields,
+			stepsOfNodes as any[],
+			filterElFromArr
+		);
 	});
 	$effect(() => {
 		if (labelEl) {
@@ -304,7 +310,12 @@
 	});
 	$effect(() => {
 		if (shadowHeight && shadowEl) {
-			labelElClone = updateShadowElement(shadowEl, labelEl, shadowHeight, shadowWidth);
+			labelElClone = updateShadowElement(
+				shadowEl,
+				labelEl as HTMLElement | null,
+				shadowHeight,
+				shadowWidth
+			);
 		}
 	});
 
@@ -349,8 +360,7 @@
 								group,
 								activeArgumentsDataGrouped_Store,
 								schemaData,
-								endpointInfo,
-								stepsOfFields
+								endpointInfo
 							);
 						}}
 					>
@@ -394,8 +404,7 @@
 									group,
 									activeArgumentsDataGrouped_Store,
 									schemaData,
-									endpointInfo,
-									stepsOfFields
+									endpointInfo
 								);
 							}}
 						>
@@ -457,12 +466,9 @@
 				<div>
 					<ActiveArgumentsGroup_addFilterAndSortingButtonContent
 						parent_inputFields={parentNode?.inputFields}
-						parent_stepsOfFields={stepsOfFields}
-						parentNodeId={node.id}
 						{onUpdateQuery}
 						bind:group
-						bind:argsInfo
-						{nodes}
+						{argsInfo}
 						{node}
 					/>
 				</div>
@@ -474,8 +480,8 @@
 			deleteItem({ detail });
 			//
 		}}
-		bind:selectedQMS={getManyQMS}
-		bind:selectedRowsColValues
+		bindSelectedQMS={getManyQMS}
+		bindSelectedRowsColValues={selectedRowsColValues}
 		bind:showSelectModal
 		{originalNodes}
 		{onUpdateQuery}
@@ -555,7 +561,7 @@
 						{/if}
 					</button>
 					{#if nodeIsInCP && (node as ContainerData)?.operator}
-						<GroupDescriptionAndControls />
+						<GroupDescriptionAndControls hasGroup_argsNode={(node as any).group_argsNode} />
 					{/if}
 				{/if}
 			</div>
@@ -628,7 +634,7 @@
 					</button>
 
 					{#if nodeIsInCP && (node as ContainerData)?.operator}
-						<GroupDescriptionAndControls />
+						<GroupDescriptionAndControls hasGroup_argsNode={(node as any).group_argsNode} />
 					{/if}
 				</div>
 				<!-- {#if inputColumnsLocation && inputColumnsLocationQMS_Info.dd_displayName == node.dd_displayName} -->
@@ -681,11 +687,10 @@
 			<div class="w-full rounded-box pr-2">
 				<div class=" transition-color ringxxx ring-1xxx rounded-box duration-500">
 					<ActiveArgument
-						bind:selectedRowsColValues
-						bind:showSelectModal
 						{onUpdateQuery}
-						bind:nodes
+						bind:nodes={nodes as any}
 						{onChanged}
+						startDrag={startDrag}
 						onChildrenStartDrag={startDrag}
 						{parentNode}
 						{node}
@@ -698,7 +703,7 @@
 								onChanged?.();
 							}
 						}}
-						isNot={node.not}
+						isNot={node.not || false}
 						onInUseChanged={() => {}}
 						activeArgumentData={node as ActiveArgumentData}
 						{group}

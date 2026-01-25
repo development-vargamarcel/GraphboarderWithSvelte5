@@ -16,6 +16,7 @@
 	import { Create_activeArgumentsDataGrouped_Store } from '$lib/stores/QMSHandling/activeArgumentsDataGrouped_Store';
 	import QMSWraper from '$lib/components/QMSWraper.svelte';
 	import { get, type Writable } from 'svelte/store';
+	import type { QMSWraperContext } from '$lib/types';
 
 	interface Props {
 		canExpand: any;
@@ -46,10 +47,10 @@
 		});
 	};
 
-	const QMSWraperContext = getContext(`${prefix}QMSWraperContext`) as any;
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as any;
-	const schemaData = QMSMainWraperContext?.schemaData;
-	const tableColsData_Store = QMSWraperContext?.tableColsData_Store;
+	const wraperContext = getContext(`${prefix}QMSWraperContext`) as any;
+	let mainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as any;
+	const schemaData = mainWraperContext?.schemaData;
+	const tableColsData_Store = wraperContext?.tableColsData_Store;
 	const stepsOfFieldsOBJ = getContext(`${prefix}stepsOfFieldsOBJ`) as Writable<any>;
 	const stepsOfFieldsOBJFull = getContext(`${prefix}stepsOfFieldsOBJFull`) as Writable<any>;
 
@@ -90,7 +91,7 @@
 
 	let hasQMSarguments = $derived.by(() => {
 		if (!$stepsOfFieldsOBJFull) return false;
-		const valueAtPath = getValueAtPath($stepsOfFieldsOBJFull, stepsOfFields);
+		const valueAtPath = getValueAtPath($stepsOfFieldsOBJFull, stepsOfFields) as any;
 		return valueAtPath?.QMSarguments;
 	});
 
@@ -100,13 +101,12 @@
 	let paginationState_derived = $state();
 	let paginationState_derivedValue = $state();
 	let finalGqlArgObjValue;
-	let activeArgumentsQMSWraperContext = $state();
+	let activeArgumentsQMSWraperContext = $state<QMSWraperContext>();
 	let QMSarguments;
 	let canAcceptArguments = $derived(canExpand && args?.length > 0 && isUsedInSomeColumn);
 
-	const mergedChildren_finalGqlArgObj_Store = QMSWraperContext.mergedChildren_finalGqlArgObj_Store;
-	const mergedChildren_QMSWraperCtxData_Store =
-		QMSWraperContext.mergedChildren_QMSWraperCtxData_Store;
+	const mergedChildren_finalGqlArgObj_Store = wraperContext.mergedChildren_finalGqlArgObj_Store;
+	const mergedChildren_QMSWraperCtxData_Store = wraperContext.mergedChildren_QMSWraperCtxData_Store;
 	let activeArgumentsDataGrouped_Store = getContext(
 		`${prefix}activeArgumentsDataGrouped_Store`
 	) as Writable<any>;
