@@ -8,7 +8,7 @@
 		getDeepField,
 		getPreciseType,
 		getQMSWraperCtxDataGivenControlPanelItem,
-		getRootType,
+		getRootType
 	} from './../utils/usefulFunctions';
 	//!!! chnage bonded to item
 	import { flip } from 'svelte/animate';
@@ -39,7 +39,12 @@
 	import GroupDescriptionAndControls from './GroupDescriptionAndControls.svelte';
 	import SelectedRowsDisplay from './SelectedRowsDisplay.svelte';
 	import { addToast } from '$lib/stores/toastStore';
-	import type { ContainerData, ActiveArgumentData, QMSWraperContext, QMSMainWraperContext } from '$lib/types';
+	import type {
+		ContainerData,
+		ActiveArgumentData,
+		QMSWraperContext,
+		QMSMainWraperContext
+	} from '$lib/types';
 
 	// Props interface - using specific types where possible, falling back to Record<string, any> or unknown for loose structures
 	interface Props {
@@ -81,7 +86,9 @@
 	let stepsOfFieldsFull = $state<string[]>([]);
 	let testName_stepsOFFieldsWasUpdated = $state(false);
 
-	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as QMSWraperContext;
+	const OutermostQMSWraperContext = getContext(
+		`${prefix}OutermostQMSWraperContext`
+	) as QMSWraperContext;
 	const { QMSFieldToQMSGetMany_Store } = OutermostQMSWraperContext;
 	let getManyQMS = $state<any>();
 	///
@@ -120,7 +127,9 @@
 		pathIsInCP = nodeContext?.pathIsInCP;
 	}
 
-	const CPItemContext = getContext(`${prefix}CPItemContext`) as { CPItem: { nodeId: string } } | undefined;
+	const CPItemContext = getContext(`${prefix}CPItemContext`) as
+		| { CPItem: { nodeId: string } }
+		| undefined;
 	let nodeIsInCP = $derived(CPItemContext?.CPItem.nodeId == node.id);
 
 	if (CPItemContext?.CPItem.nodeId == node.id) {
@@ -173,12 +182,13 @@
 	let dragDisabled = $state(true);
 	const flipDurationMs = 500;
 
-	function handleDndConsider(e: CustomEvent<DndEvent<ContainerItem>>) {
+	function handleDndConsider(e: CustomEvent<DndEvent<any>>) {
+		// e.detail.items is generic Item[] but contains our ContainerItem structure
 		const result = handleDndConsiderUtil(e.detail.items);
 		(node as ContainerData).items = result.items;
 		dragDisabled = result.dragDisabled;
 	}
-	function handleDndFinalize(e: CustomEvent<DndEvent<ContainerItem>>) {
+	function handleDndFinalize(e: CustomEvent<DndEvent<any>>) {
 		const result = handleDndFinalizeUtil(e.detail.items, () => {
 			nodes = { ...nodes };
 			handleChanged();
@@ -188,12 +198,16 @@
 		dragDisabled = result.dragDisabled;
 	}
 
-	const deleteItem = (e: CustomEvent<{ id: string }>) => {
-		(node as ContainerData).items = handleDeleteItem((node as ContainerData).items, e.detail.id, () => {
-			nodes = { ...nodes };
-			handleChanged();
-			onChanged?.();
-		});
+	const deleteItem = (e: { detail: { id: string } }) => {
+		(node as ContainerData).items = handleDeleteItem(
+			(node as ContainerData).items,
+			e.detail.id,
+			() => {
+				nodes = { ...nodes };
+				handleChanged();
+				onChanged?.();
+			}
+		);
 	};
 	//
 	let labelEl = $state<HTMLElement>();
@@ -211,7 +225,11 @@
 	function handleKeyDown(e: KeyboardEvent) {
 		dragDisabled = handleDragKeyDown(e, dragDisabled);
 	}
-	const transformDraggedElement = (draggedEl: HTMLElement | undefined, data: any, index: number) => {
+	const transformDraggedElement = (
+		draggedEl: HTMLElement | undefined,
+		data: any,
+		index: number
+	) => {
 		transformDraggedElementUtil(draggedEl);
 	};
 	//
@@ -247,10 +265,12 @@
 	//------------
 	let inputColumnsLocationQMS_Info = $state();
 	//!! todo:before getting inputColumnsLocation value,you should check if it is a query or a mutation,and handle it accordingly
-	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find((path: string[]) => {
-		inputColumnsLocationQMS_Info = getDeepField(node as any, path, schemaData, 'inputFields');
-		return inputColumnsLocationQMS_Info;
-	});
+	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find(
+		(path: string[]) => {
+			inputColumnsLocationQMS_Info = getDeepField(node as any, path, schemaData, 'inputFields');
+			return inputColumnsLocationQMS_Info;
+		}
+	);
 	//should work
 	let idColName = $state();
 
@@ -451,7 +471,7 @@
 
 	<SelectModal
 		onDeleteSubNode={(detail: any) => {
-			deleteItem({ detail } as CustomEvent);
+			deleteItem({ detail });
 			//
 		}}
 		bind:selectedQMS={getManyQMS}
@@ -669,6 +689,8 @@
 						onChildrenStartDrag={startDrag}
 						{parentNode}
 						{node}
+						parentNodeId={node.id}
+						{availableOperators}
 						onContextmenuUsed={() => {
 							if (!(node as ContainerData)?.isMain) {
 								node.not = !node.not;
@@ -680,6 +702,9 @@
 						onInUseChanged={() => {}}
 						activeArgumentData={node}
 						{group}
+						activeArgumentsDataGrouped={[]}
+						originalNodes={[]}
+						{type}
 					/>
 				</div>
 			</div>

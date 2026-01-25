@@ -8,6 +8,7 @@
 	import { getPreciseType } from '$lib/utils/usefulFunctions';
 	import { updateStoresFromAST } from '$lib/utils/astToUIState';
 	import { parse, print } from 'graphql';
+	import JSON5 from 'json5';
 
 	interface Props {
 		showNonPrettifiedQMSBody?: boolean;
