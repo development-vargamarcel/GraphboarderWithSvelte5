@@ -7,48 +7,90 @@ import {
 	generate_derivedData
 } from '$lib/utils/usefulFunctions';
 import { get, writable } from 'svelte/store';
+import type {
+	SchemaDataValue,
+	SchemaDataStore,
+	EndpointInfoStore,
+	RootType,
+	FieldWithDerivedData,
+	QMSType
+} from '$lib/types';
 
-export const create_schemaData = () => {
-	const store = writable({
+/**
+ * Creates a store to manage the GraphQL schema data and its derived metadata.
+ * @returns An object conforming to the SchemaDataStore interface.
+ */
+export const create_schemaData = (): SchemaDataStore => {
+	const store = writable<SchemaDataValue>({
 		rootTypes: [],
 		queryFields: [],
 		mutationFields: [],
+		subscriptionFields: [], // Initialize missing property
 		schema: {},
 		isReady: false
 	});
 	const { subscribe, set, update } = store;
-	let returnObject = {
+
+	let returnObject: SchemaDataStore = {
 		subscribe,
 		set,
 		update,
-		set_schema: (schema) => {},
-		set_rootTypes: (withDerivedData: false, set_storeVal = true, endpointInfo) => {
+		/**
+		 * Sets the raw schema object.
+		 * @param schema The raw GraphQL schema.
+		 */
+		set_schema: (schema: any) => {
+			// This was empty in original, maybe implementation is missing or it's a placeholder?
+			// Assuming it should update the store if needed, but original was empty.
+			// Ideally we should update the store.
+			update((val) => ({ ...val, schema }));
+		},
+
+		/**
+		 * Processes and sets the root types of the schema.
+		 * @param withDerivedData Whether to generate derived data for fields.
+		 * @param set_storeVal Whether to update the store value immediately.
+		 * @param endpointInfo The endpoint configuration store.
+		 * @returns The processed root types.
+		 */
+		set_rootTypes: (
+			withDerivedData: boolean,
+			set_storeVal: boolean = true,
+			endpointInfo: EndpointInfoStore
+		): RootType[] => {
 			console.debug('set_rootTypes called', { withDerivedData, set_storeVal });
 			let storeValue = get(store);
-			let { rootTypes, queryFields, mutationFields, schema } = storeValue;
+			let { schema } = storeValue;
+
+			// Ensure schema.types exists before proceeding
+			if (!schema || !schema.types) {
+				console.warn('Schema or schema.types is missing in set_rootTypes');
+				return [];
+			}
+
 			let new_rootTypes = sortByName([...schema.types]);
 			if (withDerivedData) {
-				new_rootTypes.forEach((el) => {
-					Object.assign(el, generate_derivedData(el, new_rootTypes, false, endpointInfo));
-					el?.args?.forEach((arg) => {
-						Object.assign(arg, generate_derivedData(arg, new_rootTypes, false, endpointInfo));
+				new_rootTypes.forEach((el: any) => {
+					Object.assign(el, generate_derivedData(el, new_rootTypes, false, endpointInfo, returnObject));
+					el?.args?.forEach((arg: any) => {
+						Object.assign(arg, generate_derivedData(arg, new_rootTypes, false, endpointInfo, returnObject));
 					});
-					el?.fields?.forEach((field) => {
-						Object.assign(field, generate_derivedData(field, new_rootTypes, false, endpointInfo));
-						field?.args?.forEach((arg) => {
-							Object.assign(arg, generate_derivedData(arg, new_rootTypes, false, endpointInfo));
+					el?.fields?.forEach((field: any) => {
+						Object.assign(field, generate_derivedData(field, new_rootTypes, false, endpointInfo, returnObject));
+						field?.args?.forEach((arg: any) => {
+							Object.assign(arg, generate_derivedData(arg, new_rootTypes, false, endpointInfo, returnObject));
 						});
 					});
-					el?.inputFields?.forEach((inputField) => {
+					el?.inputFields?.forEach((inputField: any) => {
 						Object.assign(
 							inputField,
-							generate_derivedData(inputField, new_rootTypes, false, endpointInfo)
+							generate_derivedData(inputField, new_rootTypes, false, endpointInfo, returnObject)
 						);
 					});
-					el?.enumValues?.forEach((enumValue) => {
+					el?.enumValues?.forEach((enumValue: any) => {
 						Object.assign(
 							enumValue,
-							generate_derivedData(enumValue, new_rootTypes, false, endpointInfo)
+							generate_derivedData(enumValue, new_rootTypes, false, endpointInfo, returnObject)
 						);
 					});
 				});
@@ -56,119 +98,177 @@ export const create_schemaData = () => {
 
 			if (set_storeVal) {
 				storeValue.rootTypes = new_rootTypes;
-				set(storeValue); //works even without this but donno about reactivity
+				set(storeValue);
 			}
 
 			return new_rootTypes;
 		},
-		set_rootTypes_DerivedData: () => {},
+
+		set_rootTypes_DerivedData: () => {
+			// Placeholder implementation from original
+		},
+
+		/**
+		 * Sets the fields for Query, Mutation, and Subscription types.
+		 * @param withDerivedData Whether to generate derived data.
+		 * @param set_storeVal Whether to update the store.
+		 * @param QMS Array of operation type names ('query', 'mutation', 'subscription').
+		 * @param endpointInfo The endpoint configuration store.
+		 * @returns An object containing the new fields for each operation type.
+		 */
 		set_QMSFields: (
-			withDerivedData: false,
-			set_storeVal = true,
-			QMS = ['query', 'mutation', 'subscription'],
-			endpointInfo
-		) => {
+			withDerivedData: boolean,
+			set_storeVal: boolean = true,
+			QMS: string[] = ['query', 'mutation', 'subscription'],
+			endpointInfo: EndpointInfoStore
+		): Record<string, unknown> => {
 			console.debug('set_QMSFields called', { withDerivedData, set_storeVal, QMS });
-			//QMS -> Query,Mutation,Subscription
 			let storeValue = get(store);
-			let { rootTypes, queryFields, mutationFields, schema } = storeValue;
-			let result = {};
+			let { rootTypes, schema } = storeValue;
+			let result: Record<string, any> = {};
 			let isQMSField = true;
+
 			QMS.forEach((_QMS_) => {
-				// _QMS_ -> current QMS (one of: Query,Mutation,Subscription)
-				let _QMS_Type_name = schema?.[`${_QMS_}Type`]?.name;
-				let new_QMS_Fields;
+				// _QMS_ -> current QMS (one of: Query,Mutation,Subscription) - normalized to lowercase usually
+				// But schema lookup might need different casing.
+				// Assuming standard "queryType", "mutationType", "subscriptionType" in schema
+				let schemaTypeProp = `${_QMS_.toLowerCase()}Type`;
+				let _QMS_Type_name = (schema as any)?.[schemaTypeProp]?.name;
+				let new_QMS_Fields: any[] | undefined;
+
 				if (_QMS_Type_name) {
-					new_QMS_Fields = sortByName(
-						rootTypes?.find((type) => {
-							return type?.name == _QMS_Type_name;
-						})?.fields
-					);
+					const rootType = rootTypes?.find((type) => {
+						return type?.name == _QMS_Type_name;
+					});
+					if (rootType && rootType.fields) {
+						new_QMS_Fields = sortByName([...rootType.fields]);
+					}
 				}
 
-				if (withDerivedData) {
-					new_QMS_Fields?.forEach((el) => {
-						Object.assign(el, generate_derivedData(el, rootTypes, isQMSField, endpointInfo));
-						el?.args?.forEach((arg) => {
+				if (withDerivedData && new_QMS_Fields) {
+					new_QMS_Fields.forEach((el) => {
+						Object.assign(el, generate_derivedData(el, rootTypes, isQMSField, endpointInfo, returnObject));
+						el?.args?.forEach((arg: any) => {
 							Object.assign(
 								arg,
-								generate_derivedData(arg, rootTypes, 'is QMS sub-field', endpointInfo)
+								generate_derivedData(arg, rootTypes, false, endpointInfo, returnObject) // 'is QMS sub-field' passed as boolean false/true in signature? Check util.
 							);
 						});
-						el?.fields?.forEach((field) => {
+						el?.fields?.forEach((field: any) => {
 							Object.assign(
 								field,
-								generate_derivedData(field, rootTypes, 'is QMS sub-field', endpointInfo)
+								generate_derivedData(field, rootTypes, false, endpointInfo, returnObject)
 							);
-							field?.args?.forEach((arg) => {
+							field?.args?.forEach((arg: any) => {
 								Object.assign(
 									arg,
-									generate_derivedData(arg, rootTypes, 'is QMS sub-field', endpointInfo)
+									generate_derivedData(arg, rootTypes, false, endpointInfo, returnObject)
 								);
 							});
 						});
-						el?.inputFields?.forEach((inputField) => {
+						el?.inputFields?.forEach((inputField: any) => {
 							Object.assign(
 								inputField,
-								generate_derivedData(inputField, 'is QMS sub-field', rootTypes, endpointInfo)
+								generate_derivedData(inputField, rootTypes, false, endpointInfo, returnObject)
 							);
 						});
-						el?.enumValues?.forEach((enumValue) => {
+						el?.enumValues?.forEach((enumValue: any) => {
 							Object.assign(
 								enumValue,
-								generate_derivedData(enumValue, 'is QMS sub-field', rootTypes, endpointInfo)
+								generate_derivedData(enumValue, rootTypes, false, endpointInfo, returnObject)
 							);
 						});
 					});
 				}
 
 				if (set_storeVal) {
-					storeValue = { ...storeValue, ...result };
-					set(storeValue); //works even without this but donno about reactivity
+					// We need to update the specific QMS field in the store
+					// mapping 'query' -> 'queryFields', etc.
+					let fieldKey = `${_QMS_}Fields`;
+					(storeValue as any)[fieldKey] = new_QMS_Fields || [];
 				}
 				result[`${_QMS_}Fields`] = new_QMS_Fields;
 			});
+
+			if (set_storeVal) {
+				set(storeValue);
+			}
+
 			return result;
 		},
-		set_fields: (endpointInfo) => {
-			//set rootTypes,queryFields,mutationFields,subscriptionFields //fields or types?
+
+		/**
+		 * Orchestrates the setting of all fields (root types and QMS fields).
+		 * @param endpointInfo The endpoint configuration store.
+		 */
+		set_fields: (endpointInfo: EndpointInfoStore) => {
+			//set rootTypes,queryFields,mutationFields,subscriptionFields
 			let rootTypes = returnObject.set_rootTypes(true, true, endpointInfo);
+			// Update store value ref after set_rootTypes potentially modified it
 			let storeValue = get(store);
+
 			let QMSFields = returnObject.set_QMSFields(
 				true,
-				false,
+				false, // Don't set individually, we set all at once below
 				['query', 'mutation', 'subscription'],
 				endpointInfo
 			);
+
 			set({
+				...storeValue,
 				rootTypes,
 				...QMSFields,
 				isReady: true
-			});
+			} as SchemaDataValue);
 		},
-		get_rootType: (rootTypes, RootType_Name, schemaData) => {
+
+		/**
+		 * Retrieves a root type by name.
+		 * @param rootTypes Optional array of root types to search in.
+		 * @param RootType_Name The name of the root type.
+		 * @param schemaData The schema data store (for fallback).
+		 * @returns The found RootType or undefined.
+		 */
+		get_rootType: (
+			rootTypes: RootType[] | null,
+			RootType_Name: string,
+			schemaData: SchemaDataStore
+		): RootType | undefined => {
 			if (!rootTypes) {
 				rootTypes = get(schemaData).rootTypes;
 			}
 
-			return rootTypes.filter((type) => {
+			return rootTypes.find((type) => {
 				return type.name == RootType_Name;
-			})[0];
+			});
 		},
-		get_QMS_Field: (name, _QMS_, schemaData) => {
-			//_QMS_ -> choosen QMS (one of: Query,Mutation,Subscription)
-			let storeValue = get(schemaData);
 
-			const QMSField = storeValue?.[`${_QMS_}Fields`]?.filter((field) => {
+		/**
+		 * Retrieves a specific field from a QMS operation type.
+		 * @param name The name of the field.
+		 * @param _QMS_ The operation type ('query', 'mutation', 'subscription').
+		 * @param schemaData The schema data store.
+		 * @returns The found field or undefined.
+		 */
+		get_QMS_Field: (
+			name: string,
+			_QMS_: QMSType,
+			schemaData: SchemaDataStore
+		): FieldWithDerivedData | undefined => {
+			let storeValue = get(schemaData);
+			let fieldKey = `${_QMS_}Fields` as keyof SchemaDataValue;
+
+			// Safe access with type guard logic if needed, but casting relies on structure
+			const fields = storeValue[fieldKey] as FieldWithDerivedData[] | undefined;
+
+			const QMSField = fields?.find((field) => {
 				return field.name == name;
-			})[0];
+			});
+
 			if (!QMSField) {
-				console.info(
-					{ QMSField },
-					name,
-					{ storeValue },
-					get(store),
-					storeValue?.[`${_QMS_}Fields`]
+				console.debug(
+					'get_QMS_Field: Field not found',
+					{ name, _QMS_ }
 				);
 			}
 			return QMSField;

@@ -8,6 +8,48 @@
 		toggleFilterChoice,
 		createChoisesWithId
 	} from '$lib/utils/filterStateUtils';
+	import { flip } from 'svelte/animate';
+
+	interface Props {
+		// notice - fade in works fine but don't add svelte's fade-out (known issue)
+		extraData: any;
+		id: any;
+		choises?: any;
+		title?: any;
+		modalTitle?: any;
+		type?: string;
+		size?: string;
+		chosenDefault: any;
+		defaultMeansNoChange?: boolean;
+		chosen?: any;
+		children?: import('svelte').Snippet;
+		onFilterApplied?: (detail: { id: any; chosen: any; extraData: any; choises: any }) => void;
+	}
+
+	let {
+		extraData,
+		id,
+		choises = $bindable(),
+		title = $bindable(),
+		modalTitle = title,
+		type = 'radio',
+		size = 'xs',
+		chosenDefault,
+		defaultMeansNoChange = true,
+		chosen = $bindable(),
+		children,
+		onFilterApplied
+	}: Props = $props();
+
+	if (choises === undefined) {
+		choises = [''];
+	}
+	if (title === undefined) {
+		title = choises[0];
+	}
+	if (chosen === undefined) {
+		chosen = chosenDefault ? JSON.parse(JSON.stringify(chosenDefault)) : [];
+	}
 
 	let chosenInternal = $state(JSON.parse(JSON.stringify(chosen)));
 	let extraInfo = $state('');
@@ -53,47 +95,6 @@
 		onFilterApplied?.({ id: id, chosen: chosen, extraData, choises: choises });
 	};
 
-	import { flip } from 'svelte/animate';
-	interface Props {
-		// notice - fade in works fine but don't add svelte's fade-out (known issue)
-		extraData: any;
-		id: any;
-		choises?: any;
-		title?: any;
-		modalTitle?: any;
-		type?: string;
-		size?: string;
-		chosenDefault: any;
-		defaultMeansNoChange?: boolean;
-		chosen?: any;
-		children?: import('svelte').Snippet;
-		onFilterApplied?: (detail: { id: any; chosen: any; extraData: any; choises: any }) => void;
-	}
-
-	let {
-		extraData,
-		id,
-		choises = $bindable(),
-		title = $bindable(),
-		modalTitle = title,
-		type = 'radio',
-		size = 'xs',
-		chosenDefault,
-		defaultMeansNoChange = true,
-		chosen = $bindable(),
-		children,
-		onFilterApplied
-	}: Props = $props();
-
-	if (choises === undefined) {
-		choises = [''];
-	}
-	if (title === undefined) {
-		title = choises[0];
-	}
-	if (chosen === undefined) {
-		chosen = chosenDefault ? JSON.parse(JSON.stringify(chosenDefault)) : [];
-	}
 	const flipDurationMs = 200;
 	let dragDisabled = $state(true);
 

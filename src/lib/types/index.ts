@@ -102,9 +102,11 @@ export interface SchemaDataValue {
 	queryFields: FieldWithDerivedData[];
 	mutationFields: FieldWithDerivedData[];
 	subscriptionFields: FieldWithDerivedData[];
-	schema: Record<string, unknown>;
+	schema: { types?: any[]; [key: string]: any };
 	isReady: boolean;
 }
+
+export type SchemaData = SchemaDataStore;
 
 export interface SchemaDataStore {
 	subscribe: (run: (value: SchemaDataValue) => void) => () => void;

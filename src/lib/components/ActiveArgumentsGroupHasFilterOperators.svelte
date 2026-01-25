@@ -1,23 +1,19 @@
 <script lang="ts">
 	import ActiveArgumentsGroupHasFilterOperators from './ActiveArgumentsGroupHasFilterOperators.svelte';
-
 	import SelectModal from './SelectModal.svelte';
 
 	import {
 		filterElFromArr,
-		formatData,
 		getDataGivenStepsOfFields,
 		getDeepField,
 		getPreciseType,
 		getQMSWraperCtxDataGivenControlPanelItem,
 		getRootType,
-		hasDeepProperty,
-		passAllObjectValuesThroughStringTransformerAndReturnNewObject
-	} from './../utils/usefulFunctions.ts';
+	} from './../utils/usefulFunctions';
 	//!!! chnage bonded to item
 	import { flip } from 'svelte/animate';
 	import { dndzone, SHADOW_PLACEHOLDER_ITEM_ID } from 'svelte-dnd-action';
-	import { getContext, onDestroy, onMount, setContext } from 'svelte';
+	import { getContext, setContext } from 'svelte';
 	import ActiveArgument from '$lib/components/ActiveArgument.svelte';
 	import ActiveArgumentsGroup_addFilterAndSortingButtonContent from '$lib/components/ActiveArgumentsGroup_addFilterAndSortingButtonContent.svelte';
 	import Modal from './Modal.svelte';
@@ -27,7 +23,7 @@
 		getUpdatedStepsOfNodes,
 		updateNodeSteps
 	} from '$lib/utils/nodeStepsUtils';
-	import { generateGroupDisplayTitle, getNodeDisplayClasses } from '$lib/utils/displayTitleUtils';
+	import { generateGroupDisplayTitle } from '$lib/utils/displayTitleUtils';
 	import {
 		getShadowDimensions,
 		updateShadowElement,
@@ -38,38 +34,35 @@
 		handleDndFinalize as handleDndFinalizeUtil,
 		handleDeleteItem
 	} from '$lib/utils/dndUtils';
-	import { getRowSelectionState } from '$lib/utils/rowSelectionUtils';
-	import ExplorerTable from '$lib/components/ExplorerTable.svelte';
-	import { string_transformer } from '$lib/utils/dataStructureTransformers.ts';
 	import { writable } from 'svelte/store';
 	import AddNodeToControlPanel from './AddNodeToControlPanel.svelte';
 	import GroupDescriptionAndControls from './GroupDescriptionAndControls.svelte';
-	import ManyToAllSelectInterfaceDefinition from './ManyToAllSelectInterfaceDefinition.svelte';
 	import SelectedRowsDisplay from './SelectedRowsDisplay.svelte';
 	import { addToast } from '$lib/stores/toastStore';
+	import type { ContainerData, ActiveArgumentData, QMSWraperContext, QMSMainWraperContext } from '$lib/types';
 
-	// Props interface - must be declared before usage
+	// Props interface - using specific types where possible, falling back to Record<string, any> or unknown for loose structures
 	interface Props {
-		nodes: any;
-		parentNodeId: any;
-		parentNode?: any;
-		node: any;
-		availableOperators: any;
+		nodes: Record<string, ContainerData | ActiveArgumentData>;
+		parentNodeId: string;
+		parentNode?: ContainerData;
+		node: ContainerData | ActiveArgumentData;
+		availableOperators: any; // Complex type, leaving as any for now
 		group: any;
 		type: any;
 		originalNodes: any;
 		prefix?: string;
-		addDefaultFields: any;
+		addDefaultFields?: boolean; // Changed to boolean based on usage
 		onChanged?: () => void;
 		onUpdateQuery?: () => void;
-		onChildrenStartDrag?: () => void;
+		onChildrenStartDrag?: (e?: any) => void;
 		onDeleteSubNode?: (detail: { id: string }) => void;
 	}
 
 	let {
 		nodes = $bindable(),
 		parentNodeId,
-		parentNode = nodes[parentNodeId],
+		parentNode = nodes[parentNodeId] as ContainerData,
 		node = $bindable(),
 		availableOperators,
 		group = $bindable(),
@@ -83,18 +76,19 @@
 		onDeleteSubNode
 	}: Props = $props();
 
-	let stepsOfNodes = $state([]);
-	let stepsOfFields = $state([]);
-	let stepsOfFieldsFull = $state([]);
+	let stepsOfNodes = $state<unknown[]>([]);
+	let stepsOfFields = $state<string[]>([]);
+	let stepsOfFieldsFull = $state<string[]>([]);
 	let testName_stepsOFFieldsWasUpdated = $state(false);
-	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`);
+
+	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as QMSWraperContext;
 	const { QMSFieldToQMSGetMany_Store } = OutermostQMSWraperContext;
-	let getManyQMS = $state();
+	let getManyQMS = $state<any>();
 	///
 
-	let nodeContext_forDynamicData = {};
-	if (node.nodeContext_forDynamicData) {
-		nodeContext_forDynamicData = node.nodeContext_forDynamicData;
+	let nodeContext_forDynamicData: any = {};
+	if ((node as any).nodeContext_forDynamicData) {
+		nodeContext_forDynamicData = (node as any).nodeContext_forDynamicData;
 	} else {
 		nodeContext_forDynamicData.selectedRowsColValues = writable();
 		nodeContext_forDynamicData.selectedRowsColValuesProcessed = writable();
@@ -106,7 +100,7 @@
 		nodeContext_forDynamicData.itemColumns = writable();
 		nodeContext_forDynamicData.requiredColNames = writable();
 
-		node.nodeContext_forDynamicData = nodeContext_forDynamicData;
+		(node as any).nodeContext_forDynamicData = nodeContext_forDynamicData;
 	}
 	let selectedRowsColValuesAAA = nodeContext_forDynamicData.selectedRowsColValues;
 	let selectedRowsColValuesProcessedAAA = nodeContext_forDynamicData.selectedRowsColValuesProcessed;
@@ -119,38 +113,28 @@
 
 	setContext(`${prefix}nodeContext_forDynamicData`, nodeContext_forDynamicData);
 	///
-	// $: if ($selectedQMSAAA) {
-	// 	// 	{ field, node, nodes },
-	// 	// 	nodes[node.id],
-	// 	// 	schemaData.get_rootType(null, field.dd_rootName, schemaData)
-	// 	// );
-	// 	const objToAdd = {
-	// 		nodeOrField: node,
-	// 		getMany: { selectedQMS: $selectedQMSAAA, rowSelectionState: $rowSelectionStateAAA },
-	// 		id: Math.random().toString(36).substr(2, 9)
-	// 	};
-	// 	QMSFieldToQMSGetMany_Store.addOrReplaceKeepingOldId(objToAdd);
-	// }
-	/////start
 
 	let pathIsInCP = false;
-	const nodeContext = getContext(`${prefix}nodeContext`);
+	const nodeContext = getContext(`${prefix}nodeContext`) as { pathIsInCP: boolean } | undefined;
 	if (nodeContext) {
 		pathIsInCP = nodeContext?.pathIsInCP;
 	}
+
+	const CPItemContext = getContext(`${prefix}CPItemContext`) as { CPItem: { nodeId: string } } | undefined;
 	let nodeIsInCP = $derived(CPItemContext?.CPItem.nodeId == node.id);
-	const CPItemContext = getContext(`${prefix}CPItemContext`);
+
 	if (CPItemContext?.CPItem.nodeId == node.id) {
 		setContext(`${prefix}nodeContext`, { pathIsInCP: true });
 	}
-	const isCPChild = CPItemContext ? true : false;
+	const isCPChild = !!CPItemContext;
 	let visibleInCP = $derived(pathIsInCP || nodeIsInCP);
-	let visible = $derived(visibleInCP || !CPItemContext || node.isMain);
-	let correctQMSWraperContext = '';
+	let visible = $derived(visibleInCP || !CPItemContext || (node as ContainerData).isMain);
+
+	let correctQMSWraperContext: any = ''; // Typed broadly for now as context structure is complex
 	if (isCPChild) {
 		correctQMSWraperContext = getQMSWraperCtxDataGivenControlPanelItem(
-			CPItemContext?.CPItem,
-			OutermostQMSWraperContext
+			CPItemContext!.CPItem as any,
+			OutermostQMSWraperContext as any
 		);
 	} else {
 		correctQMSWraperContext = getContext(`${prefix}QMSWraperContext`);
@@ -165,10 +149,10 @@
 			node
 		);
 	};
-	const dndIsOn = getContext('dndIsOn');
+	const dndIsOn = getContext('dndIsOn') as any;
 	const showInputField = getContext('showInputField');
 
-	const mutationVersion = getContext('mutationVersion');
+	const mutationVersion = getContext('mutationVersion') as any;
 	if (QMSType == 'mutation') {
 		$mutationVersion = true;
 	}
@@ -183,50 +167,51 @@
 		}
 	});
 
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const schemaData = QMSMainWraperContext?.schemaData;
+	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const endpointInfo = MainWraperContext?.endpointInfo;
+	const schemaData = MainWraperContext?.schemaData;
 	let dragDisabled = $state(true);
 	const flipDurationMs = 500;
-	function handleDndConsider(e) {
+
+	function handleDndConsider(e: CustomEvent<DndEvent<ContainerItem>>) {
 		const result = handleDndConsiderUtil(e.detail.items);
-		node.items = result.items;
+		(node as ContainerData).items = result.items;
 		dragDisabled = result.dragDisabled;
 	}
-	function handleDndFinalize(e) {
+	function handleDndFinalize(e: CustomEvent<DndEvent<ContainerItem>>) {
 		const result = handleDndFinalizeUtil(e.detail.items, () => {
 			nodes = { ...nodes };
 			handleChanged();
 			onChanged?.();
 		});
-		node.items = result.items;
+		(node as ContainerData).items = result.items;
 		dragDisabled = result.dragDisabled;
 	}
 
-	const deleteItem = (e) => {
-		node.items = handleDeleteItem(node.items, e.detail.id, () => {
+	const deleteItem = (e: CustomEvent<{ id: string }>) => {
+		(node as ContainerData).items = handleDeleteItem((node as ContainerData).items, e.detail.id, () => {
 			nodes = { ...nodes };
 			handleChanged();
 			onChanged?.();
 		});
 	};
 	//
-	let labelEl = $state();
-	let shadowEl = $state();
+	let labelEl = $state<HTMLElement>();
+	let shadowEl = $state<HTMLElement>();
 	let shadowHeight = $state(20);
 	let shadowWidth = $state(20);
 
 	let labelElClone = $state();
 
-	function startDrag(e) {
+	function startDrag(e: any) {
 		// preventing default to prevent lag on touch devices (because of the browser checking for screen scrolling)
 		//e.preventDefault();
 		dragDisabled = handleDragStart(e);
 	}
-	function handleKeyDown(e) {
+	function handleKeyDown(e: KeyboardEvent) {
 		dragDisabled = handleDragKeyDown(e, dragDisabled);
 	}
-	const transformDraggedElement = (draggedEl, data, index) => {
+	const transformDraggedElement = (draggedEl: HTMLElement | undefined, data: any, index: number) => {
 		transformDraggedElementUtil(draggedEl);
 	};
 	//
@@ -241,7 +226,7 @@
 	let groupDisplayTitle = $derived(generateGroupDisplayTitle(node, getPreciseType));
 
 	$effect(() => {
-		if (node?.addDefaultFields || (node?.isMain && addDefaultFields)) {
+		if ((node as any)?.addDefaultFields || ((node as ContainerData)?.isMain && addDefaultFields)) {
 			nodeAddDefaultFields(
 				node,
 				prefix,
@@ -257,16 +242,13 @@
 	let showSelectModal = $state(false);
 
 	let showAddModal = $state(false);
-	let rowSelectionState = {};
-	let selectedRowsModel = {};
-
 	let selectedRowsColValues = $state([]);
 
 	//------------
 	let inputColumnsLocationQMS_Info = $state();
 	//!! todo:before getting inputColumnsLocation value,you should check if it is a query or a mutation,and handle it accordingly
-	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find((path) => {
-		inputColumnsLocationQMS_Info = getDeepField(node, path, schemaData, 'inputFields');
+	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find((path: string[]) => {
+		inputColumnsLocationQMS_Info = getDeepField(node as any, path, schemaData, 'inputFields');
 		return inputColumnsLocationQMS_Info;
 	});
 	//should work
@@ -308,7 +290,7 @@
 
 	$effect(() => {
 		if (QMSWraperContextForSelectedQMS) {
-			idColName = QMSWraperContextForSelectedQMS.idColName;
+			idColName = (QMSWraperContextForSelectedQMS as any).idColName;
 		}
 	});
 </script>
@@ -337,7 +319,7 @@
 					</p>
 				</div>
 
-				{#if node?.isMain}
+				{#if (node as ContainerData)?.isMain}
 					<button
 						class="btn mb-6 flex-1 normal-case btn-xs btn-info"
 						onclick={() => {
@@ -356,7 +338,7 @@
 					</button>
 				{/if}
 
-				{#if !node?.isMain}
+				{#if !(node as ContainerData)?.isMain}
 					<div class="flex space-x-4">
 						{#if parentNode?.inputFields?.some((inputField) => {
 							return inputField.dd_displayName == '_not';
@@ -371,7 +353,7 @@
 										onchange={(e) => {
 											e.stopPropagation();
 											e.preventDefault();
-											if (!node?.isMain) {
+											if (!(node as ContainerData)?.isMain) {
 												node.not = !node.not;
 												operatorChangeHandler();
 												handleChanged();
@@ -403,13 +385,14 @@
 						<button
 							class="btn mb-1 flex-1 text-sm normal-case btn-xs"
 							onclick={() => {
-								if (node?.operator && !node?.isMain) {
-									if (node?.operator == '~spread~') {
-										node.operator = 'bonded';
-									} else if (node?.operator == 'bonded') {
-										node.operator = '~spread~';
+								const _node = node as ContainerData;
+								if (_node?.operator && !_node?.isMain) {
+									if (_node?.operator == '~spread~') {
+										_node.operator = 'bonded';
+									} else if (_node?.operator == 'bonded') {
+										_node.operator = '~spread~';
 									} else {
-										node.operator = 'bonded';
+										_node.operator = 'bonded';
 									}
 								}
 								operatorChangeHandler();
@@ -467,8 +450,8 @@
 		</Modal>{/if}
 
 	<SelectModal
-		onDeleteSubNode={(detail) => {
-			deleteItem({ detail });
+		onDeleteSubNode={(detail: any) => {
+			deleteItem({ detail } as CustomEvent);
 			//
 		}}
 		bind:selectedQMS={getManyQMS}
@@ -487,7 +470,7 @@
 		{group}
 	/>
 
-	{#if !node?.isMain}
+	{#if !(node as ContainerData)?.isMain}
 		<div class="   w-min-max grid w-max content-center rounded-full">
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<div class="flex">
@@ -496,10 +479,10 @@
 						role="button"
 						tabindex={dragDisabled ? 0 : -1}
 						aria-label="drag-handle"
-						class="  transition:all bi bi-grip-vertical -mr-1 ml-2 rounded-l-md text-lg duration-500 {node?.operator ==
-							undefined || node?.operator == 'bonded'
+						class="  transition:all bi bi-grip-vertical -mr-1 ml-2 rounded-l-md text-lg duration-500 {(node as ContainerData)?.operator ==
+							undefined || (node as ContainerData)?.operator == 'bonded'
 							? 'text-base-content'
-							: node?.operator == '_and'
+							: (node as ContainerData)?.operator == '_and'
 								? 'text-primary'
 								: 'text-secondary'}
 						{node?.not ? ' bg-gradient-to-r== from-base-300/100==' : 'bg-error/0'}
@@ -525,12 +508,12 @@
 					></div>
 				{/if}
 				<!-- node?.items?.length <= 1 -->
-				{#if node?.operator && !$mutationVersion}
+				{#if (node as ContainerData)?.operator && !$mutationVersion}
 					<button
-						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {node?.operator ==
-							'bonded' || node?.operator == 'list'
+						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(node as ContainerData)?.operator ==
+							'bonded' || (node as ContainerData)?.operator == 'list'
 							? 'text-base-content'
-							: node?.operator == '_and'
+							: (node as ContainerData)?.operator == '_and'
 								? 'text-primary'
 								: 'text-secondary'} h-max w-max break-all
 						{node?.not ? ' bg-gradient-to-r from-secondary/50' : 'bg-error/0'}
@@ -551,7 +534,7 @@
 							</sup>
 						{/if}
 					</button>
-					{#if nodeIsInCP && node.operator}
+					{#if nodeIsInCP && (node as ContainerData)?.operator}
 						<GroupDescriptionAndControls />
 					{/if}
 				{/if}
@@ -565,14 +548,14 @@
 		class="  w-min-max w-max transition-all duration-500
 	
 	
-	{node?.operator && (node.items.length > 1 || ($mutationVersion && node.items.length >= 1))
+	{(node as ContainerData)?.operator && ((node as ContainerData).items.length > 1 || ($mutationVersion && (node as ContainerData).items.length >= 1))
 			? 'bg-gradient-to-rxxx my-1==   rounded-l-md border-l-[1px] shadow-sm'
 			: ''} 
-	{node?.isMain ? '  bg-gradient-to-rxxx my-1==   rounded-l-md border-l-[2px] shadow-sm' : ''}
-{node?.operator && node?.not ? 'border-dashed  ' : ''} 
-{node?.operator == 'bonded' || node?.operator == 'list'
+	{(node as ContainerData)?.isMain ? '  bg-gradient-to-rxxx my-1==   rounded-l-md border-l-[2px] shadow-sm' : ''}
+{(node as ContainerData)?.operator && node?.not ? 'border-dashed  ' : ''}
+{(node as ContainerData)?.operator == 'bonded' || (node as ContainerData)?.operator == 'list'
 			? 'border-base-content'
-			: node?.operator == '_and'
+			: (node as ContainerData)?.operator == '_and'
 				? 'border-primary'
 				: 'border-secondary '}
 
@@ -593,16 +576,16 @@
 			dragDisabled = true;
 		}}
 	>
-		{#if node?.operator}
-			{#if $mutationVersion && !node?.isMain}
+		{#if (node as ContainerData)?.operator}
+			{#if $mutationVersion && !(node as ContainerData)?.isMain}
 				<div class="flex">
 					<button
 						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {getManyQMS ||
 						$selectedQMSAAA
 							? 'text-secondary'
-							: ''}   {node?.operator == 'bonded' || node?.operator == 'list'
+							: ''}   {(node as ContainerData)?.operator == 'bonded' || (node as ContainerData)?.operator == 'list'
 							? 'text-base-content'
-							: node?.operator == '_and'
+							: (node as ContainerData)?.operator == '_and'
 								? 'text-primary'
 								: 'text-secondary'} h-max w-max break-all
 						{node?.not ? ' bg-gradient-to-r from-secondary/50' : 'bg-error/0'}
@@ -624,7 +607,7 @@
 						{/if}
 					</button>
 
-					{#if nodeIsInCP && node.operator}
+					{#if nodeIsInCP && (node as ContainerData)?.operator}
 						<GroupDescriptionAndControls />
 					{/if}
 				</div>
@@ -652,12 +635,12 @@
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- node?.items?.length > 1 || node?.isMain -->
 
-				{#if node?.isMain}
+				{#if (node as ContainerData)?.isMain}
 					<button
-						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {node?.operator ==
-							'bonded' || node?.operator == 'list'
+						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(node as ContainerData)?.operator ==
+							'bonded' || (node as ContainerData)?.operator == 'list'
 							? 'text-base-content'
-							: node?.operator == '_and'
+							: (node as ContainerData)?.operator == '_and'
 								? 'text-primary'
 								: 'text-secondary'} h-max w-max break-all"
 						onclick={() => {
@@ -687,7 +670,7 @@
 						{parentNode}
 						{node}
 						onContextmenuUsed={() => {
-							if (!node?.isMain) {
+							if (!(node as ContainerData)?.isMain) {
 								node.not = !node.not;
 								handleChanged();
 								onChanged?.();
@@ -706,12 +689,12 @@
 			<section
 				class=" duration-500 {$dndIsOn
 					? '  min-h-[30px] min-w-[200px]'
-					: 'pl-1'} rounded-l-none {node?.isMain && !isCPChild
+					: 'pl-1'} rounded-l-none {(node as ContainerData)?.isMain && !isCPChild
 					? ' min-h-[40vh] border-l-2  border-l-transparent md:min-h-[60vh] '
 					: ' '}
 				 w-full"
 				use:dndzone={{
-					items: node.items,
+					items: (node as ContainerData).items,
 					dragDisabled,
 					flipDurationMs,
 					transformDraggedElement,
@@ -722,8 +705,8 @@
 				onfinalize={handleDndFinalize}
 			>
 				<!-- WE FILTER THE SHADOW PLACEHOLDER THAT WAS ADDED IN VERSION 0.7.4, filtering this way rather than checking whether 'nodes' have the id became possible in version 0.9.1 -->
-				{#if node.items.length > 1 || node?.isMain || true}
-					{#each node.items.filter((item) => {
+				{#if (node as ContainerData).items.length > 1 || (node as ContainerData)?.isMain || true}
+					{#each (node as ContainerData).items.filter((item) => {
 						return item.id !== SHADOW_PLACEHOLDER_ITEM_ID;
 					}) as item (item.id)}
 						<div
