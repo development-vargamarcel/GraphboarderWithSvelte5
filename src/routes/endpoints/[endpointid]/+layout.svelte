@@ -32,11 +32,13 @@
 
 			// 2. Try exact match in localStorageEndpoints
 			if (!found && $localStorageEndpoints) {
+				console.debug('EndpointLayout: Searching in localStorageEndpoints');
 				found = $localStorageEndpoints.find((endpoint) => endpoint.id == endpointid);
 			}
 
 			// 3. Legacy: Check for prefixes (if any legacy links still exist)
 			if (!found) {
+				console.debug('EndpointLayout: Checking for legacy ID formats');
 				if (endpointid.startsWith('localEndpoint--')) {
 					found = localEndpoints.find((endpoint) => endpoint.id == endpointid.split('--')[1]);
 				} else if (endpointid.startsWith('localstorageEndpoint--') && $localStorageEndpoints) {

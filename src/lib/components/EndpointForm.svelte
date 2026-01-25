@@ -8,9 +8,15 @@
 		onEndpointAdded?: () => void;
 		onHide?: () => void;
 		endpointToEdit?: AvailableEndpoint | null;
+		isDuplicate?: boolean;
 	}
 
-	let { onEndpointAdded, onHide, endpointToEdit = null }: Props = $props();
+	let {
+		onEndpointAdded,
+		onHide,
+		endpointToEdit = null,
+		isDuplicate = false
+	}: Props = $props();
 
 	let id = $state('');
 	let url = $state('');
@@ -25,7 +31,7 @@
 	// Effect to populate form when endpointToEdit changes
 	$effect(() => {
 		if (endpointToEdit) {
-			id = endpointToEdit.id;
+			id = isDuplicate ? `${endpointToEdit.id}_copy` : endpointToEdit.id;
 			url = endpointToEdit.url;
 			headers = endpointToEdit.headers ? JSON.stringify(endpointToEdit.headers, null, 2) : '';
 		} else {
@@ -44,8 +50,8 @@
 			return false;
 		}
 
-		// If editing and ID hasn't changed, it's valid
-		if (endpointToEdit && id === endpointToEdit.id) {
+		// If editing (and not duplicating) and ID hasn't changed, it's valid
+		if (endpointToEdit && !isDuplicate && id === endpointToEdit.id) {
 			return true;
 		}
 
@@ -108,14 +114,14 @@
 				description: endpointToEdit?.description || 'User added endpoint'
 			};
 
-			// If we are editing and the ID changed, remove the old one first
-			if (endpointToEdit && endpointToEdit.id !== id) {
+			// If we are editing (and not duplicating) and the ID changed, remove the old one first
+			if (endpointToEdit && !isDuplicate && endpointToEdit.id !== id) {
 				removeEndpoint(endpointToEdit.id);
 			}
 
 			addEndpoint(newEndpoint);
 
-			const action = endpointToEdit ? 'updated' : 'added';
+			const action = endpointToEdit && !isDuplicate ? 'updated' : 'added';
 			addToast(`Endpoint ${action} successfully!`, 'success');
 
 			onEndpointAdded?.();
@@ -160,10 +166,14 @@
 
 <div class="w-full">
 	<h2 class="mb-4 text-2xl font-bold">
-		{endpointToEdit ? 'Edit Endpoint' : 'Add new Endpoint'}
+		{#if isDuplicate}
+			Duplicate Endpoint
+		{:else}
+			{endpointToEdit ? 'Edit Endpoint' : 'Add new Endpoint'}
+		{/if}
 	</h2>
 	<p class="mb-4 text-base-content/70">
-		{endpointToEdit
+		{endpointToEdit && !isDuplicate
 			? 'Update your endpoint configuration'
 			: "Save endpoint to your browser's Local Storage"}
 	</p>

@@ -49,8 +49,8 @@
 	></div>
 	<div
 		class="fixed top-0 z-50 md:hidden"
-		in:fly|global={{ x: -300, duration: 300, opacity: 1 }}
-		out:fly|global={{ x: -350, duration: 300, opacity: 1 }}
+		in:fly|global={{ x: -300, duration: 300 }}
+		out:fly|global={{ x: -350, duration: 300 }}
 	>
 		<TabContainer
 			{endpointInfo}

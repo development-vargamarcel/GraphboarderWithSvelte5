@@ -22,9 +22,10 @@
 		endpoints: AvailableEndpoint[];
 		onAddEndpoint?: () => void;
 		onEditEndpoint?: (endpoint: AvailableEndpoint) => void;
+		onDuplicateEndpoint?: (endpoint: AvailableEndpoint) => void;
 	}
 
-	let { endpoints, onAddEndpoint, onEditEndpoint }: Props = $props();
+	let { endpoints, onAddEndpoint, onEditEndpoint, onDuplicateEndpoint }: Props = $props();
 
 	let searchTerm = $state('');
 	let sortOption = $state<'name-asc' | 'name-desc'>('name-asc');
@@ -154,8 +155,21 @@
 					{/if}
 				</div>
 
-				{#if !endpoint.isMaintained}
-					<div class="absolute top-2 right-2 z-20 flex gap-1">
+				<div class="absolute top-2 right-2 z-20 flex gap-1">
+					{#if onDuplicateEndpoint}
+						<button
+							class="btn btn-square text-primary opacity-100 btn-ghost transition-opacity btn-xs md:opacity-0 md:group-hover:opacity-100"
+							onclick={(e) => {
+								e.stopPropagation();
+								onDuplicateEndpoint(endpoint);
+							}}
+							onkeydown={(e) => e.stopPropagation()}
+							title="Duplicate Endpoint"
+						>
+							<i class="bi bi-copy"></i>
+						</button>
+					{/if}
+					{#if !endpoint.isMaintained}
 						{#if onEditEndpoint}
 							<button
 								class="btn btn-square text-info opacity-100 btn-ghost transition-opacity btn-xs md:opacity-0 md:group-hover:opacity-100"
@@ -177,8 +191,8 @@
 						>
 							<i class="bi bi-trash"></i>
 						</button>
-					</div>
-				{/if}
+					{/if}
+				</div>
 			</div>
 		{/each}
 	</div>

@@ -82,6 +82,14 @@ export const smartModifyStringBasedOnBoundries = (
 	return result.join('');
 };
 
+/**
+ * Replaces the last occurrence of specific substring logic within a string up to a max index.
+ * Note: This function seems tailored for a specific parsing logic (replacing ":{" occurrences).
+ * @param {string} str - The input string.
+ * @param {number} MaxIndex - The maximum index to search backwards from.
+ * @param {string} REPLACEMENT_STRING - The string to use as replacement.
+ * @returns {string} - The modified string.
+ */
 function replaceLastOccurrence(str: string, MaxIndex: number, REPLACEMENT_STRING: string): string {
 	// Find the index of the first occurrence of ":{" after the first character
 	const startIndex = str.indexOf(':{', 1);
@@ -105,10 +113,24 @@ function replaceLastOccurrence(str: string, MaxIndex: number, REPLACEMENT_STRING
 	return str;
 }
 
+/**
+ * Replaces a substring between two indices.
+ * @param {string} string - The original string.
+ * @param {number} start - The start index (inclusive).
+ * @param {number} end - The end index (exclusive).
+ * @param {string} what - The replacement string.
+ * @returns {string} - The new string.
+ */
 const replaceBetween = function (string: string, start: number, end: number, what: string): string {
 	return string.substring(0, start) + what + string.substring(end);
 };
 
+/**
+ * Parses and modifies a string by extracting parenthesized content and transforming it.
+ * Used for parsing complex nested string structures.
+ * @param {string} input - The input string.
+ * @returns {{ modifiedSubstring: string; remainingString: string }} - The processed part and the remainder.
+ */
 function modifyString(input: string): { modifiedSubstring: string; remainingString: string } {
 	// Step 1: Match the first parenthesis and the text inside them
 	const matchParenthesis = input.match(/\(([^)]+)\)/);
