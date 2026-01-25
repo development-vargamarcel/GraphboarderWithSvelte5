@@ -198,6 +198,21 @@
 	tableColsData_Store.subscribe((data: any) => {});
 
 	let column_stepsOfFields = $state('');
+	const addColumnFromInput = (e: any) => {
+		if (e.key == 'Enter') {
+			let stepsOfFields = column_stepsOfFields.replace(/\s/g, '').replace(/\./g, '>').split('>');
+			let tableColData = {
+				title: `col-${Math.floor(Math.random() * 200)},${generateTitleFromStepsOfFields(
+					stepsOfFields
+				)}`,
+				stepsOfFields: [QMSName, ...stepsOfFields],
+				stepsOfFieldsOBJ: stepsOfFieldsToQueryFragmentObject([QMSName, ...stepsOfFields], false)
+			};
+
+			tableColsData_Store.addColumn(tableColData);
+			column_stepsOfFields = '';
+		}
+	};
 
 	//Active arguments logic
 	let showQMSBody = $state(false);
@@ -234,6 +249,7 @@
 	<div class="mx-2 flex space-x-2">
 		<AddColumn
 			bind:column_stepsOfFields
+			{addColumnFromInput}
 			{dd_relatedRoot}
 			{QMSName}
 			{QMS_info}

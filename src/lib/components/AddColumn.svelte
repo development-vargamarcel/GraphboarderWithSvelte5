@@ -16,6 +16,7 @@
 	interface Props {
 		prefix?: string;
 		column_stepsOfFields: any;
+		addColumnFromInput?: any;
 		dd_relatedRoot: any;
 		QMSName: any;
 		QMS_info: any;
@@ -25,6 +26,7 @@
 	let {
 		prefix = '',
 		column_stepsOfFields = $bindable(),
+		addColumnFromInput,
 		dd_relatedRoot,
 		QMSName,
 		QMS_info,
@@ -74,13 +76,13 @@
 			<div
 				class="flex w-full min-w-max flex-col space-y-1 overflow-x-auto text-sm font-normal normal-case"
 			>
-				<!-- <input
+				<input
 					type="text"
 					class="input input-sm input-bordered input-accent m-2"
 					placeholder="(> or .) producer>films>title "
 					bind:value={column_stepsOfFields}
-					on:keypress={addColumnFromInput}
-				/> -->
+					onkeypress={addColumnFromInput}
+				/>
 				<div class="bg-black= sticky left-0 mx-auto text-center">
 					<button
 						class="btn w-min btn-xs btn-primary"
@@ -109,6 +111,7 @@
 						depth={0}
 						isOnMainList={true}
 						index={0}
+						oncolAddRequest={onNewColumnAddRequest}
 					/>
 					<!-- <TypeList
 						types={dd_relatedRoot.fields}

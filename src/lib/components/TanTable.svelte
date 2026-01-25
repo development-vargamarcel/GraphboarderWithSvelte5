@@ -120,11 +120,45 @@
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
 	};
+
+	const downloadCSV = () => {
+		if (!data || data.length === 0) return;
+
+		// Extract headers
+		const headers = cols.map(col => col.title);
+
+		// Create CSV content
+		const csvRows = [headers.join(',')];
+
+		for (const row of data) {
+			const values = cols.map(col => {
+				const cellData = getTableCellData(row, col, 0); // index 0 as approximation if not array
+				const stringValue = JSON.stringify(cellData);
+				// Escape double quotes by doubling them
+				return stringValue; // JSON.stringify handles quoting and escaping appropriately for CSV usually
+			});
+			csvRows.push(values.join(','));
+		}
+
+		const csvString = csvRows.join('\n');
+		const blob = new Blob([csvString], { type: 'text/csv' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `export-${new Date().toISOString().slice(0, 10)}.csv`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	};
 </script>
 
 <div class=" h-[80vh] overflow-y-auto overscroll-contain rounded-box pb-32">
 	{#if data && data.length > 0}
-		<div class="mb-2 flex justify-end px-2">
+		<div class="mb-2 flex justify-end px-2 gap-2">
+			<button class="btn btn-ghost btn-sm gap-2" onclick={downloadCSV} aria-label="Export CSV">
+				<i class="bi bi-filetype-csv"></i> Export CSV
+			</button>
 			<button class="btn btn-ghost btn-sm gap-2" onclick={downloadJSON} aria-label="Export JSON">
 				<i class="bi bi-filetype-json"></i> Export JSON
 			</button>

@@ -282,6 +282,7 @@
 <div class="mx-2 flex space-x-2">
 	<AddColumn
 		bind:column_stepsOfFields
+		{addColumnFromInput}
 		{dd_relatedRoot}
 		{QMSName}
 		QMS_info={currentQMS_info}

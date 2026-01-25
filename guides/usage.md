@@ -48,16 +48,16 @@ As you build the query, the results are fetched and displayed automatically.
     - **Hide**: Click the column menu (chevron icon) to hide specific fields.
     - **Add**: Use the "Add Column" feature to include more fields from the schema.
 - **Export**:
-    - **CSV**: Click the **"Copy CSV"** button (clipboard icon) to copy the current table view to your clipboard.
+    - **CSV**: Click the **"Export CSV"** button above the table to download the current table view as a `.csv` file.
+    - **JSON**: Click the **"Export JSON"** button to download the current table data as a `.json` file.
 - **Maintenance**:
     - **Edit Table Name**: Click the **"Edit"** button (pencil icon) to open a modal where you can alias table names for better readability in the UI.
-- **Export Data**:
-    - **Export JSON**: Click the **"Export JSON"** button to download the current table data as a `.json` file.
 
 ## 5. View Generated GraphQL
 
 - Click the **"QMS body"** button to toggle the view of the actual GraphQL query being sent to the server.
 - **Copy Query**: Click the **"Copy"** button to copy the query string to your clipboard.
+- **Copy cURL**: Click the **"Copy cURL"** button to copy a cURL command for the current query to your clipboard, allowing you to easily test it in your terminal.
 - **Prettify**: Use the "Show Prettified" toggle to switch between raw and formatted views.
 
 ## 6. History & Recent Queries
