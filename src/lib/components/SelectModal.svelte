@@ -1,63 +1,53 @@
 <script lang="ts">
 	import {
 		filterElFromArr,
-		formatData,
 		getDataGivenStepsOfFields,
 		getDeepField,
 		getPreciseType,
 		getQMSWraperCtxDataGivenControlPanelItem,
-		getRootType,
 		hasDeepProperty,
 		passAllObjectValuesThroughStringTransformerAndReturnNewObject
-	} from '../utils/usefulFunctions.ts';
-	//!!! chnage bonded to item
-	import { flip } from 'svelte/animate';
-	import { dndzone, SHADOW_PLACEHOLDER_ITEM_ID } from 'svelte-dnd-action';
-	import { getContext, onDestroy, onMount, setContext } from 'svelte';
-	import ActiveArgument from '$lib/components/ActiveArgument.svelte';
-	import ActiveArgumentsGroup_addFilterAndSortingButtonContent from '$lib/components/ActiveArgumentsGroup_addFilterAndSortingButtonContent.svelte';
+	} from '../utils/usefulFunctions';
+	import { getContext, setContext } from 'svelte';
 	import Modal from './Modal.svelte';
 	import { nodeAddDefaultFields } from '$lib/utils/usefulFunctions';
 	import SelectItem from './SelectItem.svelte';
 	import SelectQMS from './SelectQMS.svelte';
-	import ExplorerTable from '$lib/components/ExplorerTable.svelte';
-	import { string_transformer } from '$lib/utils/dataStructureTransformers.ts';
-	import { writable } from 'svelte/store';
-	import AddNodeToControlPanel from './AddNodeToControlPanel.svelte';
-	import GroupDescriptionAndControls from './GroupDescriptionAndControls.svelte';
 	import {
 		createQMSSearchInstance,
 		discoverMatchingQMS,
-		getReturningFields
 	} from '$lib/utils/searchUtils';
 	import {
 		getRowSelectionState,
 		processSelectedRowsColValues,
 		getRequiredColumnNames
 	} from '$lib/utils/rowSelectionUtils';
+	import type { ContainerData, ActiveArgumentData, QMSWraperContext, QMSMainWraperContext } from '$lib/types';
 
-	import Fuse from 'fuse.js';
-
-	// Props interface - must be declared before usage
 	interface Props {
-		nodes: any;
-		parentNodeId: any;
-		parentNode?: any;
-		node: any;
+		nodes: Record<string, ContainerData | ActiveArgumentData>;
+		parentNodeId: string;
+		parentNode?: ContainerData;
+		node: ContainerData | ActiveArgumentData;
 		availableOperators: any;
 		group: any;
 		type: any;
 		originalNodes: any;
 		prefix?: string;
-		addDefaultFields: any;
-		showSelectModal: any;
+		addDefaultFields?: boolean;
+		showSelectModal?: boolean;
 		onChanged?: () => void;
+		onUpdateQuery?: () => void;
+		onChildrenStartDrag?: (e?: any) => void;
+		onDeleteSubNode?: (detail: { id: string }) => void;
+		bindSelectedQMS?: any;
+		bindSelectedRowsColValues?: any;
 	}
 
 	let {
 		nodes = $bindable(),
 		parentNodeId,
-		parentNode = nodes[parentNodeId],
+		parentNode = nodes[parentNodeId] as ContainerData,
 		node = $bindable(),
 		availableOperators,
 		group,
@@ -65,40 +55,40 @@
 		originalNodes,
 		prefix = '',
 		addDefaultFields,
-		showSelectModal = $bindable(),
-		onChanged
+		showSelectModal = $bindable(false),
+		onChanged,
+		bindSelectedQMS = $bindable(),
+		bindSelectedRowsColValues = $bindable()
 	}: Props = $props();
 
-	// Now props are available, can use them in getContext calls
-	let stepsOfNodes = $state([]);
-	let stepsOfFields = $state([]);
-	let stepsOfFieldsFull = $state([]);
+	let stepsOfNodes = $state<unknown[]>([]);
+	let stepsOfFields = $state<string[]>([]);
+	let stepsOfFieldsFull = $state<string[]>([]);
 	let testName_stepsOFFieldsWasUpdated = false;
-	/////start
-	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`);
+
+	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as QMSWraperContext;
 	let pathIsInCP = false;
-	const nodeContext = getContext(`${prefix}nodeContext`);
+	const nodeContext = getContext(`${prefix}nodeContext`) as { pathIsInCP: boolean } | undefined;
 	if (nodeContext) {
 		pathIsInCP = nodeContext?.pathIsInCP;
 	}
+	const CPItemContext = getContext(`${prefix}CPItemContext`) as { CPItem: { nodeId: string } } | undefined;
 	let nodeIsInCP = $derived(CPItemContext?.CPItem.nodeId == node.id);
-	const CPItemContext = getContext(`${prefix}CPItemContext`);
+
 	if (CPItemContext?.CPItem.nodeId == node.id) {
 		setContext(`${prefix}nodeContext`, { pathIsInCP: true });
 	}
-	const isCPChild = CPItemContext ? true : false;
-	let visibleInCP = $derived(pathIsInCP || nodeIsInCP);
-	let visible = $derived(visibleInCP || !CPItemContext || node.isMain);
-	let correctQMSWraperContext = '';
+	const isCPChild = !!CPItemContext;
+
+	let correctQMSWraperContext: any = '';
 	if (isCPChild) {
 		correctQMSWraperContext = getQMSWraperCtxDataGivenControlPanelItem(
-			CPItemContext?.CPItem,
-			OutermostQMSWraperContext
+			CPItemContext!.CPItem as any,
+			OutermostQMSWraperContext as any
 		);
 	} else {
 		correctQMSWraperContext = getContext(`${prefix}QMSWraperContext`);
 	}
-	/////end
 
 	const { finalGqlArgObj_Store, QMS_info, activeArgumentsDataGrouped_Store, QMSType } =
 		correctQMSWraperContext;
@@ -111,10 +101,10 @@
 	const dndIsOn = getContext('dndIsOn');
 	const mutationVersion = getContext('mutationVersion');
 	if (QMSType == 'mutation') {
-		$mutationVersion = true;
+		// $mutationVersion = true; // Cannot assign to store directly if not using $ store syntax from import, handled by parent context usually
 	}
 
-	const stepsOfNodesToStepsOfFields = (stepsOfNodes) => {
+	const stepsOfNodesToStepsOfFields = (stepsOfNodes: any[]) => {
 		const stepsOfFields = stepsOfNodes
 			.filter((step) => {
 				const [not, displayName, operator] = step;
@@ -138,10 +128,10 @@
 			.flat(Infinity);
 		return stepsOfFields;
 	};
-	const getUpdatedStepsOfNodes = (stepsOfNodesParent) => {
+	const getUpdatedStepsOfNodes = (stepsOfNodesParent: any[]) => {
 		testName_stepsOFFieldsWasUpdated = true;
 		let stepsOfNodesCopy = JSON.parse(JSON.stringify(stepsOfNodesParent));
-		stepsOfNodesCopy.push([node?.not ? '_not' : undefined, node?.dd_displayName, node?.operator]);
+		stepsOfNodesCopy.push([node?.not ? '_not' : undefined, node?.dd_displayName, (node as ContainerData)?.operator]);
 		return stepsOfNodesCopy;
 	};
 
@@ -153,25 +143,26 @@
 		}
 	});
 
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const schemaData = QMSMainWraperContext?.schemaData;
+	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const endpointInfo = MainWraperContext?.endpointInfo;
+	const schemaData = MainWraperContext?.schemaData;
 	let dragDisabled = true;
 	const flipDurationMs = 500;
-	function handleDndConsider(e) {
-		node.items = e.detail.items;
+
+	function handleDndConsider(e: any) {
+		(node as ContainerData).items = e.detail.items;
 		dragDisabled = true;
 	}
-	function handleDndFinalize(e) {
-		node.items = e.detail.items;
+	function handleDndFinalize(e: any) {
+		(node as ContainerData).items = e.detail.items;
 		nodes = { ...nodes };
 		handleChanged();
 		onChanged?.();
 		dragDisabled = true;
 	}
 
-	const deleteItem = (e) => {
-		node.items = node.items.filter((item) => {
+	const deleteItem = (e: any) => {
+		(node as ContainerData).items = (node as ContainerData).items.filter((item) => {
 			return item.id !== e.detail.id;
 		});
 		// nodes[e.detail.id] = undefined;
@@ -181,22 +172,22 @@
 		onChanged?.();
 	};
 	//
-	let labelEl;
-	let shadowEl = $state();
+	let labelEl: HTMLElement;
+	let shadowEl = $state<HTMLElement>();
 	let shadowHeight = $state(20);
 	let shadowWidth = $state(20);
 
-	let labelElClone = $state();
+	let labelElClone: any = $state();
 
-	function startDrag(e) {
+	function startDrag(e: any) {
 		// preventing default to prevent lag on touch devices (because of the browser checking for screen scrolling)
 		//e.preventDefault();
 		dragDisabled = false;
 	}
-	function handleKeyDown(e) {
+	function handleKeyDown(e: KeyboardEvent) {
 		if ((e.key === 'Enter' || e.key === ' ') && dragDisabled) dragDisabled = false;
 	}
-	const transformDraggedElement = (draggedEl, data, index) => {
+	const transformDraggedElement = (draggedEl: HTMLElement, data: any, index: number) => {
 		draggedEl?.classList.add('bg-accent/25', 'border-2', 'border-accent');
 		draggedEl
 			.querySelector('.dnd-item')
@@ -215,7 +206,7 @@
 	let groupDisplayTitle = $state('');
 
 	$effect(() => {
-		if (node?.addDefaultFields || (node?.isMain && addDefaultFields)) {
+		if ((node as any)?.addDefaultFields || ((node as ContainerData)?.isMain && addDefaultFields)) {
 			nodeAddDefaultFields(
 				node,
 				prefix,
@@ -233,7 +224,7 @@
 
 	let showExplorerTable = true;
 	const fuse = createQMSSearchInstance($schemaData.queryFields);
-	const nodeContext_forDynamicData = getContext(`${prefix}nodeContext_forDynamicData`);
+	const nodeContext_forDynamicData = getContext(`${prefix}nodeContext_forDynamicData`) as any;
 	let selectedQMS = nodeContext_forDynamicData.selectedQMS;
 	let QMSRows = nodeContext_forDynamicData.QMSRows;
 	let rowSelectionState = nodeContext_forDynamicData.rowSelectionState;
@@ -242,73 +233,22 @@
 	let idColName = nodeContext_forDynamicData.idColName;
 	let requiredColNames = nodeContext_forDynamicData.requiredColNames;
 
-	//let QMSRows = [];
-	let columns = [
-		{
-			accessorFn: (row) => row.dd_displayName,
-			header: 'dd_displayName',
-			footer: 'dd_displayName',
-			enableHiding: true
-		},
-		{
-			accessorFn: (row) => row.dd_rootName,
-			header: 'dd_rootName',
-			footer: 'dd_rootName',
-			enableHiding: true
-		},
-		{
-			accessorFn: (row) => (row.dd_kindList_NON_NULL ? '!' : ''),
-			header: 'L',
-			footer: 'L',
-			enableHiding: true
-		},
-		{
-			accessorFn: (row) => (row.dd_kindList ? 'list' : ''),
-			header: 'LL',
-			footer: 'LL',
-			enableHiding: true
-		},
-		{
-			accessorFn: (row) => (row.dd_kindEl_NON_NULL ? '!' : ''),
-			header: 'E',
-			footer: 'E',
-			enableHiding: true
-		},
-		{
-			accessorFn: (row) => row.dd_kindEl,
-			header: 'EE',
-			footer: 'EE',
-			enableHiding: true
-		},
+	if (bindSelectedQMS !== undefined) {
+		selectedQMS = bindSelectedQMS;
+	}
+	if (bindSelectedRowsColValues !== undefined) {
+		selectedRowsColValues = bindSelectedRowsColValues;
+	}
 
-		{
-			accessorFn: (row) =>
-				row.args
-					?.map(
-						(arg) => `${arg.dd_displayName} (${arg.dd_kindList ? 'list of ' : ''}${arg.dd_kindEl})`
-					)
-					.join('; '),
-			header: 'Arguments',
-			footer: 'Arguments',
-			enableHiding: true
-		},
-		{
-			accessorFn: (row) => row.description?.replaceAll(',', ';'),
-			header: 'description',
-			footer: 'description',
-			enableHiding: true
-		}
-	];
-
-	if (node?.selectedQMS) {
-		$selectedQMS = node.selectedQMS;
+	if ((node as any)?.selectedQMS) {
+		$selectedQMS = (node as any).selectedQMS;
 		$activeArgumentsDataGrouped_Store = $activeArgumentsDataGrouped_Store;
 	}
 	//------------
-	let inputColumnsLocationQMS_Info;
+	let inputColumnsLocationQMS_Info: any;
 	//!! todo:before getting inputColumnsLocation value,you should check if it is a query or a mutation,and handle it accordingly
-	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find((path) => {
-		inputColumnsLocationQMS_Info = getDeepField(node, path, schemaData, 'inputFields');
+	let inputColumnsLocation = $endpointInfo.inputColumnsPossibleLocationsInArg.find((path: string[]) => {
+		inputColumnsLocationQMS_Info = getDeepField(node as any, path, schemaData, 'inputFields');
 		return inputColumnsLocationQMS_Info;
 	});
 	//should work
@@ -322,7 +262,7 @@
 		schemaData
 	);
 	const inputFieldsContainer = getDeepField(
-		node,
+		node as any,
 		inputFieldsContainerLocation,
 		schemaData,
 		'inputFields'
@@ -333,11 +273,11 @@
 	$effect(() => {
 		stepsOfFieldsFull = stepsOfNodesToStepsOfFields(stepsOfNodes);
 		stepsOfFields = filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']);
-		node.stepsOfFieldsFull = stepsOfFieldsFull;
-		node.stepsOfFields = stepsOfFields;
-		node.stepsOfFieldsMinimal = filterElFromArr(stepsOfFields, ['_and', '_or', '_not']);
-		node.stepsOfNodes = stepsOfNodes;
-		node.stepsOfFieldsStringified = JSON.stringify(stepsOfFields);
+		(node as any).stepsOfFieldsFull = stepsOfFieldsFull;
+		(node as any).stepsOfFields = stepsOfFields;
+		(node as any).stepsOfFieldsMinimal = filterElFromArr(stepsOfFields, ['_and', '_or', '_not']);
+		(node as ContainerData).stepsOfNodes = stepsOfNodes;
+		(node as any).stepsOfFieldsStringified = JSON.stringify(stepsOfFields);
 	});
 	$effect(() => {
 		if (labelEl) {
@@ -347,7 +287,7 @@
 	});
 	$effect(() => {
 		if (shadowHeight && shadowEl) {
-			if (shadowEl.style.height == 0) {
+			if (shadowEl.style.height == '0px' || shadowEl.style.height == '') {
 				//if (shadowEl.style.height == 0) ensures the bellow runs only once per grab of element to move
 				shadowEl.style.height = `${shadowHeight + 18}px`;
 				shadowEl.style.width = `${shadowWidth}px`;
@@ -356,11 +296,12 @@
 				// if (labelElClone) {
 				// 	shadowEl.removeChild(labelElClone);
 				// }
-				labelElClone = labelEl.cloneNode(true);
-				labelElClone.classList.remove('dnd-item');
-				labelElClone.classList.add('border-2', 'border-accent');
-
-				shadowEl.appendChild(labelElClone);
+				if (labelEl) {
+					labelElClone = labelEl.cloneNode(true);
+					labelElClone.classList.remove('dnd-item');
+					labelElClone.classList.add('border-2', 'border-accent');
+					shadowEl.appendChild(labelElClone);
+				}
 			}
 		}
 	});
@@ -373,22 +314,22 @@
 			groupDisplayTitle = `${groupDisplayTitle}${node.dd_displayName}`;
 		}
 
-		if (node?.operator != 'bonded') {
+		if ((node as ContainerData)?.operator != 'bonded') {
 			if (groupDisplayTitle.trim() != '') {
 				groupDisplayTitle = `${groupDisplayTitle} `;
 			}
 
-			if (node?.operator == 'list') {
+			if ((node as ContainerData)?.operator == 'list') {
 				groupDisplayTitle = `${groupDisplayTitle} (list)`;
 			}
-			if (['_and', '_or'].includes(node?.operator)) {
-				groupDisplayTitle = `${groupDisplayTitle}${node?.operator} (list)`;
+			if (['_and', '_or'].includes((node as ContainerData)?.operator)) {
+				groupDisplayTitle = `${groupDisplayTitle}${(node as ContainerData)?.operator} (list)`;
 			}
 		}
 		if (groupDisplayTitle.trim() == '' || getPreciseType(groupDisplayTitle) == 'undefined') {
-			if (node?.operator == 'bonded') {
+			if ((node as ContainerData)?.operator == 'bonded') {
 				groupDisplayTitle = '(item)'; //bonded
-			} else if (node?.operator == '~spread~') {
+			} else if ((node as ContainerData)?.operator == '~spread~') {
 				groupDisplayTitle = '(~spread~)'; //~spread~
 			}
 		}
@@ -399,7 +340,7 @@
 
 	$effect(() => {
 		if (QMSWraperContextForSelectedQMS) {
-			$idColName = QMSWraperContextForSelectedQMS.idColName;
+			$idColName = (QMSWraperContextForSelectedQMS as any).idColName;
 		}
 	});
 	$effect(() => {});
@@ -458,18 +399,18 @@
 					{node}
 					bind:QMSWraperContext={QMSWraperContextForSelectedQMS}
 					bind:rowSelectionState={$rowSelectionState}
-					enableMultiRowSelectionState={inputFieldsContainer.dd_kindList}
+					enableMultiRowSelectionState={inputFieldsContainer?.dd_kindList}
 					on:rowSelectionChange={(e) => {
 						selectedRowsModel = e.detail;
-						let selectedRowsOriginal = e.detail.rows.map((row) => row.original);
+						let selectedRowsOriginal = e.detail.rows.map((row: any) => row.original);
 
 						const returningColumnsLocation =
-							$endpointInfo.returningColumnsPossibleLocationsInQueriesPerRow.find((item) => {
+							$endpointInfo.returningColumnsPossibleLocationsInQueriesPerRow.find((item: any) => {
 								return hasDeepProperty(selectedRowsOriginal[0], item);
 							});
 						//string_transformer
 
-						$selectedRowsColValues = selectedRowsOriginal.map((row) => {
+						$selectedRowsColValues = selectedRowsOriginal.map((row: any) => {
 							return getDataGivenStepsOfFields(null, row, returningColumnsLocation);
 
 							//return getDataGivenStepsOfFields(null, row, returningColumnsLocation);

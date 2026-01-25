@@ -18,6 +18,7 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import { browser } from '$app/environment';
 	import GraphqlCodeDisplay from './GraphqlCodeDisplay.svelte';
+	import type { QMSWraperContext, QMSMainWraperContext } from '$lib/types';
 
 	interface Props {
 		prefix?: string;
@@ -27,11 +28,11 @@
 
 	let { prefix = '', QMSName, children }: Props = $props();
 
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const urqlCoreClient = QMSMainWraperContext?.urqlCoreClient;
+	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const endpointInfo = MainWraperContext?.endpointInfo;
+	const urqlCoreClient = MainWraperContext?.urqlCoreClient;
 	let queryName = QMSName;
-	const QMSWraperContext = getContext('QMSWraperContext');
+	const WraperContext = getContext('QMSWraperContext') as QMSWraperContext;
 	const {
 		QMS_bodyPart_StoreDerived_rowsCount = null,
 		activeArgumentsDataGrouped_Store,
@@ -39,45 +40,47 @@
 		QMS_bodyPartsUnifier_StoreDerived,
 		paginationOptions,
 		paginationState
-	} = QMSWraperContext;
-	const schemaData = QMSMainWraperContext?.schemaData;
+	} = WraperContext;
+	const schemaData = MainWraperContext?.schemaData;
 
 	onDestroy(() => {
 		document.getElementById('my-drawer-3')?.click();
 	});
 
 	let currentQMS_info = schemaData.get_QMS_Field(queryName, 'query', schemaData);
-	let dd_relatedRoot = getRootType(null, currentQMS_info.dd_rootName, schemaData);
+	let dd_relatedRoot = getRootType(null, currentQMS_info?.dd_rootName, schemaData);
 	if (!currentQMS_info) {
 		goto('/queries');
 	}
 
 	const paginationTypeInfo = get_paginationTypes(endpointInfo, schemaData).find((pagType) => {
-		return pagType.name == currentQMS_info.dd_paginationType;
+		return pagType.name == currentQMS_info?.dd_paginationType;
 	});
 
-	let { scalarFields } = getFields_Grouped(dd_relatedRoot, [], schemaData);
+	let { scalarFields } = getFields_Grouped(dd_relatedRoot || {}, [], schemaData);
 
-	let queryData = $state({ fetching: false, error: null, data: null });
-	let rows = $state([]);
-	let rowsCurrent = [];
-	let loadedF;
-	let completeF;
+	let queryData = $state<{ fetching: boolean; error: any; data: any }>({ fetching: false, error: null, data: null });
+	let rows = $state<any[]>([]);
+	let rowsCurrent: any[] = [];
+	let loadedF: any;
+	let completeF: any;
 	let infiniteId = $state(Math.random());
 
 	if (scalarFields.length > 0) {
 		queryData.fetching = true;
 	}
 
-	function infiniteHandler({ detail: { loaded, complete } }) {
+	function infiniteHandler({ detail: { loaded, complete } }: any) {
 		loadedF = loaded;
 		completeF = complete;
+		if (!currentQMS_info || !paginationTypeInfo) return;
+
 		const rowLimitingArgNames = paginationTypeInfo?.get_rowLimitingArgNames(
-			currentQMS_info.dd_paginationArgs
+			currentQMS_info.dd_paginationArgs || []
 		);
 		if (
-			rowLimitingArgNames?.some((argName) => {
-				return rows.length / $paginationState?.[argName] >= 1; //means that all previous pages contained nr of items == page items size
+			rowLimitingArgNames?.some((argName: any) => {
+				return rows.length / ($paginationState as any)?.[argName] >= 1; //means that all previous pages contained nr of items == page items size
 			}) ||
 			paginationTypeInfo?.name == 'pageBased'
 		) {
@@ -88,14 +91,17 @@
 		}
 	}
 
-	const runQuery = (queryBody) => {
+	const runQuery = (queryBody: string) => {
 		let fetching = true;
-		let error = false;
+		let error: any = false;
 		let data = false;
-		$urqlCoreClient
+
+		if (!urqlCoreClient || !currentQMS_info) return;
+
+		urqlCoreClient
 			.query(queryBody)
 			.toPromise()
-			.then((result) => {
+			.then((result: any) => {
 				fetching = false;
 
 				if (result.error) {
@@ -106,16 +112,15 @@
 				}
 				queryData = { fetching, error, data };
 				let stepsOfFieldsInput = [
-					currentQMS_info.dd_displayName,
-					...endpointInfo.get_rowsLocation(currentQMS_info, schemaData)
+					currentQMS_info!.dd_displayName,
+					...endpointInfo.get_rowsLocation(currentQMS_info!, schemaData)
 				];
-				rowsCurrent = getDataGivenStepsOfFields(undefined, queryData.data, stepsOfFieldsInput);
-				if (rowsCurrent && !Array.isArray(rowsCurrent)) {
-					rowsCurrent = [rowsCurrent];
-				}
+				const rawData = getDataGivenStepsOfFields(undefined, queryData.data, stepsOfFieldsInput);
+				rowsCurrent = Array.isArray(rawData) ? rawData : (rawData ? [rawData] : []);
+
 				if ($paginationOptions.infiniteScroll) {
 					if (
-						paginationTypeInfo?.isFirstPage(paginationState, currentQMS_info.dd_paginationArgs) &&
+						paginationTypeInfo?.isFirstPage?.(paginationState, currentQMS_info!.dd_paginationArgs || []) &&
 						rowsCurrent?.length > 0
 					) {
 						infiniteId += 1;
@@ -125,7 +130,7 @@
 							rows = [...rows, ...rowsCurrent];
 						}
 						if (
-							paginationTypeInfo?.isFirstPage(paginationState, currentQMS_info.dd_paginationArgs) &&
+							paginationTypeInfo?.isFirstPage?.(paginationState, currentQMS_info!.dd_paginationArgs || []) &&
 							rowsCurrent?.length == 0
 						) {
 							rows = rowsCurrent;
@@ -134,13 +139,13 @@
 				} else {
 					rows = rowsCurrent;
 				}
+
+				const limitingArgs = paginationTypeInfo?.get_rowLimitingArgNames?.(currentQMS_info!.dd_paginationArgs || []) || [];
+
 				if (
-					(paginationTypeInfo?.get_rowLimitingArgNames(currentQMS_info.dd_paginationArgs).length >
-						0 &&
-						paginationTypeInfo
-							?.get_rowLimitingArgNames(currentQMS_info.dd_paginationArgs)
-							.some((argName) => {
-								return rowsCurrent?.length == $paginationState?.[argName];
+					(limitingArgs.length > 0 &&
+						limitingArgs.some((argName: any) => {
+								return rowsCurrent?.length == ($paginationState as any)?.[argName];
 							})) ||
 					paginationTypeInfo?.name == 'pageBased'
 				) {
@@ -160,7 +165,7 @@
 		}
 	});
 
-	const hideColumn = (detail) => {
+	const hideColumn = (detail: any) => {
 		tableColsData_Store.removeColumn(detail.column);
 	};
 
@@ -213,7 +218,7 @@
 			showQMSBody = !showQMSBody;
 		}}>QMS body</button
 	>
-	{#if QMS_bodyPart_StoreDerived_rowsCount}
+	{#if QMS_bodyPart_StoreDerived_rowsCount && currentQMS_info}
 		<div class="badge flex space-x-2 badge-primary">
 			{rows.length}/
 			<RowCount
