@@ -1,19 +1,19 @@
 import { get, writable } from 'svelte/store';
-const getIdentifierValue = (obj) => {
+const getIdentifierValue = (obj: any) => {
 	return JSON.stringify(obj.stepsOfFieldsThisAppliesTo) + obj.nodeId;
 };
-const getObjIndexInArray = (arr = [], obj = {}, getIdentifierValue) => {
+const getObjIndexInArray = (arr: any[] = [], obj: any = {}, getIdentifierValue: any) => {
 	const objIdentifierValue = getIdentifierValue(obj);
 	return arr.findIndex((currObj) => {
 		return objIdentifierValue == getIdentifierValue(currObj);
 	});
 };
-export const Create_mergedChildren_controlPanel_Store = (initialValue = []) => {
+export const Create_mergedChildren_controlPanel_Store = (initialValue: any[] = []) => {
 	const store = writable(initialValue);
 	const { subscribe, set, update } = store;
 	return {
 		...store,
-		addOrReplaceKeepingOldId: (obj) => {
+		addOrReplaceKeepingOldId: (obj: any) => {
 			const storeVal = get(store);
 			const objIndexInArray = getObjIndexInArray(storeVal, obj, getIdentifierValue);
 			const objIsPresentInArray = objIndexInArray > -1;
@@ -24,7 +24,7 @@ export const Create_mergedChildren_controlPanel_Store = (initialValue = []) => {
 			}
 			store.set(storeVal);
 		},
-		delete: (obj) => {
+		delete: (obj: any) => {
 			const storeVal = get(store);
 			const objIndexInArray = getObjIndexInArray(storeVal, obj, getIdentifierValue);
 			const objIsPresentInArray = objIndexInArray > -1;
@@ -35,10 +35,10 @@ export const Create_mergedChildren_controlPanel_Store = (initialValue = []) => {
 			}
 			store.set(storeVal);
 		},
-		getObj: (obj) => {
+		getObj: (obj: any) => {
 			const storeVal = get(store);
 			const objIndexInArray = getObjIndexInArray(storeVal, obj, getIdentifierValue);
-			const objIsPresentInArray = objIndexInArray > -1;
+			// const objIsPresentInArray = objIndexInArray > -1;
 			return storeVal[objIndexInArray];
 		}
 	};

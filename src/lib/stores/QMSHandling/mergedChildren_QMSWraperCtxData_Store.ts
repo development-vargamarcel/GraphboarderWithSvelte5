@@ -1,16 +1,20 @@
 import { get, writable } from 'svelte/store';
-const getObjIndexInArray = (arr = [], obj = {}, identifierKey = 'stepsOfFields') => {
+const getObjIndexInArray = (
+	arr: any[] = [],
+	obj: Record<string, any> = {},
+	identifierKey = 'stepsOfFields'
+) => {
 	const objIdentifierKeyValue_string = JSON.stringify(obj[identifierKey]);
 	return arr.findIndex((currObj) => {
 		return JSON.stringify(currObj[identifierKey]) == objIdentifierKeyValue_string;
 	});
 };
-export const Create_mergedChildren_QMSWraperCtxData_Store = (initialValue = []) => {
+export const Create_mergedChildren_QMSWraperCtxData_Store = (initialValue: any[] = []) => {
 	const store = writable(initialValue);
 	const { subscribe, set, update } = store;
 	return {
 		...store,
-		addOrReplace: (obj) => {
+		addOrReplace: (obj: any) => {
 			const storeVal = get(store);
 			const objIndexInArray = getObjIndexInArray(storeVal, obj, 'stepsOfFields');
 			const objIsPresentInArray = objIndexInArray > -1;
@@ -21,10 +25,10 @@ export const Create_mergedChildren_QMSWraperCtxData_Store = (initialValue = []) 
 			}
 			store.set(storeVal);
 		},
-		getObj: (stepsOfFields) => {
+		getObj: (stepsOfFields: string[]) => {
 			const storeVal = get(store);
 			const objIndexInArray = getObjIndexInArray(storeVal, { stepsOfFields }, 'stepsOfFields');
-			const objIsPresentInArray = objIndexInArray > -1;
+			// const objIsPresentInArray = objIndexInArray > -1; // Unused
 			return storeVal[objIndexInArray];
 		}
 	};

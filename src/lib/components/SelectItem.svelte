@@ -2,6 +2,7 @@
 	import { run } from 'svelte/legacy';
 	import QmsWraper from '$lib/components/QMSWraper.svelte';
 	import { getContext } from 'svelte';
+	import type { QMSMainWraperContext, QMSWraperContext, FieldWithDerivedData } from '$lib/types';
 	import ComponentForLayout from '../../routes/endpoints/[endpointid]/queries/[queryName]/ComponentForLayout.svelte';
 
 	interface Props {
@@ -20,22 +21,24 @@
 		QMS_info = $bindable(),
 		enableMultiRowSelectionState = true,
 		rowSelectionState,
-		QMSWraperContext = $bindable(),
+		QMSWraperContext: QMSWraperContextBound = $bindable(),
 		node,
 		onRowSelectionChange,
 		onRowClicked
 	}: Props = $props();
 
-	if (QMSWraperContext === undefined) {
-		QMSWraperContext = {};
+	if (QMSWraperContextBound === undefined) {
+		QMSWraperContextBound = {};
 	}
 
-	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	const endpointInfo = QMSMainWraperContext?.endpointInfo;
-	const schemaData = QMSMainWraperContext?.schemaData;
-	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`);
+	let QMSMainWraperContextVar = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const endpointInfo = QMSMainWraperContextVar?.endpointInfo;
+	const schemaData = QMSMainWraperContextVar?.schemaData;
+	const OutermostQMSWraperContext = getContext(
+		`${prefix}OutermostQMSWraperContext`
+	) as QMSWraperContext;
 	const { QMSFieldToQMSGetMany_Store } = OutermostQMSWraperContext;
-	let getManyQMS = $state();
+	let getManyQMS = $state<FieldWithDerivedData>();
 	run(() => {
 		if ($QMSFieldToQMSGetMany_Store.length > 0) {
 			getManyQMS = QMSFieldToQMSGetMany_Store.getObj({
@@ -50,7 +53,7 @@
 {#key getManyQMS}
 	{#if getManyQMS}
 		<QmsWraper
-			bind:QMSWraperContext
+			bind:QMSWraperContext={QMSWraperContextBound}
 			QMSName={getManyQMS.dd_displayName}
 			initialGqlArgObj={{}}
 			QMSType="query"

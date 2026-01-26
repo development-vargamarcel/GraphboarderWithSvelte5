@@ -1,6 +1,6 @@
 <script lang="ts">
 	let { stepsOfFields } = $props();
-	let stepsOfFields_display = stepsOfFields
+	let stepsOfFields_display = (stepsOfFields as (string | any)[])
 		.map((el) => {
 			if (typeof el == 'string') {
 				return el;

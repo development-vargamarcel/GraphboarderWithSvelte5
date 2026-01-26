@@ -50,7 +50,8 @@ export function processSelectedRowsColValues(
 		let idDecoded = endpointInfo.get_decodedId(null, null, idRaw);
 
 		if (node.dd_kindEl == 'SCALAR') {
-			return { [node.dd_displayName]: idDecoded };
+			const displayName = node.dd_displayName || 'id';
+			return { [displayName]: idDecoded };
 		}
 
 		const rowWithRequiredColsOnly: Record<string, any> = {};
@@ -77,7 +78,9 @@ export function getRequiredColumnNames(node: {
 	}
 
 	return (
-		node?.inputFields?.filter((field) => field.dd_NON_NULL).map((field) => field.dd_displayName) ||
-		[]
+		node?.inputFields
+			?.filter((field) => field.dd_NON_NULL)
+			.map((field) => field.dd_displayName || '')
+			.filter(Boolean) || []
 	);
 }

@@ -213,7 +213,7 @@
 						</th>
 					{/if}
 
-					<td>{parseInt(row.index) + 1}</td>
+					<td>{row.index + 1}</td>
 
 					{#each row.getVisibleCells() as cell}
 						<td class="break-no">

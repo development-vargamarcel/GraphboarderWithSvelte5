@@ -9,10 +9,18 @@
 
 	let showAddModal = $state(false);
 	let editingEndpoint = $state<AvailableEndpoint | null>(null);
+	let isDuplicateMode = $state(false);
 	let fileInput = $state<HTMLInputElement | null>(null);
 
 	const handleEditEndpoint = (endpoint: AvailableEndpoint) => {
 		editingEndpoint = endpoint;
+		isDuplicateMode = false;
+		showAddModal = true;
+	};
+
+	const handleDuplicateEndpoint = (endpoint: AvailableEndpoint) => {
+		editingEndpoint = endpoint;
+		isDuplicateMode = true;
 		showAddModal = true;
 	};
 
@@ -77,6 +85,7 @@
 				class="btn btn-primary"
 				onclick={() => {
 					editingEndpoint = null;
+					isDuplicateMode = false;
 					showAddModal = true;
 				}}
 			>
@@ -89,9 +98,11 @@
 		endpoints={$endpoints}
 		onAddEndpoint={() => {
 			editingEndpoint = null;
+			isDuplicateMode = false;
 			showAddModal = true;
 		}}
 		onEditEndpoint={handleEditEndpoint}
+		onDuplicateEndpoint={handleDuplicateEndpoint}
 	/>
 
 	<Modal
@@ -100,13 +111,16 @@
 		onCancel={() => {
 			showAddModal = false;
 			editingEndpoint = null;
+			isDuplicateMode = false;
 		}}
 	>
 		<EndpointForm
 			endpointToEdit={editingEndpoint}
+			isDuplicate={isDuplicateMode}
 			onHide={() => {
 				showAddModal = false;
 				editingEndpoint = null;
+				isDuplicateMode = false;
 			}}
 		/>
 	</Modal>

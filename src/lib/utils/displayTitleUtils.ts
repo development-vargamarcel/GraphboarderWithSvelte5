@@ -30,7 +30,7 @@ export function generateGroupDisplayTitle(
 		if (node?.operator == 'list') {
 			groupDisplayTitle = `${groupDisplayTitle} (list)`;
 		}
-		if (['_and', '_or'].includes(node?.operator)) {
+		if (['_and', '_or'].includes(node?.operator || '')) {
 			groupDisplayTitle = `${groupDisplayTitle}${node?.operator} (list)`;
 		}
 	}

@@ -25,12 +25,14 @@
 
 		dragDisabled = true;
 	}
-	const transformDraggedElement = (draggedEl, data, index) => {
-		draggedEl.querySelector('.dnd-item').classList.add('bg-accent/20', 'border-2', 'border-accent');
+	const transformDraggedElement = (draggedEl: any, data: any, index: any) => {
+		draggedEl
+			?.querySelector('.dnd-item')
+			?.classList.add('bg-accent/20', 'border-2', 'border-accent');
 	};
 
 	//
-	function handleConsider(e) {
+	function handleConsider(e: any) {
 		const {
 			items: newItems,
 			info: { source, trigger }
@@ -41,7 +43,7 @@
 			dragDisabled = true;
 		}
 	}
-	function handleFinalize(e) {
+	function handleFinalize(e: any) {
 		const {
 			items: newItems,
 			info: { source }
@@ -53,19 +55,19 @@
 		}
 		onUpdateQuery?.();
 	}
-	function startDrag(e) {
+	function startDrag(e: any) {
 		// preventing default to prevent lag on touch devices (because of the browser checking for screen scrolling)
 		e.preventDefault();
 		dragDisabled = false;
 	}
-	function handleKeyDown(e) {
+	function handleKeyDown(e: KeyboardEvent) {
 		if ((e.key === 'Enter' || e.key === ' ') && dragDisabled) dragDisabled = false;
 	}
 	//
 
 	const hasGroup_argsNode = group.group_argsNode;
 	//
-	const dndIsOn = getContext('dndIsOn');
+	const dndIsOn = getContext('dndIsOn') as any;
 	const showInputField = getContext('showInputField');
 </script>
 
@@ -81,7 +83,7 @@
 	onfinalize={handleFinalize}
 	class=" rounded-box pt-2 pr-2"
 >
-	{#each group.group_args as activeArgumentData (activeArgumentData.id)}
+	{#each (group.group_args as any[]) as activeArgumentData (activeArgumentData.id)}
 		<div animate:flip={{ duration: flipDurationMs }} class="relative flex">
 			{#if $dndIsOn}
 				<div class="grid content-center rounded-full">

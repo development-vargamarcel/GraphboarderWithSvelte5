@@ -16,6 +16,7 @@ From the home page, click **"Get Started"** to navigate to the **Endpoint Picker
   - **Headers**: Optional JSON object for headers (e.g., `{"Authorization": "Bearer token"}`).
   - **Test Connection**: Use the "Test Connection" button to verify if the URL and headers are correct before saving.
 - **Edit/Delete**: User-defined endpoints can be edited or deleted using the buttons on the card.
+- **Duplicate**: Click the duplicate icon (copy) on any endpoint card to create a copy of its configuration. This is useful for creating variations of endpoints (e.g., Development vs. Production) without re-entering all details.
 - **Export/Import**: You can export your user-defined endpoints to a JSON file and import them later.
 
 ## 2. Exploring the Schema

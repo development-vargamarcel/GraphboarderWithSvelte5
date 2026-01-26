@@ -230,7 +230,7 @@
 		data: any,
 		index: number | undefined
 	) => {
-		transformDraggedElementUtil(draggedEl);
+		transformDraggedElementUtil(draggedEl || null);
 	};
 	//
 
@@ -290,7 +290,7 @@
 	});
 
 	$effect(() => {
-		stepsOfFieldsFull = stepsOfNodesToStepsOfFields(stepsOfNodes);
+		stepsOfFieldsFull = stepsOfNodesToStepsOfFields(stepsOfNodes as any[]);
 		stepsOfFields = filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']);
 		updateNodeSteps(
 			node,
