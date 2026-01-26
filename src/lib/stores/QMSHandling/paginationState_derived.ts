@@ -3,11 +3,11 @@
 import { derived, get } from 'svelte/store';
 import { get_paginationTypes } from '../pagination/paginationTypes';
 export const Create_paginationState_derived = (
-	_paginationState_Store,
-	paginationArgs,
-	paginationType,
-	endpointInfo,
-	schemaData
+	_paginationState_Store: any,
+	paginationArgs: any,
+	paginationType: any,
+	endpointInfo: any,
+	schemaData: any
 ) => {
 	return {
 		...derived([_paginationState_Store], ([$_paginationState_Store], set) => {
@@ -16,7 +16,7 @@ export const Create_paginationState_derived = (
 					.find((pagType) => {
 						return pagType.name == paginationType;
 					})
-					.isFirstPage(_paginationState_Store, paginationArgs)
+					?.isFirstPage?.(_paginationState_Store, paginationArgs)
 			) {
 				set($_paginationState_Store);
 			}

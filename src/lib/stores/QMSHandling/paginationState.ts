@@ -30,29 +30,35 @@ export const Create_paginationState = (
 		update,
 		nextPage: (returnedDataBatch_last: unknown, QMS_name: string, QMS_type: QMSType) => {
 			update((val) => {
-				return paginationTypeInfo.get_nextPageState(
-					val,
-					paginationArgs,
-					returnedDataBatch_last,
-					QMS_name,
-					QMS_type
+				return (
+					paginationTypeInfo?.get_nextPageState(
+						val,
+						paginationArgs,
+						returnedDataBatch_last,
+						QMS_name,
+						QMS_type
+					) || val
 				);
 			});
 		},
 		prevPage: (returnedDataBatch_last: unknown, QMS_name: string, QMS_type: QMSType) => {
 			update((val) => {
-				return paginationTypeInfo.get_prevPageState(
-					val,
-					paginationArgs,
-					returnedDataBatch_last,
-					QMS_name,
-					QMS_type
+				return (
+					paginationTypeInfo?.get_prevPageState(
+						val,
+						paginationArgs,
+						returnedDataBatch_last,
+						QMS_name,
+						QMS_type
+					) || val
 				);
 			});
 		},
 		resetToDefault: () => {
 			update((val) => {
-				return paginationTypeInfo.get_defaultPaginationStateForDynamic(val, paginationArgs);
+				return (
+					paginationTypeInfo?.get_defaultPaginationStateForDynamic(val, paginationArgs) || val
+				);
 			});
 		}
 	};

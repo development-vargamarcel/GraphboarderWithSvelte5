@@ -7,13 +7,13 @@ import { derived, get } from 'svelte/store';
 import _ from 'lodash';
 
 export const Create_QMS_bodyPart_StoreDerived = (
-	finalGqlArgObj_Store,
-	tableColsData_Store,
+	finalGqlArgObj_Store: any,
+	tableColsData_Store: any,
 	QMS_type = 'query',
 	QMS_name: string,
-	paginationOptions_Store,
-	paginationState_derived_Store,
-	mergedChildren_finalGqlArgObj_Store,
+	paginationOptions_Store: any,
+	paginationState_derived_Store: any,
+	mergedChildren_finalGqlArgObj_Store: any,
 	initialGqlArgObj = {}
 ) => {
 	return derived(
@@ -24,7 +24,7 @@ export const Create_QMS_bodyPart_StoreDerived = (
 			mergedChildren_finalGqlArgObj_Store
 		],
 		(
-			[$finalGqlArgObj_Store, $tableColsData_Store, , $mergedChildren_finalGqlArgObj_Store],
+			[$finalGqlArgObj_Store, $tableColsData_Store, _, $mergedChildren_finalGqlArgObj_Store],
 			set
 		) => {
 			let paginationState = {};
@@ -40,7 +40,7 @@ export const Create_QMS_bodyPart_StoreDerived = (
 					{},
 					initialGqlArgObj || {},
 					paginationState,
-					$finalGqlArgObj_Store?.finalGqlArgObj || {}
+					($finalGqlArgObj_Store as any)?.finalGqlArgObj || {}
 				);
 				return merged;
 			};

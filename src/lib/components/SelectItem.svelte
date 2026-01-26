@@ -2,7 +2,7 @@
 	import { run } from 'svelte/legacy';
 	import QmsWraper from '$lib/components/QMSWraper.svelte';
 	import { getContext } from 'svelte';
-	import type { QMSMainWraperContext, QMSWraperContext } from '$lib/types';
+	import type { QMSMainWraperContext, QMSWraperContext, FieldWithDerivedData } from '$lib/types';
 	import ComponentForLayout from '../../routes/endpoints/[endpointid]/queries/[queryName]/ComponentForLayout.svelte';
 
 	interface Props {
@@ -38,7 +38,7 @@
 		`${prefix}OutermostQMSWraperContext`
 	) as QMSWraperContext;
 	const { QMSFieldToQMSGetMany_Store } = OutermostQMSWraperContext;
-	let getManyQMS = $state();
+	let getManyQMS = $state<FieldWithDerivedData>();
 	run(() => {
 		if ($QMSFieldToQMSGetMany_Store.length > 0) {
 			getManyQMS = QMSFieldToQMSGetMany_Store.getObj({

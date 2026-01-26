@@ -138,7 +138,8 @@
 				value = activeArgumentData.chd_dispatchValue.join(', ');
 			} else if (typeof activeArgumentData.chd_dispatchValue == 'string') {
 				value = string_transformerREVERSE(
-					activeArgumentData.chd_dispatchValue || activeArgumentData.defaultValue
+					(activeArgumentData.chd_dispatchValue as string) ||
+						(activeArgumentData.defaultValue as string)
 				);
 			}
 		}
