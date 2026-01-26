@@ -80,9 +80,11 @@
 	let responseSize = $state<number | null>(null);
 	let viewMode = $state<'table' | 'json'>('table');
 
-	if (scalarFields.length > 0) {
-		queryData.fetching = true;
-	}
+	$effect(() => {
+		if (scalarFields.length > 0) {
+			queryData.fetching = true;
+		}
+	});
 
 	function infiniteHandler({ detail: { loaded, complete } }: any) {
 		loadedF = loaded;
