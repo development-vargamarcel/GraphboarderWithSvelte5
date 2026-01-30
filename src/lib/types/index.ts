@@ -297,6 +297,7 @@ export interface EndpointConfiguration {
 	description?: string;
 	id?: string;
 	isMaintained?: boolean;
+	headers?: Record<string, string>;
 	rowsLocationPossibilities?: RowsLocationPossibility[];
 	rowCountLocationPossibilities?: RowsLocationPossibility[];
 	relayPageInfoFieldsPossibleNames?: Record<string, string[]>;

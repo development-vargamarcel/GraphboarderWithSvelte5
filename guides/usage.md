@@ -73,7 +73,17 @@ As you build the query, the results are fetched and displayed automatically.
 - **Copy TypeScript**: Click the **"Copy TS"** button to generate and copy a TypeScript interface definition for the current query response to your clipboard. This interface is automatically derived from the schema and matches the shape of the selected fields.
 - **Prettify**: Use the "Show Prettified" toggle to switch between raw and formatted views.
 
-## 6. History & Favorites
+## 6. Dynamic Headers
+
+You can modify the HTTP headers for the current session directly from the query execution interface. This is useful for testing different authentication tokens or roles without modifying the global endpoint configuration.
+
+1.  Click the **"Headers"** button in the toolbar (next to "QMS body").
+2.  A modal will appear showing the current headers as a JSON object.
+3.  Edit the headers (e.g., update the `Authorization` token).
+4.  Click **"Save"**.
+5.  All subsequent queries in the current session will use the new headers.
+
+## 7. History & Favorites
 
 - **History**:
   - The application automatically tracks every query and mutation you execute in the **History** tab.
@@ -87,12 +97,12 @@ As you build the query, the results are fetched and displayed automatically.
   - Enter a name for your query.
   - Access your favorite queries from the "Favorites" tab in the sidebar.
 
-## 7. Appearance
+## 8. Appearance
 
 - **Theme Toggle**: Use the sun/moon icon at the bottom of the sidebar to switch between Light and Dark themes.
 - **Download Schema**: Click the download icon (arrow pointing down) next to the theme toggle to download the current GraphQL schema as a JSON file. This is useful for offline analysis or for use with other tools.
 
-## 8. Mutations
+## 9. Mutations
 
 For mutations (creating/updating data):
 
@@ -101,7 +111,7 @@ For mutations (creating/updating data):
 3.  Click **Submit** to execute the mutation.
 4.  View the result (success/error) and returned data.
 
-## 9. Troubleshooting & Debugging
+## 10. Troubleshooting & Debugging
 
 - **Loading States**: If the application takes time to load an endpoint configuration, a loading spinner will appear. If it fails to load, an error message with a "Retry" button will be displayed.
 - **Console Logs**: For advanced debugging, open your browser's developer console (F12). The application logs detailed information about data fetching, pagination logic, and configuration parsing using `console.debug`.
