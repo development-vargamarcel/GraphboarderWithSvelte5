@@ -25,6 +25,7 @@
 	import GraphqlCodeDisplay from '$lib/components/GraphqlCodeDisplay.svelte';
 	import ControlPanel from '$lib/components/ControlPanel.svelte';
 	import { historyQueries } from '$lib/stores/historyQueriesStore';
+	import HeadersEditor from '$lib/components/HeadersEditor.svelte';
 	import { get } from 'svelte/store';
 	import type {
 		QMSWraperContext,
@@ -153,6 +154,7 @@
 		let data: any = false;
 
 		const startTime = Date.now();
+		console.debug('Query Execution Start:', new Date(startTime).toISOString());
 		const endpointId = $page.params.endpointid;
 		const queryName = QMSName;
 
@@ -162,13 +164,16 @@
 			.then((result: any) => {
 				fetching = false;
 				const duration = Date.now() - startTime;
+				console.debug('Query Execution Completed in', duration, 'ms');
 				let status: 'success' | 'error' = 'success';
 
 				if (result.error) {
+					console.debug('Query Error:', result.error);
 					error = result.error.message;
 					status = 'error';
 				}
 				if (result.data) {
+					console.debug('Query Data Size:', JSON.stringify(result.data).length, 'bytes');
 					data = result.data;
 				}
 
@@ -298,6 +303,7 @@
 		hljs.highlightAll();
 	});
 	let showModal = $state(false);
+	let showHeadersModal = $state(false);
 	let showActiveFilters;
 </script>
 
@@ -368,6 +374,25 @@
 			showQMSBody = !showQMSBody;
 		}}>QMS body</button
 	>
+	<button
+		class="btn grow normal-case btn-xs"
+		onclick={() => {
+			showHeadersModal = true;
+		}}
+	>
+		Headers
+	</button>
+
+	{#if showHeadersModal}
+		<Modal
+			modalIdentifier="headersModal"
+			showApplyBtn={false}
+			onCancel={() => (showHeadersModal = false)}
+		>
+			<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
+		</Modal>
+	{/if}
+
 	{#if QMS_bodyPart_StoreDerived_rowsCount}
 		<div class="badge flex space-x-2 badge-primary">
 			{rows.length}/
