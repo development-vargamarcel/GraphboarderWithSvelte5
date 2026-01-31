@@ -76,15 +76,29 @@ As you build the query, the results are fetched and displayed automatically.
   - Copy this URL and send it to others. When they open it, the application will restore the query exactly as it was.
 - **Prettify**: Use the "Show Prettified" toggle to switch between raw and formatted views.
 
-## 6. Dynamic Headers
+## 6. Dynamic Headers & Environment Variables
+
+### Dynamic Headers
 
 You can modify the HTTP headers for the current session directly from the query execution interface. This is useful for testing different authentication tokens or roles without modifying the global endpoint configuration.
 
-1.  Click the **"Headers"** button in the toolbar (next to "QMS body").
+1.  Click the **"Headers"** button in the toolbar (next to "Variables").
 2.  A modal will appear showing the current headers as a JSON object.
 3.  Edit the headers (e.g., update the `Authorization` token).
 4.  Click **"Save"**.
 5.  All subsequent queries in the current session will use the new headers.
+
+### Environment Variables
+
+To improve security and convenience, you can use environment variables in your headers instead of hardcoding sensitive tokens.
+
+1.  Click the **"Variables"** button in the toolbar.
+2.  Add a new variable by entering a **Key** (e.g., `API_TOKEN`) and a **Value**.
+3.  Click **Add**. The value is stored locally in your browser.
+4.  In the **Headers** editor (or Endpoint configuration), use the variable syntax: `{{VARIABLE_NAME}}`.
+    - Example: `{"Authorization": "Bearer {{API_TOKEN}}"}`
+5.  The application will automatically substitute `{{API_TOKEN}}` with the actual value when making requests.
+6.  You can toggle **"Show Values"** to reveal the actual values of your variables.
 
 ## 7. History & Favorites
 
