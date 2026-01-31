@@ -35,6 +35,8 @@
 	import GraphqlCodeDisplay from './GraphqlCodeDisplay.svelte';
 	import type { QMSWraperContext, QMSMainWraperContext } from '$lib/types';
 	import JSON5 from 'json5';
+	import HeadersEditor from '$lib/components/HeadersEditor.svelte';
+	import EnvVarsManager from '$lib/components/EnvVarsManager.svelte';
 
 	/**
 	 * Component that displays a list of results from a GraphQL endpoint.
@@ -231,6 +233,9 @@
 	let showQMSBody = $state(false);
 	let showNonPrettifiedQMSBody = false;
 
+	let showHeadersModal = $state(false);
+	let showVarsModal = $state(false);
+
 	onMount(() => {
 		hljs.registerLanguage('graphql', graphql);
 		hljs.highlightAll();
@@ -267,6 +272,12 @@
 				</div>
 			</Modal>
 		{/if}
+		<Modal bind:show={showHeadersModal} modalIdentifier="headers-modal" showApplyBtn={false}>
+			<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
+		</Modal>
+		<Modal bind:show={showVarsModal} modalIdentifier="vars-modal" showApplyBtn={false}>
+			<EnvVarsManager onClose={() => (showVarsModal = false)} />
+		</Modal>
 	</div>
 	<div class="join">
 		<button
@@ -278,6 +289,21 @@
 			onclick={() => (viewMode = 'json')}>JSON</button
 		>
 	</div>
+
+	<button
+		class="btn btn-xs normal-case"
+		onclick={() => (showHeadersModal = true)}
+		title="Edit Request Headers"
+	>
+		<i class="bi bi-list-check"></i> Headers
+	</button>
+	<button
+		class="btn btn-xs normal-case"
+		onclick={() => (showVarsModal = true)}
+		title="Manage Environment Variables"
+	>
+		<i class="bi bi-braces"></i> Variables
+	</button>
 
 	<button
 		class=" btn grow normal-case btn-xs"

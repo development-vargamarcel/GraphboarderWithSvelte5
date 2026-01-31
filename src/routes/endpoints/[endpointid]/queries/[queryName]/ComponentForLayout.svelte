@@ -26,6 +26,7 @@
 	import ControlPanel from '$lib/components/ControlPanel.svelte';
 	import { historyQueries } from '$lib/stores/historyQueriesStore';
 	import HeadersEditor from '$lib/components/HeadersEditor.svelte';
+	import EnvVarsManager from '$lib/components/EnvVarsManager.svelte';
 	import { get } from 'svelte/store';
 	import type {
 		QMSWraperContext,
@@ -307,6 +308,7 @@
 	});
 	let showModal = $state(false);
 	let showHeadersModal = $state(false);
+	let showVarsModal = $state(false);
 	let showActiveFilters;
 </script>
 
@@ -385,14 +387,31 @@
 	>
 		Headers
 	</button>
+	<button
+		class="btn grow normal-case btn-xs"
+		onclick={() => {
+			showVarsModal = true;
+		}}
+	>
+		Variables
+	</button>
 
 	{#if showHeadersModal}
 		<Modal
+			bind:show={showHeadersModal}
 			modalIdentifier="headersModal"
 			showApplyBtn={false}
-			onCancel={() => (showHeadersModal = false)}
 		>
 			<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
+		</Modal>
+	{/if}
+	{#if showVarsModal}
+		<Modal
+			bind:show={showVarsModal}
+			modalIdentifier="varsModal"
+			showApplyBtn={false}
+		>
+			<EnvVarsManager onClose={() => (showVarsModal = false)} />
 		</Modal>
 	{/if}
 

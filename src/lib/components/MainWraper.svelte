@@ -8,6 +8,8 @@
 	import { Create_urqlCoreClient } from '$lib/utils/urqlCoreClient';
 	import { setContextClient, Client, fetchExchange } from '@urql/svelte';
 	import type { EndpointConfiguration } from '$lib/types';
+	import { envVars } from '$lib/stores/envVarsStore';
+	import { get } from 'svelte/store';
 
 	interface Props {
 		prefix?: string;
@@ -26,17 +28,36 @@
 	console.debug('Initializing URQL Client for:', ($endpointInfo as any)?.url);
 
 	let getHeaders = () => {
-		if (($endpointInfo as any)?.headers) {
-			return ($endpointInfo as any).headers;
-		}
-		if (browser) {
+		let headers: Record<string, string> = {};
+		if (($endpointInfo as any)?.headers && Object.keys(($endpointInfo as any).headers).length > 0) {
+			headers = ($endpointInfo as any).headers;
+		} else if (browser) {
 			const headersStr = localStorage.getItem('headers');
-			const headers = headersStr ? JSON.parse(headersStr) : {};
+			headers = headersStr ? JSON.parse(headersStr) : {};
 			console.debug('Loaded headers from localStorage:', headers);
-			return headers;
-		} else {
-			return {};
 		}
+
+		// Environment Variable Substitution
+		const vars = get(envVars);
+		const substitutedHeaders: Record<string, string> = {};
+
+		for (const [key, value] of Object.entries(headers)) {
+			if (typeof value === 'string') {
+				substitutedHeaders[key] = value.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (match, varName) => {
+					if (vars[varName] !== undefined) {
+						// console.debug(`Substituted env var ${varName} in header ${key}`);
+						return vars[varName];
+					} else {
+						console.warn(`Environment variable '${varName}' not found for header '${key}'`);
+						return match;
+					}
+				});
+			} else {
+				substitutedHeaders[key] = value;
+			}
+		}
+
+		return substitutedHeaders;
 	};
 
 	let client = new Client({
