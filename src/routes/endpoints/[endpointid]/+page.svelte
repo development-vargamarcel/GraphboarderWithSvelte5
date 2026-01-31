@@ -20,7 +20,8 @@
 			const endpointid = $page.params.endpointid;
 			if (endpointid) {
 				console.debug('EndpointPage: Redirecting to explorer');
-				goto(`/endpoints/${endpointid}/explorer`, { replaceState: true });
+				// eslint-disable-next-line svelte/no-navigation-without-resolve
+				void goto(`/endpoints/${endpointid}/explorer`, { replaceState: true });
 			}
 		}
 	});

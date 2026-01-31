@@ -3,7 +3,7 @@
 	import ComponentForLayout from './ComponentForLayout.svelte';
 	import { page } from '$app/state';
 	import { historyQueries } from '$lib/stores/historyQueriesStore';
-	import { get } from 'svelte/store';
+	import { decodeState } from '$lib/utils/stateEncoder';
 
 	interface Props {
 		children?: import('svelte').Snippet;
@@ -20,6 +20,8 @@
 
 	$effect(() => {
 		const historyId = page.url.searchParams.get('historyId');
+		const encodedState = page.url.searchParams.get('state');
+
 		if (historyId) {
 			const historyItem = historyQueries.get(historyId);
 			if (historyItem) {
@@ -27,18 +29,25 @@
 				if (historyItem.args) initialGqlArgObj = historyItem.args;
 				if (historyItem.cols) tableColsData_StoreInitialValue = historyItem.cols;
 			}
+		} else if (encodedState) {
+			const decoded = decodeState(encodedState);
+			if (decoded) {
+				console.debug('Restoring query from shared state:', decoded);
+				if (decoded.args) initialGqlArgObj = decoded.args;
+				if (decoded.cols) tableColsData_StoreInitialValue = decoded.cols;
+			}
 		}
 	});
 </script>
 
 {@render children?.()}
-{#key page.url.searchParams.get('historyId')}
-<QMSWraper
-	isOutermostQMSWraper={true}
-	QMSName={queryName}
-	initialGqlArgObj={initialGqlArgObj}
-	tableColsData_StoreInitialValue={tableColsData_StoreInitialValue}
->
-	<ComponentForLayout rowSelectionState={{}} />
-</QMSWraper>
+{#key (page.url.searchParams.get('historyId') || '') + (page.url.searchParams.get('state') || '')}
+	<QMSWraper
+		isOutermostQMSWraper={true}
+		QMSName={queryName}
+		{initialGqlArgObj}
+		{tableColsData_StoreInitialValue}
+	>
+		<ComponentForLayout rowSelectionState={{}} />
+	</QMSWraper>
 {/key}

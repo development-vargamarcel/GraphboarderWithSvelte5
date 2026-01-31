@@ -178,7 +178,7 @@
 				{#if isHistoryTab}
 					<span class="font-bold text-accent-content">History</span>
 					<button
-						class="btn btn-xs btn-error text-white"
+						class="btn text-white btn-xs btn-error"
 						onclick={clearHistory}
 						title="Clear all history"
 					>

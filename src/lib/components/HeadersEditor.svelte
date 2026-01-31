@@ -39,7 +39,7 @@
 		Modify headers for the current session. These headers will be used for all subsequent requests.
 	</p>
 	<textarea
-		class="textarea textarea-bordered h-64 font-mono text-sm"
+		class="textarea-bordered textarea h-64 font-mono text-sm"
 		bind:value={headersString}
 		placeholder={'{ "Authorization": "Bearer ..." }'}
 	></textarea>

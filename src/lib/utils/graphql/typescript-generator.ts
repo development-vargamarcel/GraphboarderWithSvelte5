@@ -66,14 +66,17 @@ const generateProperties = (
 				parentRootType = parentType as RootType;
 			} else if ('dd_rootName' in parentType) {
 				// It's a field, we need to resolve its type
-				parentRootType = getRootType(null, parentType.dd_rootName, { subscribe: () => {} } as any) ||
-                                 schemaData.rootTypes.find((r: RootType) => r.name === parentType.dd_rootName);
+				parentRootType =
+					getRootType(null, parentType.dd_rootName, { subscribe: () => {} } as any) ||
+					schemaData.rootTypes.find((r: RootType) => r.name === parentType.dd_rootName);
 			}
 
-            // Fallback: If we can't find parentRootType, try to find it in schemaData using the name directly if available
-            if (!parentRootType && (parentType as any).name) {
-                 parentRootType = schemaData.rootTypes.find((r: RootType) => r.name === (parentType as any).name);
-            }
+			// Fallback: If we can't find parentRootType, try to find it in schemaData using the name directly if available
+			if (!parentRootType && (parentType as any).name) {
+				parentRootType = schemaData.rootTypes.find(
+					(r: RootType) => r.name === (parentType as any).name
+				);
+			}
 
 			if (parentRootType && parentRootType.fields) {
 				fieldDef = parentRootType.fields.find((f) => f.name === fieldName);
@@ -90,53 +93,63 @@ const generateProperties = (
 			const kinds = get_KindsArray(fieldDef);
 			const isList = kinds.includes('LIST');
 			const isNonNull = kinds[0] === 'NON_NULL'; // Top level non-null
-            // Check inner non-null for list elements if list
-            // Simple logic:
-            // If SCALAR -> mapScalar
-            // If OBJECT -> recurse
-            // If ENUM -> string (for now)
+			// Check inner non-null for list elements if list
+			// Simple logic:
+			// If SCALAR -> mapScalar
+			// If OBJECT -> recurse
+			// If ENUM -> string (for now)
 
 			const typeName = fieldDef.dd_displayName || fieldDef.type?.name || 'unknown';
 
-            if (kinds.includes('SCALAR')) {
-                const scalarName = fieldDef.dd_rootName; // e.g., 'String' or 'Int'
-                tsType = mapScalarToTS(scalarName);
-            } else if (kinds.includes('ENUM')) {
-                tsType = 'string'; // Simplification
-            } else if (kinds.includes('OBJECT') || kinds.includes('INTERFACE') || kinds.includes('UNION')) {
-                // Recurse
-                if (selection.selectionSet) {
-                    // We need to pass the type of this field as the new parentType.
-                    // fieldDef is the definition of the field, so fieldDef.dd_rootName refers to the return type name.
-                    const returnTypeRoot = schemaData.rootTypes.find((r: RootType) => r.name === fieldDef!.dd_rootName);
+			if (kinds.includes('SCALAR')) {
+				const scalarName = fieldDef.dd_rootName; // e.g., 'String' or 'Int'
+				tsType = mapScalarToTS(scalarName);
+			} else if (kinds.includes('ENUM')) {
+				tsType = 'string'; // Simplification
+			} else if (
+				kinds.includes('OBJECT') ||
+				kinds.includes('INTERFACE') ||
+				kinds.includes('UNION')
+			) {
+				// Recurse
+				if (selection.selectionSet) {
+					// We need to pass the type of this field as the new parentType.
+					// fieldDef is the definition of the field, so fieldDef.dd_rootName refers to the return type name.
+					const returnTypeRoot = schemaData.rootTypes.find(
+						(r: RootType) => r.name === fieldDef!.dd_rootName
+					);
 
-                    if (returnTypeRoot) {
-                         const nestedProps = generateProperties(selection.selectionSet, returnTypeRoot, schemaData, indentLevel + 1);
-                         tsType = `{\n${nestedProps}${indent}}`;
-                    } else {
-                        tsType = 'any'; // Could not resolve return type
-                    }
-                } else {
-                    tsType = 'any'; // Missing selection set for object
-                }
-            }
+					if (returnTypeRoot) {
+						const nestedProps = generateProperties(
+							selection.selectionSet,
+							returnTypeRoot,
+							schemaData,
+							indentLevel + 1
+						);
+						tsType = `{\n${nestedProps}${indent}}`;
+					} else {
+						tsType = 'any'; // Could not resolve return type
+					}
+				} else {
+					tsType = 'any'; // Missing selection set for object
+				}
+			}
 
-            if (isList) {
-                tsType = `${tsType}[]`;
-            }
+			if (isList) {
+				tsType = `${tsType}[]`;
+			}
 
-            if (!isNonNull) {
-                tsType = `${tsType} | null`;
-            }
+			if (!isNonNull) {
+				tsType = `${tsType} | null`;
+			}
 
 			properties.push(`${indent}${alias}: ${tsType};`);
-
 		} else if (selection.kind === 'InlineFragment') {
-             // TODO: Support Inline Fragments better
-             properties.push(`${indent}// Inline Fragments not fully supported yet`);
-        } else if (selection.kind === 'FragmentSpread') {
-             properties.push(`${indent}// Fragment Spreads not supported yet`);
-        }
+			// TODO: Support Inline Fragments better
+			properties.push(`${indent}// Inline Fragments not fully supported yet`);
+		} else if (selection.kind === 'FragmentSpread') {
+			properties.push(`${indent}// Fragment Spreads not supported yet`);
+		}
 	});
 
 	return properties.join('\n');
@@ -162,10 +175,10 @@ export const generateTypeScript = (
 	}
 
 	const schemaData = get(schemaDataStore);
-    if(!schemaData.isReady) {
-        console.warn('[TS Gen] Schema data is not ready');
-        return '// Schema not ready';
-    }
+	if (!schemaData.isReady) {
+		console.warn('[TS Gen] Schema data is not ready');
+		return '// Schema not ready';
+	}
 
 	let result = '';
 
@@ -176,49 +189,53 @@ export const generateTypeScript = (
 		return '// No operation found';
 	}
 
-    const type = operation.operation; // 'query', 'mutation', 'subscription'
-    const name = operation.name ? operation.name.value : operationName;
+	const type = operation.operation; // 'query', 'mutation', 'subscription'
+	const name = operation.name ? operation.name.value : operationName;
 
-    // Determine the root type (Query, Mutation, Subscription)
-    let rootType: RootType | undefined;
-    if (type === 'query') {
-        // Typically 'Query' but strictly should check schema. But schemaData.rootTypes usually has it.
-        // We can assume schemaData.queryFields comes from the root Query type.
-        // Or find the type named 'Query' (or whatever standard)
-        // Let's search for "Query" or use the first root type if not found? No, that's risky.
-        // schemaData doesn't explicitly point to Root Query Type object, but it has queryFields.
-        // We can construct a fake parent type for the root.
+	// Determine the root type (Query, Mutation, Subscription)
+	let rootType: RootType | undefined;
+	if (type === 'query') {
+		// Typically 'Query' but strictly should check schema. But schemaData.rootTypes usually has it.
+		// We can assume schemaData.queryFields comes from the root Query type.
+		// Or find the type named 'Query' (or whatever standard)
+		// Let's search for "Query" or use the first root type if not found? No, that's risky.
+		// schemaData doesn't explicitly point to Root Query Type object, but it has queryFields.
+		// We can construct a fake parent type for the root.
 
-        // Better: Find the type that contains `queryFields`.
-        // schemaData.rootTypes contains all types.
-        // We can look for the type named 'Query' usually.
-        rootType = schemaData.rootTypes.find(t => t.name === 'Query');
-    } else if (type === 'mutation') {
-        rootType = schemaData.rootTypes.find(t => t.name === 'Mutation');
-    } else if (type === 'subscription') {
-        rootType = schemaData.rootTypes.find(t => t.name === 'Subscription');
-    }
+		// Better: Find the type that contains `queryFields`.
+		// schemaData.rootTypes contains all types.
+		// We can look for the type named 'Query' usually.
+		rootType = schemaData.rootTypes.find((t) => t.name === 'Query');
+	} else if (type === 'mutation') {
+		rootType = schemaData.rootTypes.find((t) => t.name === 'Mutation');
+	} else if (type === 'subscription') {
+		rootType = schemaData.rootTypes.find((t) => t.name === 'Subscription');
+	}
 
-    if (!rootType) {
-        // Fallback: Try to guess or just use queryFields to populate a dummy Root
-         console.warn(`[TS Gen] Could not find Root Type for ${type}. using fallback.`);
-         if (type === 'query') {
-             rootType = { name: 'Query', kind: 'OBJECT', fields: schemaData.queryFields } as any;
-         } else if (type === 'mutation') {
-             rootType = { name: 'Mutation', kind: 'OBJECT', fields: schemaData.mutationFields } as any;
-         } else if (type === 'subscription') {
-             rootType = { name: 'Subscription', kind: 'OBJECT', fields: schemaData.subscriptionFields } as any;
-         }
-    }
+	if (!rootType) {
+		// Fallback: Try to guess or just use queryFields to populate a dummy Root
+		console.warn(`[TS Gen] Could not find Root Type for ${type}. using fallback.`);
+		if (type === 'query') {
+			rootType = { name: 'Query', kind: 'OBJECT', fields: schemaData.queryFields } as any;
+		} else if (type === 'mutation') {
+			rootType = { name: 'Mutation', kind: 'OBJECT', fields: schemaData.mutationFields } as any;
+		} else if (type === 'subscription') {
+			rootType = {
+				name: 'Subscription',
+				kind: 'OBJECT',
+				fields: schemaData.subscriptionFields
+			} as any;
+		}
+	}
 
-    if (!rootType) {
-        return '// Could not resolve Root Type';
-    }
+	if (!rootType) {
+		return '// Could not resolve Root Type';
+	}
 
 	const props = generateProperties(operation.selectionSet, rootType, schemaData, 1);
 
 	result = `export interface ${name} {\n${props}\n}`;
 
-    console.debug('[TS Gen] Generation complete.');
+	console.debug('[TS Gen] Generation complete.');
 	return result;
 };

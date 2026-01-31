@@ -15,6 +15,9 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import { favoriteQueries } from '$lib/stores/favoriteQueriesStore';
 	import { addToast } from '$lib/stores/toastStore';
+	import { encodeState } from '$lib/utils/stateEncoder';
+	import { get } from 'svelte/store';
+	import { goto } from '$app/navigation';
 
 	interface Props {
 		showNonPrettifiedQMSBody?: boolean;
@@ -81,6 +84,7 @@
 	let curlCopyFeedback = $state(false);
 	let fetchCopyFeedback = $state(false);
 	let tsCopyFeedback = $state(false);
+	let shareFeedback = $state(false);
 
 	const copyToClipboard = () => {
 		navigator.clipboard.writeText(value);
@@ -88,6 +92,45 @@
 		setTimeout(() => {
 			copyFeedback = false;
 		}, 2000);
+	};
+
+	const handleShare = () => {
+		if (!QMSWraperContext) {
+			console.warn('Cannot share: QMSWraperContext not available');
+			addToast('Cannot share: Context unavailable', 'error');
+			return;
+		}
+
+		try {
+			const { finalGqlArgObj_Store, tableColsData_Store } = QMSWraperContext;
+			const args = get(finalGqlArgObj_Store);
+			const cols = get(tableColsData_Store);
+
+			const state = { args, cols };
+			const encodedState = encodeState(state);
+
+			if (!encodedState) {
+				addToast('Failed to encode state', 'error');
+				return;
+			}
+
+			const url = new URL(window.location.href);
+			url.searchParams.set('state', encodedState);
+
+			// Update URL without reloading
+			void goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
+
+			navigator.clipboard.writeText(url.toString());
+
+			shareFeedback = true;
+			addToast('Share link copied to clipboard!', 'success');
+			setTimeout(() => {
+				shareFeedback = false;
+			}, 2000);
+		} catch (e) {
+			console.error('Error sharing link:', e);
+			addToast('Error generating share link', 'error');
+		}
 	};
 
 	const generateCurlCommand = () => {
@@ -349,6 +392,18 @@
 			title="Save this query to favorites"
 		>
 			<i class="bi bi-star-fill"></i> Save
+		</button>
+		<button
+			class="btn normal-case btn-xs btn-info"
+			onclick={handleShare}
+			aria-label="Share Link"
+			title="Generate and copy a shareable link"
+		>
+			{#if shareFeedback}
+				<i class="bi bi-check"></i> Copied!
+			{:else}
+				<i class="bi bi-share-fill"></i> Share
+			{/if}
 		</button>
 		<button
 			class="btn normal-case btn-xs btn-primary"

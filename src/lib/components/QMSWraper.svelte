@@ -219,14 +219,7 @@
 		);
 	}
 
-	run(() => {});
-
-	run(() => {});
-	// 	'$mergedChildren_activeArgumentsDataGrouped_Store',
-	// 	$mergedChildren_activeArgumentsDataGrouped_Store
-	// );
-	run(() => {});
-	run(() => {});
+	// Removed unused run blocks
 
 	const QMS_bodyPart_StoreDerived = Create_QMS_bodyPart_StoreDerived(
 		finalGqlArgObj_Store,
@@ -280,9 +273,6 @@
 		endpointInfo,
 		schemaData
 	);
-
-	run(() => {});
-	run(() => {});
 
 	// Build the context object
 	QMSWraperContext = {

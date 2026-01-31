@@ -84,7 +84,8 @@
 
 	let dd_relatedRoot = getRootType(null, currentQMS_info.dd_rootName, schemaData);
 	if (!currentQMS_info) {
-		goto('/queries');
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		void goto('/queries');
 	}
 	//
 	let activeArgumentsData = [];
@@ -183,7 +184,9 @@
 					const tableColsData = get(tableColsData_Store) as any;
 
 					// Simple deep copy to avoid mutations affecting stored history if objects are referenced
-					const argsToSave = finalGqlArgObj?.finalGqlArgObj ? JSON.parse(JSON.stringify(finalGqlArgObj.finalGqlArgObj)) : {};
+					const argsToSave = finalGqlArgObj?.finalGqlArgObj
+						? JSON.parse(JSON.stringify(finalGqlArgObj.finalGqlArgObj))
+						: {};
 					const colsToSave = tableColsData ? JSON.parse(JSON.stringify(tableColsData)) : [];
 
 					if (endpointId) {
