@@ -142,7 +142,9 @@
 					const finalGqlArgObj = get(finalGqlArgObj_Store) as any;
 					const tableColsData = get(tableColsData_Store) as any;
 
-					const argsToSave = finalGqlArgObj?.finalGqlArgObj ? JSON.parse(JSON.stringify(finalGqlArgObj.finalGqlArgObj)) : {};
+					const argsToSave = finalGqlArgObj?.finalGqlArgObj
+						? JSON.parse(JSON.stringify(finalGqlArgObj.finalGqlArgObj))
+						: {};
 					const colsToSave = tableColsData ? JSON.parse(JSON.stringify(tableColsData)) : [];
 
 					if (endpointId) {
