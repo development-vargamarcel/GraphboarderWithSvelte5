@@ -23,6 +23,7 @@ const createRecentQueriesStore = () => {
 	return {
 		subscribe,
 		add: (query: Omit<RecentQuery, 'id' | 'timestamp'>) => {
+			console.debug('[RecentQueries] Adding query:', query.name);
 			update((queries) => {
 				const newQuery = { ...query, id: crypto.randomUUID(), timestamp: Date.now() };
 				// Remove duplicates (same name, type, and endpoint)
@@ -38,6 +39,7 @@ const createRecentQueriesStore = () => {
 			});
 		},
 		clear: () => {
+			console.debug('[RecentQueries] Clearing recent queries');
 			if (browser) {
 				localStorage.removeItem(STORAGE_KEY);
 			}

@@ -30,6 +30,7 @@ Once connected to an endpoint, you will see the **Explorer Interface**.
 
 - **Sidebar**: Displays the GraphQL schema (Root Types: Query, Mutation, Subscription).
 - **Navigation**: Expand types to see fields and arguments.
+- **Search**: Use the search bar in the sidebar to filter queries, mutations, history items, or favorites by name. The search supports fuzzy matching for better results.
 - **Documentation**: Hover over fields or click "info" icons to see descriptions and types from the schema.
 
 ## 3. Building Queries (Visual Query Builder)

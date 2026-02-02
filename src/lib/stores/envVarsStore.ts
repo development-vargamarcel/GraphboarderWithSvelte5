@@ -30,7 +30,7 @@ function createEnvVarsStore() {
 				if (browser) {
 					localStorage.setItem(STORAGE_KEY, JSON.stringify(newVars));
 				}
-				console.debug(`EnvVar set: ${key}`);
+				console.info(`[EnvVars] Set variable: ${key}`);
 				return newVars;
 			});
 		},
@@ -41,7 +41,7 @@ function createEnvVarsStore() {
 				if (browser) {
 					localStorage.setItem(STORAGE_KEY, JSON.stringify(newVars));
 				}
-				console.debug(`EnvVar removed: ${key}`);
+				console.info(`[EnvVars] Removed variable: ${key}`);
 				return newVars;
 			});
 		},

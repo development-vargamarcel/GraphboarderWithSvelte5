@@ -95,9 +95,6 @@
 		hljs.highlightAll();
 	});
 
-	let astAsString = $state('');
-	let ast: any = $state();
-	let astPrinted = $state('');
 	let copyFeedback = $state(false);
 	let curlCopyFeedback = $state(false);
 	let fetchCopyFeedback = $state(false);
@@ -105,6 +102,39 @@
 	let apolloCopyFeedback = $state(false);
 	let shareFeedback = $state(false);
 	let downloadFeedback = $state(false);
+
+	let effectiveValue = $derived(
+		valueModifiedManually !== undefined ? valueModifiedManually : value
+	);
+
+	let ast = $derived.by(() => {
+		try {
+			if (effectiveValue && language === 'graphql') {
+				return parse(effectiveValue);
+			}
+		} catch (e) {
+			// Failed to parse
+		}
+		return undefined;
+	});
+
+	let astPrinted = $derived.by(() => {
+		if (ast) {
+			try {
+				return print(ast);
+			} catch (e) {
+				// Failed to print
+			}
+		}
+		return '';
+	});
+
+	let astAsString = $derived.by(() => {
+		if (ast && getPreciseType(ast) == 'object') {
+			return JSON5.stringify(ast);
+		}
+		return '';
+	});
 
 	/**
 	 * Copies the raw content string to the clipboard.
@@ -418,47 +448,20 @@ export function ${hookName}() {
 	};
 
 	$effect(() => {
-		try {
-			// Only parse as GraphQL if language is graphql
-			if (value && language === 'graphql') {
-				ast = parse(value);
-			}
-		} catch (e) {
-			// Failed to parse, ignore
-		}
-	});
-
-	$effect(() => {
 		if (valueModifiedManually && valueModifiedManually !== lastSyncedValue) {
 			try {
 				if (language === 'graphql') {
-					ast = parse(valueModifiedManually);
+					const manualAst = parse(valueModifiedManually);
 
 					// Sync to UI if enabled and context is available
 					if (enableSyncToUI && QMSWraperContext && QMSMainWraperContext) {
-						syncQueryToUI(ast);
+						syncQueryToUI(manualAst);
 						lastSyncedValue = valueModifiedManually;
 					}
 				}
 			} catch (e) {
 				console.error('Error parsing manually modified query:', e);
 			}
-		}
-	});
-
-	$effect(() => {
-		if (ast) {
-			try {
-				astPrinted = print(ast);
-			} catch (e) {
-				// Failed to print, ignore
-			}
-		}
-	});
-
-	$effect(() => {
-		if (ast && getPreciseType(ast) == 'object') {
-			astAsString = JSON5.stringify(ast);
 		}
 	});
 </script>

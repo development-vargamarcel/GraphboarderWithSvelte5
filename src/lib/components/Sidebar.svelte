@@ -7,13 +7,24 @@
 	import type { QMSMainWraperContext } from '$lib/types';
 	import { downloadJSON } from '$lib/utils/usefulFunctions';
 
+	/**
+	 * Props for the Sidebar component.
+	 */
 	interface Props {
+		/** Whether the sidebar should be forced visible (e.g. on mobile). */
 		forceVisibleSidebar?: boolean;
+		/** Selector for the portal target (optional). */
 		portalSelector?: any;
+		/** List of links to display (optional, override). */
 		links?: any;
+		/** Prefix for context keys. */
 		prefix?: string;
 	}
 
+	/**
+	 * Sidebar component that contains the navigation tabs and schema tools.
+	 * Handles schema download and theme toggling.
+	 */
 	let {
 		forceVisibleSidebar = $bindable(false),
 		portalSelector = undefined,

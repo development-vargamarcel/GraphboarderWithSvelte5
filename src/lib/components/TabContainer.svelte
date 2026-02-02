@@ -7,6 +7,7 @@
 	import { favoriteQueries } from '$lib/stores/favoriteQueriesStore';
 	import { historyQueries } from '$lib/stores/historyQueriesStore';
 	import type { QMSMainWraperContext } from '$lib/types';
+	import Fuse from 'fuse.js';
 
 	interface LinkItem {
 		title: string;
@@ -118,14 +119,36 @@
 		}
 	]);
 
-	let itemsToShow = $state<LinkItem[]>([]);
+	let searchTerm = $state('');
 
-	const get_itemsToShow = () => {
-		const currentLink = links.find((link) => {
+	let currentLink = $derived(
+		links.find((link) => {
 			return $page.url.pathname == link.url || $page.url.pathname.startsWith(`${link.url}/`);
-		});
-		itemsToShow = currentLink?.items ?? [];
-	};
+		})
+	);
+
+	let rawItems = $derived(currentLink?.items ?? []);
+
+	let fuse = $derived(
+		new Fuse(rawItems, {
+			keys: ['title'],
+			threshold: 0.4
+		})
+	);
+
+	let itemsToShow = $derived.by(() => {
+		if (!searchTerm.trim()) return rawItems;
+		return fuse.search(searchTerm).map((result) => result.item);
+	});
+
+	// Better strategy for reset: track the last visited "tab" URL base
+	let lastTabUrl = $state('');
+	$effect(() => {
+		if (currentLink && currentLink.url !== lastTabUrl) {
+			searchTerm = '';
+			lastTabUrl = currentLink.url;
+		}
+	});
 
 	let isHistoryTab = $derived($page.url.pathname.includes('/history'));
 
@@ -137,16 +160,6 @@
 			historyQueries.clear();
 		}
 	};
-
-	onMount(() => {
-		get_itemsToShow();
-	});
-
-	$effect(() => {
-		if ($page.url.pathname) {
-			get_itemsToShow();
-		}
-	});
 </script>
 
 <div class="flex h-screen overscroll-contain">
@@ -172,17 +185,34 @@
 		</ul>
 	</div>
 
-	{#if itemsToShow.length > 0}
+	{#if rawItems.length > 0}
 		<div class="">
-			<div class="flex h-[50px] items-center justify-between bg-accent px-4">
+			<div class="flex h-[50px] items-center justify-between gap-2 bg-accent px-4">
+				<div class="relative w-full max-w-xs">
+					<input
+						type="text"
+						placeholder="Search..."
+						class="input input-xs input-bordered w-full pr-8 text-black"
+						bind:value={searchTerm}
+					/>
+					{#if searchTerm}
+						<button
+							class="absolute top-0 right-0 bottom-0 z-10 flex items-center pr-2 text-gray-500 hover:text-black"
+							onclick={() => (searchTerm = '')}
+							aria-label="Clear search"
+						>
+							<i class="bi bi-x-circle-fill"></i>
+						</button>
+					{/if}
+				</div>
+
 				{#if isHistoryTab}
-					<span class="font-bold text-accent-content">History</span>
 					<button
 						class="btn text-white btn-xs btn-error"
 						onclick={clearHistory}
 						title="Clear all history"
 					>
-						<i class="bi bi-trash"></i> Clear
+						<i class="bi bi-trash"></i>
 					</button>
 				{/if}
 			</div>
