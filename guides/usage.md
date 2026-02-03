@@ -173,3 +173,17 @@ A new **Storage Manager** tool is available to inspect and manage data stored in
 - **Access**: Click the **Database** icon (bi-database) in the bottom-left corner of the sidebar (next to the theme toggle).
 - **Inspect**: View raw JSON data for Endpoints, History, Favorites, and Environment Variables.
 - **Delete**: Individually delete specific storage keys if needed for debugging or cleanup.
+
+## 12. Command Palette
+
+A global **Command Palette** is available to help you navigate quickly through the application without lifting your hands from the keyboard.
+
+- **Access**: Press `Ctrl+K` (or `Cmd+K` on Mac) anywhere in the application to open the Command Palette.
+- **Search**:
+  - Search for global pages (Home, Endpoints).
+  - Search for pages within the current endpoint (Explorer, History, Favorites, Recent, etc.).
+  - Search for specific **Queries** and **Mutations** available in the schema.
+- **Navigate**:
+  - Use `Arrow Up` / `Arrow Down` to navigate the results.
+  - Press `Enter` to select an item.
+  - Press `Esc` to close.

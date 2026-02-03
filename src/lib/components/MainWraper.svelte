@@ -10,6 +10,7 @@
 	import type { EndpointConfiguration } from '$lib/types';
 	import { envVars } from '$lib/stores/envVarsStore';
 	import { get } from 'svelte/store';
+	import { appContext } from '$lib/stores/appContextStore';
 
 	/**
 	 * Props for MainWraper.
@@ -89,6 +90,16 @@
 		endpointInfo: endpointInfo,
 		schemaData: schemaData,
 		urqlCoreClient: urqlCoreClient
+	});
+
+	$effect(() => {
+		appContext.set({ endpointInfo, schemaData });
+		return () => {
+			const current = get(appContext);
+			if (current.endpointInfo === endpointInfo) {
+				appContext.set({ endpointInfo: null, schemaData: null });
+			}
+		};
 	});
 </script>
 
