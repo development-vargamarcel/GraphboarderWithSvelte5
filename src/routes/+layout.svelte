@@ -2,6 +2,8 @@
 	// import '../app.postcss';
 	import '../app.css';
 	import ToastContainer from '$lib/components/UI/ToastContainer.svelte';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
+
 	interface Props {
 		children?: import('svelte').Snippet;
 	}
@@ -10,6 +12,7 @@
 </script>
 
 <ToastContainer />
+<CommandPalette />
 
 <header></header>
 
