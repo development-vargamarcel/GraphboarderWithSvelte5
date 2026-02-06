@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import { get } from 'svelte/store';
-import { page } from '$app/stores';
 import { stringToQMSString_transformer } from '$lib/utils/dataStructureTransformers';
 import {
 	deleteIfChildrenHaveOneKeyAndLastKeyIsQMSarguments,
@@ -30,12 +29,7 @@ import type {
 } from '$lib/types';
 
 import { argumentCanRunQuery, sortingFunctionMutipleColumnsGivenArray } from './data-processing';
-import {
-	getFields_Grouped,
-	getRootType,
-	get_nodeFieldsQMS_info,
-	get_scalarColsData
-} from './schema-traversal';
+import { getFields_Grouped, get_nodeFieldsQMS_info, get_scalarColsData } from './schema-traversal';
 
 /**
  * Constructs the body part of a GraphQL query/mutation string.
@@ -79,7 +73,7 @@ export const build_QMS_bodyPart = (
 			return '(' + JSON.stringify(value) + ')';
 		}
 		return value;
-	}).replaceAll('\"QMSarguments\":', '');
+	}).replaceAll('"QMSarguments":', '');
 	const listOfSubstrings = generateListOfSubstrings(inputString);
 	const outsideTextModifier = (text: string): string => {
 		return text.replaceAll(/novaluehere|"|:/gi, '');
@@ -114,7 +108,7 @@ export const generate_gqlArgObj = (group_argumentsData: ActiveArgumentData[]): G
 			canRunQuery = false;
 			return false;
 		}
-		const { chd_dispatchValue, stepsOfFields, dd_displayName } = argData;
+		const { chd_dispatchValue, dd_displayName } = argData;
 
 		const curr_gqlArgObj: any = gqlArgObj;
 		if (dd_displayName) {
@@ -238,7 +232,7 @@ export const generate_group_gqlArgObj_forHasOperators = (
 	const spreadOutItems = spreadItemsIfInSpreadContainers(items);
 	spreadOutItems.forEach((item) => {
 		const itemData = nodes[item.id];
-		const isContainer = itemData.hasOwnProperty('items');
+		const isContainer = Object.prototype.hasOwnProperty.call(itemData, 'items');
 		const nodeStep = itemData?.stepsOfNodes?.[itemData?.stepsOfNodes.length - 1];
 		const nodeStepClean = filterElFromArr(nodeStep as any, [null, undefined, 'bonded', 'list']);
 
@@ -277,13 +271,10 @@ export const generate_group_gqlArgObj_forHasOperators = (
 			dataToAssign,
 			true
 		) as Record<string, unknown>;
-		let itemObjectTestCurr = setValueAtPath({}, nodeStepClean as string[], dataToAssign, true);
-		const itemObjectTest2 = 'not set';
 		if (resultingGqlArgObj == undefined) {
 			// let itemObjectTest2 = 'set'
 			//itemObjectTest2 = dataToAssign
 			resultingGqlArgObj = dataToAssign as Record<string, unknown>;
-			itemObjectTestCurr = dataToAssign;
 		}
 
 		if (isContainer) {
@@ -414,7 +405,6 @@ export const getQMSLinks = (
 	endpointInfo: EndpointInfoStore,
 	schemaData: SchemaData
 ): { url: string; title: string }[] => {
-	const $page = get(page);
 	// let origin = $page.url.origin; // Unused
 	let queryLinks: { url: string; title: string }[] = [];
 	const $schemaData = get(schemaData);
@@ -538,7 +528,7 @@ export const tableColsDataToQueryFields = (
  */
 export const nodeAddDefaultFields = (
 	node: ContainerData,
-	prefix: string = '',
+	_prefix: string = '',
 	group: ActiveArgumentGroup,
 	activeArgumentsDataGrouped_Store: ActiveArgumentsDataGroupedStore,
 	schemaData: SchemaData,

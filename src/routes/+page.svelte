@@ -29,6 +29,7 @@
 					</li>
 				</ul>
 				<div class="flex gap-4">
+					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 					<a href="/endpoints" class="btn gap-2 btn-lg btn-primary">
 						Get Started <i class="bi bi-arrow-right"></i>
 					</a>

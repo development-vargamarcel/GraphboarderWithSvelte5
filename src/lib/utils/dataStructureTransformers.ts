@@ -161,8 +161,3 @@ export const boolean_transformer = (value: unknown): boolean => {
 	}
 	return value as boolean;
 };
-const escapeAllSigngleAndDoubleQuotes = (str: string): string => {
-	return str.replace(/["']/g, (match) => {
-		return `\\${match}`;
-	});
-};

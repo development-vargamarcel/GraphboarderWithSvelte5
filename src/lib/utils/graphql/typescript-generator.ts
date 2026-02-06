@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { SchemaDataStore, RootType, FieldWithDerivedData, GraphQLKind } from '$lib/types';
+import type { SchemaDataStore, RootType, FieldWithDerivedData } from '$lib/types';
 import { getRootType, get_KindsArray } from './schema-traversal';
 
 /**
@@ -98,8 +98,6 @@ const generateProperties = (
 			// If SCALAR -> mapScalar
 			// If OBJECT -> recurse
 			// If ENUM -> string (for now)
-
-			const typeName = fieldDef.dd_displayName || fieldDef.type?.name || 'unknown';
 
 			if (kinds.includes('SCALAR')) {
 				const scalarName = fieldDef.dd_rootName; // e.g., 'String' or 'Int'

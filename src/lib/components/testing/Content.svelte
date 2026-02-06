@@ -16,7 +16,7 @@
 </script>
 
 <b style="color:{node?.color}">{node?.name}</b>
-{#if node?.hasOwnProperty('items')}
+{#if node?.items}
 	<section
 		use:dndzone={{ items: node.items, flipDurationMs, centreDraggedOnCursor: true }}
 		onconsider={handleDndConsider}

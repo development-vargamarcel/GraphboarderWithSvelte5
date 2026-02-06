@@ -4,7 +4,8 @@ import {
 	generateFetchCommand,
 	generateApolloCommand,
 	generatePythonCommand,
-	generateGoCommand
+	generateGoCommand,
+	generateRustCommand
 } from './codegen';
 
 // Mock logger
@@ -109,6 +110,19 @@ describe('codegen', () => {
 			// Escaped: ... \"a\\\\b\" ...
 			expect(result).toContain('\\"'); // quotes escaped
 			expect(result).toContain('\\\\'); // backslashes escaped
+		});
+	});
+
+	describe('generateRustCommand', () => {
+		it('generates Rust command correctly', () => {
+			const result = generateRustCommand(url, headers, query);
+			expect(result).toContain('use reqwest::Client;');
+			expect(result).toContain('use serde_json::json;');
+			expect(result).toContain(`.post("${url}")`);
+			expect(result).toContain('.header("Authorization", "Bearer token")');
+			expect(result).toContain('.header("Content-Type", "application/json")');
+			expect(result).toContain('.json(&json!(');
+			expect(result).toContain('"query": "query { hello }"');
 		});
 	});
 });
