@@ -96,10 +96,10 @@
 	<div class="flex items-center justify-between">
 		<h3 class="text-lg font-bold">Environment Variables</h3>
 		<div class="flex items-center gap-2">
-			<button class="btn btn-xs btn-ghost" onclick={handleExport} title="Export Variables">
+			<button class="btn btn-ghost btn-xs" onclick={handleExport} title="Export Variables">
 				<i class="bi bi-download"></i>
 			</button>
-			<button class="btn btn-xs btn-ghost" onclick={handleImportClick} title="Import Variables">
+			<button class="btn btn-ghost btn-xs" onclick={handleImportClick} title="Import Variables">
 				<i class="bi bi-upload"></i>
 			</button>
 			<input
@@ -109,7 +109,7 @@
 				accept=".json"
 				class="hidden"
 			/>
-			<div class="divider divider-horizontal mx-0"></div>
+			<div class="divider mx-0 divider-horizontal"></div>
 			<label class="label cursor-pointer p-0">
 				<span class="label-text mr-2 text-xs">Show Values</span>
 				<input type="checkbox" class="toggle toggle-xs" bind:checked={showValues} />

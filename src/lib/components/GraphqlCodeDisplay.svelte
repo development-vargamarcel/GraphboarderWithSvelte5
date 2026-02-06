@@ -30,6 +30,7 @@
 	import { downloadText } from '$lib/utils/downloadUtils';
 	import { logger } from '$lib/utils/logger';
 	import { pinnedResponseStore } from '$lib/stores/pinnedResponseStore';
+	import JsonDiffViewer from './JsonDiffViewer.svelte';
 
 	/**
 	 * Props for GraphqlCodeDisplay component.
@@ -115,7 +116,7 @@
 	try {
 		QMSWraperContext = getContext(`${prefix}QMSWraperContext`);
 		QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`);
-	} catch (e) {
+	} catch {
 		// Context might not be available in all usages
 	}
 
@@ -131,6 +132,16 @@
 	let copyFeedback = $state(false);
 	let shareFeedback = $state(false);
 	let downloadFeedback = $state(false);
+
+	let showDiff = $state(false);
+	let pinnedResponse = $state<any>(null);
+
+	$effect(() => {
+		const unsubscribe = pinnedResponseStore.subscribe((val) => {
+			pinnedResponse = val;
+		});
+		return unsubscribe;
+	});
 
 	/**
 	 * Copies the raw content string to the clipboard.
@@ -187,6 +198,7 @@
 			url.searchParams.set('state', encodedState);
 
 			// Update URL without reloading
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
 			void goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
 
 			navigator.clipboard.writeText(url.toString());
@@ -238,7 +250,7 @@
 				try {
 					const storedHeaders = JSON.parse(headersStr);
 					headers = { ...storedHeaders };
-				} catch (e) {
+				} catch {
 					// ignore
 				}
 			}
@@ -252,6 +264,7 @@
 		const lang = exportLanguage;
 		const query = value;
 		// Ensure we re-generate when modal opens to capture latest endpoint details
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const _ = showExportModal;
 
 		const { url, headers } = getEndpointDetails();
@@ -340,7 +353,7 @@
 				ast = parse(value);
 				complexity = calculateComplexity(ast);
 			}
-		} catch (e) {
+		} catch {
 			// Failed to parse, ignore
 		}
 	});
@@ -367,7 +380,7 @@
 		if (ast) {
 			try {
 				astPrinted = print(ast);
-			} catch (e) {
+			} catch {
 				// Failed to print, ignore
 			}
 		}
@@ -384,14 +397,18 @@
 	<div class="max-h-[50vh] overflow-y-auto">
 		{#if language === 'json'}
 			<div class="mx-4 mt-2">
-				<CodeEditor
-					rawValue={value}
-					language="json"
-					{readonly}
-					onChanged={(detail) => {
-						if (!readonly) valueModifiedManually = detail.chd_rawValue;
-					}}
-				/>
+				{#if showDiff && pinnedResponse}
+					<JsonDiffViewer left={pinnedResponse.response} right={value} />
+				{:else}
+					<CodeEditor
+						rawValue={value}
+						language="json"
+						{readonly}
+						onChanged={(detail) => {
+							if (!readonly) valueModifiedManually = detail.chd_rawValue;
+						}}
+					/>
+				{/if}
 			</div>
 		{:else if showNonPrettifiedQMSBody}
 			<code class="px-10">{value}</code>
@@ -399,9 +416,11 @@
 				<code class="px-10">{astAsString}</code>
 			</div>
 		{:else}
+			<!-- eslint-disable svelte/no-at-html-tags -->
 			<code class="language-graphql"
 				>{@html hljs.highlight(format(value), { language: 'graphql' }).value.trim()}</code
 			>
+			<!-- eslint-enable svelte/no-at-html-tags -->
 			<div class="mx-4 mt-2">
 				<CodeEditor
 					rawValue={value}
@@ -457,6 +476,20 @@
 			</button>
 		{/if}
 		{#if language === 'json'}
+			{#if pinnedResponse}
+				<button
+					class="btn normal-case btn-xs {showDiff ? 'btn-active' : 'btn-ghost'}"
+					onclick={() => {
+						showDiff = !showDiff;
+						logger.info('User toggled diff view', { showDiff });
+					}}
+					aria-label={showDiff ? 'Show Code' : 'Compare with Pinned'}
+					title={showDiff ? 'Back to code view' : 'Compare with pinned response'}
+				>
+					<i class="bi bi-code-square"></i>
+					{showDiff ? 'Show Code' : 'Diff'}
+				</button>
+			{/if}
 			<button
 				class="btn normal-case btn-xs btn-secondary"
 				onclick={() => {
@@ -533,7 +566,7 @@
 	<h3 class="mb-4 text-lg font-bold">Export Code</h3>
 
 	<div class="tabs-boxed mb-4 tabs">
-		{#each exportOptions as option}
+		{#each exportOptions as option (option.id)}
 			<button
 				class="tab"
 				class:tab-active={exportLanguage === option.id}
