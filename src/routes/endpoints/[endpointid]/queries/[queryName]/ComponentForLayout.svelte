@@ -25,11 +25,7 @@
 	import EnvVarsManager from '$lib/components/EnvVarsManager.svelte';
 	import { logger } from '$lib/utils/logger';
 	import { get } from 'svelte/store';
-	import type {
-		QMSWraperContext,
-		QMSMainWraperContext,
-		FieldWithDerivedData
-	} from '$lib/types/index';
+	import type { QMSMainWraperContext } from '$lib/types/index';
 
 	// Props interface and destructuring MUST come before getContext calls that use prefix
 	interface Props {
@@ -64,7 +60,6 @@
 		activeArgumentsDataGrouped_Store,
 		tableColsData_Store,
 		finalGqlArgObj_Store,
-		QMS_bodyPart_StoreDerived,
 		QMS_bodyPartsUnifier_StoreDerived,
 		paginationOptions,
 		paginationState,
@@ -76,8 +71,12 @@
 		currentQMS_info = schemaData.get_QMS_Field(QMSName, 'query', schemaData);
 	}
 
+	let unsubscribeQMSBody: () => void;
+
 	onDestroy(() => {
 		document.getElementById('my-drawer-3')?.click();
+		if (intervalId) clearInterval(intervalId);
+		if (unsubscribeQMSBody) unsubscribeQMSBody();
 	});
 
 	let dd_relatedRoot = getRootType(null, currentQMS_info.dd_rootName, schemaData);
@@ -86,11 +85,11 @@
 		void goto('/queries');
 	}
 	//
-	let activeArgumentsData = [];
+	// let activeArgumentsData = []; // Unused
 	const paginationTypeInfo = get_paginationTypes(endpointInfo, schemaData).find((pagType: any) => {
 		return pagType.name == currentQMS_info.dd_paginationType;
 	});
-	let activeArgumentsDataGrouped_Store_IS_SET = $state(false);
+	// let activeArgumentsDataGrouped_Store_IS_SET = $state(false); // Unused
 	$effect(() => {
 		// Just to react to changes, empty body or logging if needed
 		// But this was causing syntax error due to incorrect structure in previous content
@@ -98,9 +97,8 @@
 			qmsWraperContext,
 			val: $activeArgumentsDataGrouped_Store
 		};
-
-		activeArgumentsDataGrouped_Store_IS_SET =
-			$activeArgumentsDataGrouped_Store.length > 0 ? true : false;
+		// No-op to keep reactivity if intended, but unused variable warning
+		void _;
 	});
 	//
 	let scalarFields: any[] = [];
@@ -253,15 +251,15 @@
 						})) ||
 					paginationTypeInfo?.name == 'pageBased'
 				) {
-					loadedF && loadedF();
+					if (loadedF) loadedF();
 				} else {
-					completeF && completeF();
+					if (completeF) completeF();
 				}
 
 				rowsCurrent = [];
 			});
 	};
-	QMS_bodyPartsUnifier_StoreDerived.subscribe((QMS_body: string) => {
+	unsubscribeQMSBody = QMS_bodyPartsUnifier_StoreDerived.subscribe((QMS_body: string) => {
 		if (QMS_body && QMS_body !== '') {
 			runQuery(QMS_body);
 		}
@@ -276,7 +274,7 @@
 	const hideColumn = (detail: { column: string }) => {
 		tableColsData_Store.removeColumn(detail.column);
 	};
-	tableColsData_Store.subscribe((data: any) => {});
+	// tableColsData_Store.subscribe((data: any) => {}); // Unused subscription
 
 	let column_stepsOfFields = $state('');
 	const addColumnFromInput = (e: any) => {
@@ -299,6 +297,47 @@
 	let showQMSBody = $state(false);
 	let showNonPrettifiedQMSBody = false;
 
+	// Auto-Refresh Logic
+	/** Whether auto-refresh is currently enabled. */
+	let autoRefresh = $state(false);
+	/** The interval for auto-refresh in milliseconds. Default is 5000ms. */
+	let refreshInterval = $state(5000);
+	/** The ID of the current interval timer, used for cleanup. */
+	let intervalId: ReturnType<typeof setInterval> | undefined = undefined;
+
+	/**
+	 * Toggles the auto-refresh feature.
+	 * Starts or stops the interval based on the new state.
+	 */
+	const toggleAutoRefresh = () => {
+		autoRefresh = !autoRefresh;
+		if (autoRefresh) {
+			logger.info('Starting auto-refresh', { interval: refreshInterval });
+			runQuery(get(QMS_bodyPartsUnifier_StoreDerived));
+			intervalId = setInterval(() => {
+				logger.debug('Auto-refresh triggered');
+				runQuery(get(QMS_bodyPartsUnifier_StoreDerived));
+			}, refreshInterval);
+		} else {
+			logger.info('Stopping auto-refresh');
+			if (intervalId) {
+				clearInterval(intervalId);
+				intervalId = undefined;
+			}
+		}
+	};
+
+	$effect(() => {
+		// Update interval if duration changes while active
+		if (autoRefresh && intervalId) {
+			clearInterval(intervalId);
+			intervalId = setInterval(() => {
+				logger.debug('Auto-refresh triggered (interval updated)');
+				runQuery(get(QMS_bodyPartsUnifier_StoreDerived));
+			}, refreshInterval);
+		}
+	});
+
 	onMount(() => {
 		hljs.registerLanguage('graphql', graphql);
 		hljs.highlightAll();
@@ -306,7 +345,7 @@
 	let showModal = $state(false);
 	let showHeadersModal = $state(false);
 	let showVarsModal = $state(false);
-	let showActiveFilters;
+	// let showActiveFilters; // Unused
 	let viewMode = $state<'table' | 'json'>('table');
 </script>
 
@@ -405,6 +444,28 @@
 	>
 		Variables
 	</button>
+
+	<!-- Auto-Refresh UI -->
+	<div class="join" title="Auto-Refresh Query">
+		<button
+			class="btn join-item btn-xs {autoRefresh ? 'btn-active btn-success' : ''}"
+			onclick={toggleAutoRefresh}
+			aria-label="Toggle Auto-Refresh"
+		>
+			<i class="bi bi-arrow-repeat {autoRefresh ? 'animate-spin' : ''}"></i>
+		</button>
+		{#if autoRefresh}
+			<input
+				type="number"
+				class="input input-xs join-item w-20"
+				bind:value={refreshInterval}
+				min="1000"
+				step="1000"
+				aria-label="Refresh Interval (ms)"
+				title="Interval (ms)"
+			/>
+		{/if}
+	</div>
 
 	{#if showHeadersModal}
 		<Modal bind:show={showHeadersModal} modalIdentifier="headersModal" showApplyBtn={false}>

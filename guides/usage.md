@@ -197,6 +197,14 @@ You can pin a query response to compare it with future results.
 5.  You can collapse the panel or close it when done.
 6.  The pinned response persists even if you navigate to other pages.
 
+### Auto-Refresh
+
+You can configure the query to automatically re-execute at a specified interval. This is useful for monitoring data that changes frequently.
+
+- **Toggle**: Click the **Auto-Refresh** button (circular arrows icon) in the toolbar to enable or disable auto-refresh.
+- **Interval**: When enabled, an input field appears where you can specify the refresh interval in milliseconds (default: 5000ms).
+- **Indicator**: The button icon spins when auto-refresh is active.
+
 ## 12. Command Palette
 
 A global **Command Palette** is available to help you navigate quickly through the application without lifting your hands from the keyboard.
