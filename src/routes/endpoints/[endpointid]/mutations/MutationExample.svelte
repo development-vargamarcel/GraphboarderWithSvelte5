@@ -46,12 +46,10 @@
 		activeArgumentsDataGrouped_Store,
 		tableColsData_Store,
 		finalGqlArgObj_Store,
-		QMS_bodyPart_StoreDerived,
 		QMS_bodyPartsUnifier_StoreDerived,
 		paginationOptions,
 		paginationState,
 		QMS_info,
-		QMSType,
 		QMSName
 	} = QMSWraperContext as any;
 
@@ -65,17 +63,15 @@
 		//	goto('/queries');
 	}
 	//
-	let activeArgumentsData = [];
+	// let activeArgumentsData = []; // Unused
 	const paginationTypeInfo = get_paginationTypes(endpointInfo as any, schemaData as any).find(
 		(pagType: any) => {
 			return pagType.name == QMS_info?.dd_paginationType;
 		}
 	);
-	let activeArgumentsDataGrouped_Store_IS_SET = $state(false);
-	$effect(() => {
-		activeArgumentsDataGrouped_Store_IS_SET =
-			$activeArgumentsDataGrouped_Store.length > 0 ? true : false;
-	});
+	// let activeArgumentsDataGrouped_Store_IS_SET = $derived( // Unused
+	// 	$activeArgumentsDataGrouped_Store.length > 0 ? true : false
+	// );
 	//
 
 	let scalarFields: any[] = [];
@@ -209,9 +205,9 @@
 						})) ||
 					paginationTypeInfo?.name == 'pageBased'
 				) {
-					loadedF && loadedF();
+					if (loadedF) loadedF();
 				} else {
-					completeF && completeF();
+					if (completeF) completeF();
 				}
 
 				rowsCurrent = [];
@@ -233,7 +229,7 @@
 	const hideColumn = (detail: { column: string }) => {
 		tableColsData_Store.removeColumn(detail.column);
 	};
-	tableColsData_Store.subscribe((data: any) => {});
+	// tableColsData_Store.subscribe((data: any) => {}); // Unused subscription
 
 	let column_stepsOfFields = $state('');
 	const addColumnFromInput = (e: any) => {
@@ -260,8 +256,8 @@
 		hljs.registerLanguage('graphql', graphql);
 		hljs.highlightAll();
 	});
-	let showModal = false;
-	let showActiveFilters;
+	// let showModal = false; // Unused
+	// let showActiveFilters; // Unused
 </script>
 
 <div class=" h-full">
