@@ -717,7 +717,7 @@
 			</div>
 		{/if}
 
-		{#if node.hasOwnProperty('items')}
+		{#if (node as ContainerData).items}
 			<section
 				class=" duration-500 {$dndIsOn ? '  min-h-[30px] min-w-[200px]' : 'pl-1'} rounded-l-none {(
 					node as ContainerData

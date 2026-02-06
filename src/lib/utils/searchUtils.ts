@@ -81,8 +81,6 @@ export function discoverMatchingQMS(
 	const myField = fields?.find((field: any) => field.dd_displayName == node.dd_displayName);
 
 	if (myField) {
-		const myFieldRoot = schemaData.get_rootType(null, myField.dd_rootName, schemaData);
-
 		// First try: Exact match by root name and list type
 		const exactMatches = schemaData.queryFields.filter((item: any) => {
 			return item.dd_kindList && item.dd_rootName == myField.dd_rootName;

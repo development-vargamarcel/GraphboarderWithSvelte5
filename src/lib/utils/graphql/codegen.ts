@@ -190,3 +190,50 @@ ${headersCode}
 	fmt.Println(string(body))
 }`;
 };
+
+/**
+ * Generates a Rust snippet using reqwest for the given GraphQL query.
+ * @param url The endpoint URL.
+ * @param headers A dictionary of HTTP headers.
+ * @param query The GraphQL query string.
+ * @returns The Rust code snippet.
+ */
+export const generateRustCommand = (
+	url: string,
+	headers: Record<string, string>,
+	query: string
+): string => {
+	logger.debug('Generating Rust command', { url, headersCount: Object.keys(headers).length });
+
+	const allHeaders = { ...headers };
+	if (!allHeaders['Content-Type']) {
+		allHeaders['Content-Type'] = 'application/json';
+	}
+
+	const payload = { query };
+	const payloadJson = JSON.stringify(payload, null, 4);
+
+	let headersCode = '';
+	for (const [key, val] of Object.entries(allHeaders)) {
+		headersCode += `\n        .header("${key}", "${val}")`;
+	}
+
+	return `use reqwest::Client;
+use serde_json::json;
+use std::error::Error;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    let client = Client::new();
+
+    let response = client
+        .post("${url}")${headersCode}
+        .json(&json!(${payloadJson}))
+        .send()
+        .await?;
+
+    println!("{}", response.text().await?);
+
+    Ok(())
+}`;
+};

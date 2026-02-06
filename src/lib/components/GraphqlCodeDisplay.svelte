@@ -14,7 +14,8 @@
 		generateFetchCommand,
 		generateApolloCommand,
 		generatePythonCommand,
-		generateGoCommand
+		generateGoCommand,
+		generateRustCommand
 	} from '$lib/utils/graphql/codegen';
 	import { parse, print } from 'graphql';
 	import JSON5 from 'json5';
@@ -78,7 +79,8 @@
 		{ id: 'ts', label: 'TypeScript' },
 		{ id: 'apollo', label: 'Apollo' },
 		{ id: 'python', label: 'Python' },
-		{ id: 'go', label: 'Go' }
+		{ id: 'go', label: 'Go' },
+		{ id: 'rust', label: 'Rust' }
 	];
 
 	/**
@@ -275,6 +277,8 @@
 				return generatePythonCommand(url, headers, query);
 			case 'go':
 				return generateGoCommand(url, headers, query);
+			case 'rust':
+				return generateRustCommand(url, headers, query);
 			default:
 				return '';
 		}

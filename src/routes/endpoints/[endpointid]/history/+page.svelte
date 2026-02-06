@@ -80,9 +80,10 @@
 		reader.readAsText(file);
 	};
 
-	const restoreQuery = (q: any) => {
+	const restoreQuery = async (q: any) => {
 		const url = `/endpoints/${endpointId}/${q.type === 'query' ? 'queries' : 'mutations'}/${q.queryName}?historyId=${q.id}`;
-		void goto(url);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		await goto(url);
 	};
 </script>
 
@@ -158,7 +159,10 @@
 								{/if}
 							</td>
 							<td class="font-medium">
-								<button class="link font-bold link-hover" onclick={() => restoreQuery(item)}>
+								<button
+									class="link font-bold link-hover"
+									onclick={async () => await restoreQuery(item)}
+								>
 									{item.queryName}
 								</button>
 								<span class="ml-1 text-xs opacity-50">({item.type})</span>
@@ -168,7 +172,7 @@
 							<td class="text-right">
 								<button
 									class="btn btn-ghost btn-xs"
-									onclick={() => restoreQuery(item)}
+									onclick={async () => await restoreQuery(item)}
 									title="Restore State"
 									aria-label="Restore query"
 								>

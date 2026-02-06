@@ -1,21 +1,16 @@
 <script lang="ts">
-	import type { LayoutData } from './$types';
 	import { page } from '$app/stores';
 	import MainWraper from '$lib/components/MainWraper.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { localEndpoints } from '$lib/stores/testData/testEndpoints';
 	import { localStorageEndpoints } from '$lib/stores/endpointsStore';
-	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
 	import type { AvailableEndpoint } from '$lib/types';
-	import { untrack } from 'svelte';
 
 	interface Props {
-		data: LayoutData;
 		children?: import('svelte').Snippet;
 	}
 
-	let { data, children }: Props = $props();
+	let { children }: Props = $props();
 
 	let endpointConfiguration = $state<AvailableEndpoint | undefined>();
 	let endpointid = $state<string>('');
@@ -101,6 +96,7 @@
 			<div class="text-center">
 				<h2 class="text-xl font-bold">Endpoint Not Found</h2>
 				<p class="py-4">Could not find configuration for ID: {endpointid}</p>
+				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a href="/endpoints" class="btn btn-primary">Back to Endpoints</a>
 			</div>
 		</div>

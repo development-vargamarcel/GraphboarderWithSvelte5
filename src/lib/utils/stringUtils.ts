@@ -1,4 +1,3 @@
-import { stringToQMSString_transformer } from '$lib/utils/dataStructureTransformers';
 import { getPreciseType } from './typeUtils';
 
 /**

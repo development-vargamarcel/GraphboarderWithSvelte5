@@ -78,6 +78,7 @@ As you build the query, the results are fetched and displayed automatically.
     - **Apollo**: Generate a React component example using `@apollo/client`.
     - **Python**: Generate a Python script using the `requests` library.
     - **Go**: Generate a Go program using the `net/http` package.
+    - **Rust**: Generate a Rust program using the `reqwest` crate.
   - **Preview & Copy**: You can view the generated code in the modal and click **"Copy"** to save it to your clipboard.
 - **Copy Content**: Click the **"Copy"** button to copy the raw GraphQL query string.
 - **Share Link**: Click the **"Share"** button to generate a shareable URL for the current query state.

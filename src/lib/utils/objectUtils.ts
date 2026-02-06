@@ -127,7 +127,7 @@ export const hasDeepProperty = (obj: Record<string, unknown>, propertyPath: stri
 	let currentObj = obj;
 	for (let i = 0; i < propertyPath.length; i++) {
 		const prop = propertyPath[i];
-		if (!currentObj.hasOwnProperty(prop)) {
+		if (!Object.prototype.hasOwnProperty.call(currentObj, prop)) {
 			return false;
 		}
 		currentObj = currentObj[prop] as Record<string, unknown>;

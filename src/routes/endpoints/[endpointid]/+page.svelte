@@ -1,14 +1,7 @@
 <script lang="ts">
-	import type { PageData } from './$types';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-
-	interface Props {
-		data: PageData;
-	}
-
-	let { data }: Props = $props();
 
 	// This page is rendered when we are at /endpoints/[endpointid]
 	// We want to redirect to the explorer by default.

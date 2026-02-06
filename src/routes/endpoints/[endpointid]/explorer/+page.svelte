@@ -8,11 +8,7 @@
 	import { addToast } from '$lib/stores/toastStore';
 	import type { QMSMainWraperContext } from '$lib/types/index';
 
-	interface Props {
-		prefix?: string;
-	}
-
-	let { prefix = '' } = $props();
+	const prefix = '';
 
 	let qmsMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
 	const schemaData = qmsMainWraperContext?.schemaData;

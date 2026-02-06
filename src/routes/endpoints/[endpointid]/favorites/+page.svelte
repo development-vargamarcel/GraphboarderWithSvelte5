@@ -60,9 +60,10 @@
 		reader.readAsText(file);
 	};
 
-	const navigateToQuery = (q: any) => {
+	const navigateToQuery = async (q: any) => {
 		const url = `/endpoints/${endpointId}/${q.type === 'query' ? 'queries' : 'mutations'}/${q.name}`;
-		void goto(url);
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		await goto(url);
 	};
 </script>
 
@@ -108,7 +109,7 @@
 							<td class="font-medium">
 								<button
 									class="link font-bold text-primary link-hover"
-									onclick={() => navigateToQuery(fav)}
+									onclick={async () => await navigateToQuery(fav)}
 								>
 									{fav.name}
 								</button>
@@ -122,7 +123,7 @@
 							<td class="space-x-1 text-right">
 								<button
 									class="btn btn-ghost btn-xs"
-									onclick={() => navigateToQuery(fav)}
+									onclick={async () => await navigateToQuery(fav)}
 									title="Run"
 									aria-label="Run query"
 								>
