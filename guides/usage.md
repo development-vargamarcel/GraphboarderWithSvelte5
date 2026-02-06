@@ -200,6 +200,21 @@ You can pin a query response to compare it with future results.
 5.  You can collapse the panel or close it when done.
 6.  The pinned response persists even if you navigate to other pages.
 
+### Comparing Responses
+
+You can compare the current query response with a previously pinned response to identify differences.
+
+1.  **Pin a Response**: As described above, pin a response using the "Pin" button in the JSON view.
+2.  **Execute New Query**: Run the same query (or a modified one) to get a new response.
+3.  **Compare**:
+    - Switch to **JSON** view.
+    - Click the **"Diff"** button in the toolbar (next to the Pin button).
+    - The view will switch to a visual diff mode:
+      - **Green**: Added content (present in current response but not in pinned).
+      - **Red**: Removed content (present in pinned response but not in current).
+      - **Grey**: Unchanged content.
+    - Click **"Show Code"** to return to the standard JSON view.
+
 ### Auto-Refresh
 
 You can configure the query to automatically re-execute at a specified interval. This is useful for monitoring data that changes frequently.
