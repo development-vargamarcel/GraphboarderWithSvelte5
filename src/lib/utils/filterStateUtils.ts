@@ -1,22 +1,50 @@
 /**
- * Utility functions for filter choice state management
+ * Utility functions for filter choice state management.
  */
 
+type FilterType = 'radio' | 'checkbox' | 'toggle';
+
+const normalizeType = (type: string): FilterType => {
+	if (type === 'radio' || type === 'checkbox' || type === 'toggle') {
+		return type;
+	}
+	return 'checkbox';
+};
+
+const normalizeToStringArray = (value: string | string[] | undefined): string[] => {
+	if (Array.isArray(value)) {
+		return value.filter(Boolean);
+	}
+	if (value) {
+		return [value];
+	}
+	return [];
+};
+
+const areSelectionsEqual = (left: string | string[], right: string | string[]): boolean => {
+	const leftArr = normalizeToStringArray(left);
+	const rightArr = normalizeToStringArray(right);
+	return (
+		leftArr.length === rightArr.length && leftArr.every((item, index) => item === rightArr[index])
+	);
+};
+
 /**
- * Synchronizes choice order between selected items and all choices
- * @param choisesWithId - Array of choices with IDs
- * @param chosenInternal - Currently selected choices
- * @returns Object with updated chosenNew and choisesNew arrays
+ * Synchronizes choice order between selected items and all choices.
  */
 export function syncChoiceOrder(
 	choisesWithId: Array<{ id: string; title: string }>,
 	chosenInternal: string[]
 ): { chosenNew: string[]; choisesNew: string[] } {
+	const chosenSet = new Set(chosenInternal ?? []);
 	const chosenNew: string[] = [];
 	const choisesNew: string[] = [];
 
 	choisesWithId.forEach((choice) => {
-		if (chosenInternal?.includes(choice.title)) {
+		if (!choice.title || choisesNew.includes(choice.title)) {
+			return;
+		}
+		if (chosenSet.has(choice.title)) {
 			chosenNew.push(choice.title);
 		}
 		choisesNew.push(choice.title);
@@ -26,34 +54,18 @@ export function syncChoiceOrder(
 }
 
 /**
- * Determines button styling classes based on filter state
- * @param chosen - Currently selected choices
- * @param chosenDefault - Default choices
- * @param defaultMeansNoChange - Whether default state means no change
- * @param isToggle - Whether this is a toggle filter
- * @returns Object with button and info extra classes
+ * Determines button styling classes based on filter state.
  */
 export function getFilterButtonClasses(
 	chosen: string | string[],
 	chosenDefault: string | string[],
 	defaultMeansNoChange: boolean,
-	isToggle: boolean
+	_isToggle: boolean
 ): { btnExtraClass: string; extraInfoExtraClass: string } {
-	const hasSelection = Array.isArray(chosen) ? chosen.length > 0 : !!chosen;
-	const isDefault = JSON.stringify(chosenDefault) == JSON.stringify(chosen);
+	const hasSelection = normalizeToStringArray(chosen).length > 0;
+	const isDefault = areSelectionsEqual(chosenDefault, chosen);
 
-	if (hasSelection && defaultMeansNoChange && isDefault) {
-		return {
-			btnExtraClass:
-				'btn-outline btn-neutral bg-primary/10 hover:bg-primary/10 hover:text-base-content',
-			extraInfoExtraClass: 'border-base-content text-base-content'
-		};
-	} else if (hasSelection) {
-		return {
-			btnExtraClass: 'btn-primary',
-			extraInfoExtraClass: 'border-primary-content text-primary-content'
-		};
-	} else if (!hasSelection && defaultMeansNoChange && !isDefault) {
+	if ((hasSelection && !defaultMeansNoChange) || (defaultMeansNoChange && !isDefault)) {
 		return {
 			btnExtraClass: 'btn-primary',
 			extraInfoExtraClass: 'border-primary-content text-primary-content'
@@ -63,17 +75,12 @@ export function getFilterButtonClasses(
 	return {
 		btnExtraClass:
 			'btn-outline btn-neutral bg-primary/10 hover:bg-primary/10 hover:text-base-content',
-		extraInfoExtraClass: ''
+		extraInfoExtraClass: isDefault ? 'border-base-content text-base-content' : ''
 	};
 }
 
 /**
- * Gets the display title and extra info based on filter type and selection
- * @param type - Filter type ('radio', 'checkbox', 'toggle')
- * @param chosen - Currently selected choices
- * @param titlePreChange - Original title before changes
- * @param isToggle - Whether this is a toggle filter
- * @returns Object with title and extraInfo
+ * Gets the display title and extra info based on filter type and selection.
  */
 export function getFilterDisplayInfo(
 	type: string,
@@ -81,62 +88,53 @@ export function getFilterDisplayInfo(
 	titlePreChange: string,
 	isToggle: boolean
 ): { title: string; extraInfo: string } {
-	const hasSelection = Array.isArray(chosen) ? chosen.length > 0 : !!chosen;
+	const normalizedType = normalizeType(type);
+	const choices = normalizeToStringArray(chosen);
+	const hasSelection = choices.length > 0;
 
-	if (isToggle && hasSelection) {
-		return { title: Array.isArray(chosen) ? chosen[0] : chosen, extraInfo: '' };
+	if (isToggle || normalizedType === 'toggle') {
+		return { title: hasSelection ? choices[0] : titlePreChange, extraInfo: '' };
 	}
 
-	if (type == 'toggle') {
-		return { title: Array.isArray(chosen) ? chosen[0] : chosen, extraInfo: '' };
+	if (normalizedType === 'radio') {
+		return { title: hasSelection ? choices[0] : titlePreChange, extraInfo: '' };
 	}
 
-	if (type == 'radio') {
-		return {
-			title: hasSelection ? (Array.isArray(chosen) ? chosen[0] : chosen) : titlePreChange,
-			extraInfo: ''
-		};
-	}
-
-	// checkbox type
 	if (hasSelection) {
-		return { title: titlePreChange, extraInfo: `${Array.isArray(chosen) ? chosen.length : 1}` };
+		return { title: titlePreChange, extraInfo: `${choices.length}` };
 	}
 
 	return { title: titlePreChange, extraInfo: '' };
 }
 
 /**
- * Toggles a choice in a filter
- * @param type - Filter type ('radio' or 'checkbox')
- * @param choises - Available choices
- * @param currentChosen - Current selection
- * @returns New chosen value
+ * Toggles a choice in a filter.
  */
 export function toggleFilterChoice(
 	type: string,
 	choises: string[],
 	currentChosen: string | string[] | undefined
 ): string | string[] | undefined {
-	if (type == 'radio') {
-		const hasSelection =
-			currentChosen && (Array.isArray(currentChosen) ? currentChosen.length > 0 : true);
+	if (!choises?.length) {
+		return undefined;
+	}
+
+	const normalizedType = normalizeType(type);
+	if (normalizedType === 'radio') {
+		const hasSelection = normalizeToStringArray(currentChosen).length > 0;
 		return hasSelection ? undefined : choises[0];
 	}
 
-	// checkbox type
-	const hasSelection = currentChosen && Array.isArray(currentChosen) && currentChosen.length > 0;
-	return hasSelection ? undefined : choises;
+	const hasSelection = normalizeToStringArray(currentChosen).length > 0;
+	return hasSelection ? undefined : [...new Set(choises)];
 }
 
 /**
- * Creates choices with IDs from plain choice array
- * @param choises - Array of choice strings
- * @returns Array of choices with id and title properties
+ * Creates choices with IDs from plain choice array.
  */
 export function createChoisesWithId(choises: string[]): Array<{ id: string; title: string }> {
-	return choises.map((choise) => ({
-		id: choise,
+	return [...new Set(choises.filter(Boolean))].map((choise) => ({
+		id: choise.trim().toLowerCase().replace(/\s+/g, '-'),
 		title: choise
 	}));
 }

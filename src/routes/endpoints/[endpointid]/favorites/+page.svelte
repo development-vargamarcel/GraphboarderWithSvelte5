@@ -6,7 +6,8 @@
 	import { addToast } from '$lib/stores/toastStore';
 	import Modal from '$lib/components/Modal.svelte';
 
-	let endpointId = $derived($page.params.endpointid);
+	// Keep endpointId stable for store APIs that require a concrete string.
+	let endpointId = $derived($page.params.endpointid ?? '');
 
 	// Filter favorites for current endpoint
 	let favorites = $derived($favoriteQueries.filter((q) => q.endpointId === endpointId));
@@ -177,20 +178,23 @@
 	{:else}
 		{#each sortedFolders as folder (folder)}
 			<details
-				class="collapse collapse-arrow border-base-300 bg-base-100 rounded-box mb-2 border"
+				class="collapse-arrow collapse mb-2 rounded-box border border-base-300 bg-base-100"
 				open
 			>
 				<summary class="collapse-title text-xl font-medium">
 					<div class="flex items-center justify-between gap-2">
 						<div class="flex items-center gap-2">
 							<span>{folder}</span>
-							<span class="badge badge-sm badge-outline">{groupedFavorites[folder].length}</span>
+							<span class="badge badge-outline badge-sm">{groupedFavorites[folder].length}</span>
 						</div>
 						{#if folder !== 'Uncategorized'}
 							<button
 								class="btn btn-ghost btn-xs"
 								type="button"
-								onclick|stopPropagation={() => openRenameFolderModal(folder)}
+								onclick={(event) => {
+									event.stopPropagation();
+									openRenameFolderModal(folder);
+								}}
 								title="Rename folder"
 								aria-label="Rename folder"
 							>
@@ -223,9 +227,7 @@
 										</td>
 										<td>
 											<span
-												class="badge {fav.type === 'query'
-													? 'badge-primary'
-													: 'badge-secondary'}"
+												class="badge {fav.type === 'query' ? 'badge-primary' : 'badge-secondary'}"
 											>
 												{fav.type}
 											</span>
@@ -277,7 +279,7 @@
 			</label>
 			<input
 				id="favorite-name"
-				class="input input-bordered w-full"
+				class="input-bordered input w-full"
 				type="text"
 				bind:value={editName}
 				placeholder="Favorite name"
@@ -289,7 +291,7 @@
 			</label>
 			<input
 				id="favorite-folder"
-				class="input input-bordered w-full"
+				class="input-bordered input w-full"
 				type="text"
 				list="favorite-folders"
 				bind:value={editFolder}
@@ -300,7 +302,7 @@
 					<option value={folder}></option>
 				{/each}
 			</datalist>
-			<p class="text-xs text-base-content/60 mt-1">
+			<p class="mt-1 text-xs text-base-content/60">
 				Leave blank to move the favorite into "Uncategorized".
 			</p>
 		</div>
@@ -320,7 +322,7 @@
 			</label>
 			<input
 				id="rename-from-folder"
-				class="input input-bordered w-full"
+				class="input-bordered input w-full"
 				type="text"
 				value={renameFromFolder}
 				disabled
@@ -332,12 +334,12 @@
 			</label>
 			<input
 				id="rename-to-folder"
-				class="input input-bordered w-full"
+				class="input-bordered input w-full"
 				type="text"
 				bind:value={renameToFolder}
 				placeholder="Folder name (leave blank to clear)"
 			/>
-			<p class="text-xs text-base-content/60 mt-1">
+			<p class="mt-1 text-xs text-base-content/60">
 				Leave blank to move favorites into "Uncategorized".
 			</p>
 		</div>

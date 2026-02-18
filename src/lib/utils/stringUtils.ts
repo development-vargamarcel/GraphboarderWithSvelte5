@@ -1,6 +1,18 @@
 import { getPreciseType } from './typeUtils';
 
 /**
+ * Safely serializes unknown data to a string.
+ * Some state objects can be circular; this fallback keeps UI rendering stable.
+ */
+function safeStringify(data: unknown): string {
+	try {
+		return JSON.stringify(data);
+	} catch {
+		return '[Unserializable data]';
+	}
+}
+
+/**
  * Formats data into a string with a maximum length.
  * @param data - The data to format.
  * @param length - The maximum length of the resulting string.
@@ -12,35 +24,30 @@ export const formatData = (
 	length: number,
 	alwaysStringyfy: boolean = true
 ): string => {
-	let string = '';
-	let resultingString = '';
-
-	if (alwaysStringyfy) {
-		string = JSON.stringify(data);
-	} else {
-		typeof data === 'string' ? (string = data) : (string = JSON.stringify(data));
+	if (!Number.isFinite(length) || length <= 0) {
+		return '';
 	}
 
-	if (string.length >= length) {
-		resultingString = `${string.substring(0, length / 2)} ... ${string.substring(
-			string.length - length / 2
-		)}`;
-	} else {
-		resultingString = string;
+	const string = alwaysStringyfy
+		? safeStringify(data)
+		: typeof data === 'string'
+			? data
+			: safeStringify(data);
+
+	if (string.length <= length) {
+		return string;
 	}
 
-	return resultingString;
+	if (length < 5) {
+		return string.substring(0, length);
+	}
+
+	const sideLength = Math.floor((length - 5) / 2);
+	return `${string.substring(0, sideLength)} ... ${string.substring(string.length - sideLength)}`;
 };
 
 /**
  * Modifies a string by applying modifiers to text inside and outside of specified boundaries.
- * @param inputString - The input string to modify.
- * @param openBoundryChar - The character marking the start of a boundary (default: '(').
- * @param closeBoundryChar - The character marking the end of a boundary (default: ')').
- * @param insideTextModifier - A function to modify text inside the boundaries.
- * @param outsideTextModifier - A function to modify text outside the boundaries.
- * @param deleteBoundriesIfTextInsideIsEmpty - Whether to delete the boundaries if the text inside becomes empty (default: true).
- * @returns The modified string.
  */
 export const smartModifyStringBasedOnBoundries = (
 	inputString: string,
@@ -50,16 +57,20 @@ export const smartModifyStringBasedOnBoundries = (
 	outsideTextModifier: ((text: string) => string) | undefined,
 	deleteBoundriesIfTextInsideIsEmpty: boolean = true
 ): string => {
-	if (!inputString.includes(openBoundryChar)) {
-		return inputString;
+	if (!inputString.includes(openBoundryChar) || !inputString.includes(closeBoundryChar)) {
+		return getPreciseType(outsideTextModifier) === 'function'
+			? outsideTextModifier!(inputString)
+			: inputString;
 	}
+
 	const result: string[] = [];
-	//let splitByOpened=inputString.split('(')
 	const splitByClosed = inputString.split(closeBoundryChar);
-	splitByClosed.forEach((element) => {
+	splitByClosed.forEach((element, index) => {
 		const splitByOpen = element.split(openBoundryChar);
 		let outsidePart = splitByOpen[0];
 		let insidePart = splitByOpen[1];
+		const shouldReAddCloseBoundary = index < splitByClosed.length - 1;
+
 		if (outsidePart) {
 			if (getPreciseType(outsideTextModifier) === 'function') {
 				outsidePart = outsideTextModifier!(outsidePart);
@@ -70,10 +81,10 @@ export const smartModifyStringBasedOnBoundries = (
 			if (getPreciseType(insideTextModifier) === 'function') {
 				insidePart = insideTextModifier!(insidePart);
 			}
-			if (deleteBoundriesIfTextInsideIsEmpty && insidePart == '') {
-				result.push(``);
-			} else {
-				result.push(`${openBoundryChar}${insidePart}${closeBoundryChar}`);
+			if (!(deleteBoundriesIfTextInsideIsEmpty && insidePart === '')) {
+				result.push(
+					`${openBoundryChar}${insidePart}${shouldReAddCloseBoundary ? closeBoundryChar : ''}`
+				);
 			}
 		}
 	});
@@ -81,127 +92,89 @@ export const smartModifyStringBasedOnBoundries = (
 	return result.join('');
 };
 
-/**
- * Replaces the last occurrence of specific substring logic within a string up to a max index.
- * Note: This function seems tailored for a specific parsing logic (replacing ":{" occurrences).
- * @param {string} str - The input string.
- * @param {number} MaxIndex - The maximum index to search backwards from.
- * @param {string} REPLACEMENT_STRING - The string to use as replacement.
- * @returns {string} - The modified string.
- */
-function replaceLastOccurrence(str: string, MaxIndex: number, REPLACEMENT_STRING: string): string {
-	// Find the index of the first occurrence of ":{" after the first character
+function replaceLastOccurrence(str: string, maxIndex: number, replacementString: string): string {
 	const startIndex = str.indexOf(':{', 1);
-
-	// If the first occurrence is found
-	if (startIndex !== -1) {
-		// Find the index of the last occurrence of ":{" before the fourth character
-		const lastIndex = str.lastIndexOf(':{', MaxIndex);
-
-		// If the last occurrence is found
-		if (lastIndex !== -1) {
-			// Replace the last occurrence with a new string (e.g., "REPLACEMENT_STRING")
-			const replacedString =
-				str.substring(0, lastIndex) + REPLACEMENT_STRING + str.substring(lastIndex + 2);
-
-			return replacedString;
-		}
+	if (startIndex === -1) {
+		return str;
 	}
 
-	// If no occurrences are found, return the original string
-	return str;
+	const lastIndex = str.lastIndexOf(':{', maxIndex);
+	if (lastIndex === -1) {
+		return str;
+	}
+
+	return str.substring(0, lastIndex) + replacementString + str.substring(lastIndex + 2);
 }
 
-/**
- * Replaces a substring between two indices.
- * @param {string} string - The original string.
- * @param {number} start - The start index (inclusive).
- * @param {number} end - The end index (exclusive).
- * @param {string} what - The replacement string.
- * @returns {string} - The new string.
- */
-const replaceBetween = function (string: string, start: number, end: number, what: string): string {
-	return string.substring(0, start) + what + string.substring(end);
+const replaceBetween = (input: string, start: number, end: number, replacement: string): string => {
+	return input.substring(0, start) + replacement + input.substring(end);
 };
 
-/**
- * Parses and modifies a string by extracting parenthesized content and transforming it.
- * Used for parsing complex nested string structures.
- * @param {string} input - The input string.
- * @returns {{ modifiedSubstring: string; remainingString: string }} - The processed part and the remainder.
- */
 function modifyString(input: string): { modifiedSubstring: string; remainingString: string } {
-	// Step 1: Match the first parenthesis and the text inside them
 	const matchParenthesis = input.match(/\(([^)]+)\)/);
-	let remainingString: string;
-	let modifiedSubstring: string;
 	if (!matchParenthesis) {
-		modifiedSubstring = input;
-		remainingString = '';
-		return { modifiedSubstring, remainingString };
+		return { modifiedSubstring: input, remainingString: '' };
 	}
-	const parenhtesisLength = matchParenthesis[0].length;
-	const parenhtesisStart = matchParenthesis.index!;
-	const parenhtesisEnd = parenhtesisStart + parenhtesisLength;
 
-	//delete matched parenthesis and it's content from string
-	input = replaceBetween(input, parenhtesisStart, parenhtesisEnd, '');
-	input = replaceLastOccurrence(input, matchParenthesis.index!, matchParenthesis[0] + ':{');
-	modifiedSubstring = input.substring(0, parenhtesisEnd);
-	remainingString = input.substring(parenhtesisEnd, input.length);
-	// Return the original string if no match is found
-	return { modifiedSubstring, remainingString };
+	const parenthesisLength = matchParenthesis[0].length;
+	const parenthesisStart = matchParenthesis.index!;
+	const parenthesisEnd = parenthesisStart + parenthesisLength;
+
+	input = replaceBetween(input, parenthesisStart, parenthesisEnd, '');
+	input = replaceLastOccurrence(input, matchParenthesis.index!, `${matchParenthesis[0]}:{`);
+
+	return {
+		modifiedSubstring: input.substring(0, parenthesisEnd),
+		remainingString: input.substring(parenthesisEnd)
+	};
 }
 
 /**
  * Generates a list of substrings from a string, handling nested structures/parentheses.
- * @param string - The input string.
- * @returns An array of substrings.
  */
-export const generateListOfSubstrings = (string: string): string[] => {
-	const substrings: string[] = [];
-	let reachedTheEnd = false;
-	while (!reachedTheEnd) {
-		const { modifiedSubstring, remainingString } = modifyString(string);
-		if (remainingString === '') {
-			reachedTheEnd = true;
-		}
-		substrings.push(modifiedSubstring);
-		string = remainingString;
+export const generateListOfSubstrings = (input: string): string[] => {
+	if (!input) {
+		return [];
 	}
-	return substrings;
+
+	let currentInput = input;
+	const substrings: string[] = [];
+	while (currentInput.length > 0) {
+		const { modifiedSubstring, remainingString } = modifyString(currentInput);
+		substrings.push(modifiedSubstring);
+		if (remainingString === '') {
+			break;
+		}
+		currentInput = remainingString;
+	}
+
+	return substrings.filter(Boolean);
 };
 
 /**
  * Converts a GraphQL argument object to a string representation.
- * @param gqlArgObj - The GraphQL argument object.
- * @returns The string representation of the argument object.
  */
 export const gqlArgObjToString = (gqlArgObj: Record<string, unknown>): string => {
-	const gqlArgObj_string = JSON.stringify(gqlArgObj);
-	if (gqlArgObj_string == '{ }') {
+	const gqlArgObjString = safeStringify(gqlArgObj);
+	if (gqlArgObjString === '{}' || gqlArgObjString === '{ }') {
 		return '';
 	}
-	const gqlArgObj_stringModified = gqlArgObj_string
+
+	return gqlArgObjString
 		.replace(/"/g, '')
-		.replace(/'/g, `"`)
-		.replace(/&Prime;/g, `\\"`)
+		.replace(/'/g, '"')
+		.replace(/&Prime;/g, '\\"')
 		.replace(/&prime;/g, `'`)
 		.slice(1, -1);
-	return gqlArgObj_stringModified;
 };
 
 /**
  * Generates a title string from an array of field steps.
- * @param steps - Array of strings representing the steps/path to a field.
- * @returns A joined string representation of the steps.
  */
 export const generateTitleFromStepsOfFields = (steps: string[]): string => {
 	if (!Array.isArray(steps) || steps.length === 0) {
 		return '';
 	}
-	// Join with a separator, e.g., ' > ' or just return the last element or similar.
-	// Based on typical usage 'col-' + ... it might be used for IDs or classes.
-	// Let's assume a simple join for now.
-	return steps.join('-');
+
+	return steps.filter(Boolean).join('-');
 };

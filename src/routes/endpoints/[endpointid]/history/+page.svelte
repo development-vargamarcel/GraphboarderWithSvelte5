@@ -186,7 +186,7 @@
 									<i class="bi bi-arrow-counterclockwise text-lg"></i>
 								</button>
 								<button
-									class="btn btn-ghost btn-xs text-error"
+									class="btn text-error btn-ghost btn-xs"
 									onclick={() => handleDelete(item.id)}
 									title="Delete history item"
 									aria-label="Delete history item"
