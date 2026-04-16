@@ -3,6 +3,7 @@
 	import { localEndpoints } from '$lib/stores/testData/testEndpoints';
 	import { addToast } from '$lib/stores/toastStore';
 	import type { AvailableEndpoint } from '$lib/types';
+	import { getProxiedUrl } from '$lib/stores/proxySettingsStore';
 
 	interface Props {
 		onEndpointAdded?: () => void;
@@ -137,7 +138,7 @@
 				headersObj = JSON.parse(headers);
 			}
 
-			const response = await fetch(url, {
+			const response = await fetch(getProxiedUrl(url), {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

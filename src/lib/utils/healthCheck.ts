@@ -1,3 +1,5 @@
+import { getProxiedUrl } from '$lib/stores/proxySettingsStore';
+
 export interface HealthCheckResult {
 	healthy: boolean;
 	latency?: number;
@@ -17,7 +19,7 @@ export const checkEndpointHealth = async (
 	const startTime = performance.now();
 	try {
 		console.debug(`[HealthCheck] Checking ${url}...`);
-		const response = await fetch(url, {
+		const response = await fetch(getProxiedUrl(url), {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

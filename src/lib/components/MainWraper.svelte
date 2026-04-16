@@ -11,6 +11,7 @@
 	import { envVars } from '$lib/stores/envVarsStore';
 	import { get } from 'svelte/store';
 	import { appContext } from '$lib/stores/appContextStore';
+	import { proxySettings, getProxiedUrl } from '$lib/stores/proxySettingsStore';
 
 	/**
 	 * Props for MainWraper.
@@ -71,21 +72,31 @@
 		return substitutedHeaders;
 	};
 
-	let client = new Client({
-		url: ($endpointInfo as any)?.url || '',
-		fetchOptions: () => {
-			console.debug('Fetching with headers for:', ($endpointInfo as any)?.url);
-			return {
-				headers: getHeaders()
-			};
-		},
-		exchanges: [fetchExchange]
-	});
+	const makeClient = () =>
+		new Client({
+			url: getProxiedUrl(($endpointInfo as any)?.url || ''),
+			fetchOptions: () => {
+				console.debug('Fetching with headers for:', ($endpointInfo as any)?.url);
+				return {
+					headers: getHeaders()
+				};
+			},
+			exchanges: [fetchExchange]
+		});
+
+	let client = makeClient();
 
 	const urqlCoreClient = Create_urqlCoreClient();
 	urqlCoreClient.set(client);
 
 	setContextClient(client);
+
+	$effect(() => {
+		const _ = $proxySettings;
+		const newClient = makeClient();
+		urqlCoreClient.set(newClient);
+		setContextClient(newClient);
+	});
 	setContext(`${prefix}QMSMainWraperContext`, {
 		endpointInfo: endpointInfo,
 		schemaData: schemaData,
