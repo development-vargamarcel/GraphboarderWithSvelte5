@@ -3,10 +3,12 @@
 	import TabContainer from '$lib/components/TabContainer.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import LocalStorageManager from '$lib/components/LocalStorageManager.svelte';
+	import ProxySettings from '$lib/components/ProxySettings.svelte';
 	import { getContext } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import type { QMSMainWraperContext } from '$lib/types';
 	import { downloadJSON } from '$lib/utils/usefulFunctions';
+	import { proxySettings } from '$lib/stores/proxySettingsStore';
 
 	interface Props {
 		forceVisibleSidebar?: boolean;
@@ -31,6 +33,7 @@
 	const schemaData = QMSContext?.schemaData;
 
 	let showStorageManager = $state(false);
+	let showProxySettings = $state(false);
 
 	/**
 	 * Downloads the current schema as a JSON file.
@@ -46,6 +49,7 @@
 </script>
 
 <LocalStorageManager bind:show={showStorageManager} />
+<ProxySettings bind:show={showProxySettings} />
 
 <div
 	class="h-screen w-full {forceVisibleSidebar
@@ -73,6 +77,15 @@
 					aria-label="Storage Manager"
 				>
 					<i class="bi bi-database"></i>
+				</button>
+			</div>
+			<div class="tooltip tooltip-right" data-tip="Proxy Settings">
+				<button
+					class="btn btn-circle btn-ghost btn-sm {$proxySettings.enabled ? 'text-primary' : ''}"
+					onclick={() => (showProxySettings = true)}
+					aria-label="Proxy Settings"
+				>
+					<i class="bi bi-router"></i>
 				</button>
 			</div>
 		</div>
