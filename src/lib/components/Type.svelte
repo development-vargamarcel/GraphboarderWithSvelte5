@@ -64,7 +64,7 @@
 	}
 
 	let inDuration = $state(300);
-	let expandData: any = $state({});
+	let expandData: any = {};
 	let canExpand = $derived(!dd_kindsArray?.includes('SCALAR') && dd_kindsArray.length > 0);
 
 	const expand = () => {

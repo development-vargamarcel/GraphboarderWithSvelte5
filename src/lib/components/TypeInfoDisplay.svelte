@@ -96,10 +96,8 @@
 	});
 
 	let showModal = $state(false);
-	let finalGqlArgObj_Store = $state();
-	let finalGqlArgObj_StoreValue = $state();
-	let paginationState_derived = $state();
-	let paginationState_derivedValue = $state();
+	let finalGqlArgObj_Store: any;
+	let paginationState_derived: any;
 	let finalGqlArgObjValue;
 	let activeArgumentsQMSWraperContext = $state<QMSWraperContext>();
 	let QMSarguments;
@@ -139,18 +137,15 @@
 			);
 
 			finalGqlArgObj_Store = activeArgumentsQMSWraperContext.finalGqlArgObj_Store;
-			finalGqlArgObj_StoreValue = finalGqlArgObj_Store;
 			paginationState_derived = activeArgumentsQMSWraperContext.paginationState_derived;
-			paginationState_derivedValue = paginationState_derived;
 		}
 	});
 
-	let currentQMSWraperCtxData = $state();
-	$effect(() => {
-		if ($mergedChildren_QMSWraperCtxData_Store) {
-			currentQMSWraperCtxData = mergedChildren_QMSWraperCtxData_Store.getObj(stepsOfFields);
-		}
-	});
+	let currentQMSWraperCtxData = $derived(
+		$mergedChildren_QMSWraperCtxData_Store
+			? mergedChildren_QMSWraperCtxData_Store.getObj(stepsOfFields)
+			: undefined
+	);
 	let currentQMSArguments = $derived(
 		getValueAtPath($mergedChildren_finalGqlArgObj_Store, [...stepsOfFields, 'QMSarguments'])
 	);

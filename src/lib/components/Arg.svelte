@@ -47,7 +47,7 @@
 	let { dd_kindsArray, dd_rootName, dd_displayName } = type;
 
 	let showExpand = $state(false);
-	let expandData = $state<any>({});
+	let expandData: any = {};
 	let canExpand = false;
 	if (!dd_kindsArray.includes('SCALAR') && dd_kindsArray.length > 0) {
 		canExpand = true;
