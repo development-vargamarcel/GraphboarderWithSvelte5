@@ -1,6 +1,7 @@
 <script lang="ts">
 	import EndpointForm from '$lib/components/EndpointForm.svelte';
 	import EndpointPicker from '$lib/components/EndpointPicker.svelte';
+	import ProxySettingsInline from '$lib/components/ProxySettingsInline.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import { endpoints, localStorageEndpoints, addEndpoint } from '$lib/stores/endpointsStore';
 	import { get } from 'svelte/store';
@@ -93,6 +94,8 @@
 			</button>
 		</div>
 	</div>
+
+	<ProxySettingsInline />
 
 	<EndpointPicker
 		endpoints={$endpoints}
