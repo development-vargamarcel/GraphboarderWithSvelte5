@@ -82,8 +82,8 @@
 	}: Props = $props();
 
 	let stepsOfNodes = $state<unknown[]>([]);
-	let stepsOfFields = $state<string[]>([]);
-	let stepsOfFieldsFull = $state<string[]>([]);
+	let stepsOfFieldsFull = $derived(stepsOfNodesToStepsOfFields(stepsOfNodes as any[]));
+	let stepsOfFields = $derived(filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']));
 	let testName_stepsOFFieldsWasUpdated = $state(false);
 
 	const OutermostQMSWraperContext = getContext(
@@ -290,9 +290,7 @@
 	});
 
 	$effect(() => {
-		stepsOfFieldsFull = stepsOfNodesToStepsOfFields(stepsOfNodes as any[]);
-		stepsOfFields = filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']);
-		updateNodeSteps(node, stepsOfFieldsFull, stepsOfFields, stepsOfNodes as any[], filterElFromArr);
+		updateNodeSteps(node, stepsOfFieldsFull, stepsOfFields, $state.snapshot(stepsOfNodes), filterElFromArr);
 	});
 	$effect(() => {
 		if (labelEl) {

@@ -64,8 +64,6 @@
 	}: Props = $props();
 
 	let stepsOfNodes = $state<unknown[]>([]);
-	let stepsOfFields = $state<string[]>([]);
-	let stepsOfFieldsFull = $state<string[]>([]);
 	let testName_stepsOFFieldsWasUpdated = false;
 
 	const OutermostQMSWraperContext = getContext(
@@ -134,6 +132,8 @@
 			.flat(Infinity);
 		return stepsOfFields;
 	};
+	let stepsOfFieldsFull = $derived(stepsOfNodesToStepsOfFields(stepsOfNodes as any[]));
+	let stepsOfFields = $derived(filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']));
 	const getUpdatedStepsOfNodes = (stepsOfNodesParent: any[]) => {
 		testName_stepsOFFieldsWasUpdated = true;
 		let stepsOfNodesCopy = JSON.parse(JSON.stringify(stepsOfNodesParent));
@@ -294,12 +294,10 @@
 	});
 
 	$effect(() => {
-		stepsOfFieldsFull = stepsOfNodesToStepsOfFields(stepsOfNodes);
-		stepsOfFields = filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']);
 		(node as any).stepsOfFieldsFull = stepsOfFieldsFull;
 		(node as any).stepsOfFields = stepsOfFields;
 		(node as any).stepsOfFieldsMinimal = filterElFromArr(stepsOfFields, ['_and', '_or', '_not']);
-		(node as ContainerData).stepsOfNodes = stepsOfNodes;
+		(node as ContainerData).stepsOfNodes = $state.snapshot(stepsOfNodes);
 		(node as any).stepsOfFieldsStringified = JSON.stringify(stepsOfFields);
 	});
 	$effect(() => {
