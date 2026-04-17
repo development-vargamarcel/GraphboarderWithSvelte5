@@ -13,7 +13,7 @@
 	//!!! chnage bonded to item
 	import { flip } from 'svelte/animate';
 	import { dndzone, SHADOW_PLACEHOLDER_ITEM_ID, type DndEvent } from 'svelte-dnd-action';
-	import { getContext, setContext } from 'svelte';
+	import { getContext, setContext, untrack } from 'svelte';
 	import ActiveArgument from '$lib/components/ActiveArgument.svelte';
 	import ActiveArgumentsGroup_addFilterAndSortingButtonContent from '$lib/components/ActiveArgumentsGroup_addFilterAndSortingButtonContent.svelte';
 	import Modal from './Modal.svelte';
@@ -245,13 +245,15 @@
 
 	$effect(() => {
 		if ((node as any)?.addDefaultFields || ((node as ContainerData)?.isMain && addDefaultFields)) {
-			nodeAddDefaultFields(
-				node as ContainerData,
-				prefix,
-				group,
-				activeArgumentsDataGrouped_Store,
-				schemaData,
-				endpointInfo
+			untrack(() =>
+				nodeAddDefaultFields(
+					node as ContainerData,
+					prefix,
+					group,
+					activeArgumentsDataGrouped_Store,
+					schemaData,
+					endpointInfo
+				)
 			);
 		}
 	});

@@ -8,7 +8,7 @@
 		hasDeepProperty,
 		passAllObjectValuesThroughStringTransformerAndReturnNewObject
 	} from '../utils/usefulFunctions';
-	import { getContext, setContext } from 'svelte';
+	import { getContext, setContext, untrack } from 'svelte';
 	import Modal from './Modal.svelte';
 	import { nodeAddDefaultFields } from '$lib/utils/usefulFunctions';
 	import SelectItem from './SelectItem.svelte';
@@ -217,13 +217,15 @@
 
 	$effect(() => {
 		if ((node as any)?.addDefaultFields || ((node as ContainerData)?.isMain && addDefaultFields)) {
-			nodeAddDefaultFields(
-				node as ContainerData,
-				prefix,
-				group,
-				activeArgumentsDataGrouped_Store,
-				schemaData,
-				endpointInfo
+			untrack(() =>
+				nodeAddDefaultFields(
+					node as ContainerData,
+					prefix,
+					group,
+					activeArgumentsDataGrouped_Store,
+					schemaData,
+					endpointInfo
+				)
 			);
 		}
 	});
