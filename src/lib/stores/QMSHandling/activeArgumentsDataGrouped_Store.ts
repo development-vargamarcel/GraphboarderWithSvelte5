@@ -330,7 +330,7 @@ export const add_activeArgumentOrContainerTo_activeArgumentsDataGrouped = (
 			return;
 		}
 		const gqlArgObj = generate_gqlArgObj([newArgumentOrContainerData]);
-		newArgumentOrContainerData = _.merge({}, newArgumentOrContainerData, gqlArgObj);
+		Object.assign(newArgumentOrContainerData, gqlArgObj);
 		if (typeExtraData.defaultValue == undefined) {
 			return;
 		}
