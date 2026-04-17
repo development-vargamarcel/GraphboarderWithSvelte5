@@ -10,7 +10,7 @@
 	} from '$lib/utils/usefulFunctions';
 	import _ from 'lodash';
 
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ActiveArguments from '$lib/components/ActiveArguments.svelte';
 	import { Create_activeArgumentsDataGrouped_Store } from '$lib/stores/QMSHandling/activeArgumentsDataGrouped_Store';
@@ -124,21 +124,22 @@
 	// //E//move to QMSWraper (outermost if possible)
 
 	$effect(() => {
-		if (activeArgumentsQMSWraperContext) {
-			if (canAcceptArguments) {
+		const ctx = activeArgumentsQMSWraperContext;
+		const canAccept = canAcceptArguments;
+		if (!ctx) return;
+		untrack(() => {
+			if (canAccept) {
 				mergedChildren_QMSWraperCtxData_Store.addOrReplace({
 					stepsOfFields,
-					...activeArgumentsQMSWraperContext
+					...ctx
 				});
 			}
 
-			$activeArgumentsDataGrouped_Store = get(
-				activeArgumentsQMSWraperContext.activeArgumentsDataGrouped_Store
-			);
+			$activeArgumentsDataGrouped_Store = get(ctx.activeArgumentsDataGrouped_Store);
 
-			finalGqlArgObj_Store = activeArgumentsQMSWraperContext.finalGqlArgObj_Store;
-			paginationState_derived = activeArgumentsQMSWraperContext.paginationState_derived;
-		}
+			finalGqlArgObj_Store = ctx.finalGqlArgObj_Store;
+			paginationState_derived = ctx.paginationState_derived;
+		});
 	});
 
 	let currentQMSWraperCtxData = $derived(

@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { run } from 'svelte/legacy';
-
 	import { setValueAtPath } from '$lib/utils/usefulFunctions';
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
+	import _ from 'lodash';
 	interface Props {
 		prefix?: string;
 		QMSWraperCtxDataCurrent: any;
@@ -18,22 +17,24 @@
 	) as QMSWraperContext;
 	const { mergedChildren_finalGqlArgObj_Store } = OutermostQMSWraperContext;
 	/////////////////
-	let QMSarguments = $state();
-	/////////////////
-	run(() => {
-		if ($finalGqlArgObj_Store && $finalGqlArgObj_Store.final_canRunQuery) {
-			QMSarguments = { ...$finalGqlArgObj_Store.finalGqlArgObj, ...$paginationState_derived };
-		}
-	});
+	const QMSarguments = $derived(
+		$finalGqlArgObj_Store?.final_canRunQuery
+			? { ...$finalGqlArgObj_Store.finalGqlArgObj, ...$paginationState_derived }
+			: undefined
+	);
 
-	run(() => {
-		if (QMSarguments || $paginationState_derived) {
+	$effect.pre(() => {
+		if (QMSarguments === undefined && !$paginationState_derived) return;
+		const argsSnapshot = QMSarguments;
+		untrack(() => {
 			mergedChildren_finalGqlArgObj_Store.update((value: Record<string, unknown>) => {
-				return setValueAtPath(value, [...stepsOfFields, 'QMSarguments'], QMSarguments) as Record<
-					string,
-					unknown
-				>;
+				const next = setValueAtPath(
+					value,
+					[...stepsOfFields, 'QMSarguments'],
+					argsSnapshot
+				) as Record<string, unknown>;
+				return _.isEqual(value, next) ? value : next;
 			});
-		}
+		});
 	});
 </script>
