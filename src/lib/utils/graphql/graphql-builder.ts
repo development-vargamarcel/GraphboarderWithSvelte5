@@ -55,7 +55,7 @@ export const build_QMS_bodyPart = (
 	});
 
 	if (Object.keys(QMS_fields).length == 0) {
-		console.error('no cols data,choose at least one field');
+		console.debug('no cols data,choose at least one field');
 		return null;
 	}
 

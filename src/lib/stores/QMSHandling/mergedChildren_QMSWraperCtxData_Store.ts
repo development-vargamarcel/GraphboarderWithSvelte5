@@ -19,6 +19,13 @@ export const Create_mergedChildren_QMSWraperCtxData_Store = (initialValue: any[]
 			const objIndexInArray = getObjIndexInArray(storeVal, obj, 'stepsOfFields');
 			const objIsPresentInArray = objIndexInArray > -1;
 			if (objIsPresentInArray) {
+				const existing = storeVal[objIndexInArray];
+				const keys = Object.keys(obj);
+				const sameShape =
+					existing &&
+					keys.length === Object.keys(existing).length &&
+					keys.every((k) => existing[k] === obj[k]);
+				if (sameShape) return;
 				storeVal[objIndexInArray] = obj;
 			} else {
 				storeVal.push(obj);

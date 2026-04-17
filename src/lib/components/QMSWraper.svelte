@@ -332,7 +332,7 @@
 </script>
 
 {#if isOutermostQMSWraper}
-	{#each $mergedChildren_QMSWraperCtxData_Store as any[] as QMSWraperCtxDataCurrent (QMSWraperCtxDataCurrent?.stepsOfFields?.join() || Math.random())}
+	{#each $mergedChildren_QMSWraperCtxData_Store as any[] as QMSWraperCtxDataCurrent, i (QMSWraperCtxDataCurrent?.stepsOfFields?.join('>') || `__idx_${i}`)}
 		<QMSWraperCtxDataCurrentComputations {QMSWraperCtxDataCurrent} />
 	{/each}
 {/if}
