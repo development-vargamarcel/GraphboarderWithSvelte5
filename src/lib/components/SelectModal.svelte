@@ -213,7 +213,33 @@
 	let argsInfo = QMS_info?.args;
 	let showModal = false;
 
-	let groupDisplayTitle = $state('');
+	const groupDisplayTitle = $derived.by(() => {
+		let title = '';
+		if (node.dd_displayName) {
+			title = `${title}${node.dd_displayName}`;
+		}
+
+		if ((node as ContainerData)?.operator != 'bonded') {
+			if (title.trim() != '') {
+				title = `${title} `;
+			}
+
+			if ((node as ContainerData)?.operator == 'list') {
+				title = `${title} (list)`;
+			}
+			if (['_and', '_or'].includes((node as ContainerData)?.operator)) {
+				title = `${title}${(node as ContainerData)?.operator} (list)`;
+			}
+		}
+		if (title.trim() == '' || getPreciseType(title) == 'undefined') {
+			if ((node as ContainerData)?.operator == 'bonded') {
+				title = '(item)';
+			} else if ((node as ContainerData)?.operator == '~spread~') {
+				title = '(~spread~)';
+			}
+		}
+		return title;
+	});
 
 	$effect(() => {
 		if ((node as any)?.addDefaultFields || ((node as ContainerData)?.isMain && addDefaultFields)) {
@@ -329,44 +355,10 @@
 		}
 	});
 	$effect(() => {
-		groupDisplayTitle = '';
-		//if (node?.not) {
-		//	groupDisplayTitle = `${groupDisplayTitle}_not `;
-		//}
-		if (node.dd_displayName) {
-			groupDisplayTitle = `${groupDisplayTitle}${node.dd_displayName}`;
-		}
-
-		if ((node as ContainerData)?.operator != 'bonded') {
-			if (groupDisplayTitle.trim() != '') {
-				groupDisplayTitle = `${groupDisplayTitle} `;
-			}
-
-			if ((node as ContainerData)?.operator == 'list') {
-				groupDisplayTitle = `${groupDisplayTitle} (list)`;
-			}
-			if (['_and', '_or'].includes((node as ContainerData)?.operator)) {
-				groupDisplayTitle = `${groupDisplayTitle}${(node as ContainerData)?.operator} (list)`;
-			}
-		}
-		if (groupDisplayTitle.trim() == '' || getPreciseType(groupDisplayTitle) == 'undefined') {
-			if ((node as ContainerData)?.operator == 'bonded') {
-				groupDisplayTitle = '(item)'; //bonded
-			} else if ((node as ContainerData)?.operator == '~spread~') {
-				groupDisplayTitle = '(~spread~)'; //~spread~
-			}
-		}
-		groupDisplayTitle = `${groupDisplayTitle}`;
-		//groupDisplayTitle = stepsOfNodes.join('->') + `(${groupDisplayTitle})`;
-	});
-	//should work
-
-	$effect(() => {
 		if (QMSWraperContextForSelectedQMS) {
 			$idColName = (QMSWraperContextForSelectedQMS as any).idColName;
 		}
 	});
-	$effect(() => {});
 	$effect(() => {
 		if ($QMSFieldToQMSGetMany_Store.length > 0) {
 			getManyQMS = QMSFieldToQMSGetMany_Store.getObj({
