@@ -97,8 +97,10 @@
 
 	$effect(() => {
 		if (labelEl) {
-			shadowHeight = labelEl.clientHeight;
-			shadowWidth = labelEl.clientWidth;
+			const h = labelEl.clientHeight;
+			const w = labelEl.clientWidth;
+			if (h !== shadowHeight) shadowHeight = h;
+			if (w !== shadowWidth) shadowWidth = w;
 		}
 	});
 
@@ -118,13 +120,13 @@
 			}
 		}
 	});
-	let get_valueToDisplay = (): string | undefined => {
+	let get_valueToDisplay = (data: ActiveArgumentData): string | undefined => {
 		let value: string | undefined;
-		if (getPreciseType(activeArgumentData.chd_dispatchValue) == 'number') {
-			value = String(activeArgumentData.chd_dispatchValue);
+		if (getPreciseType(data.chd_dispatchValue) == 'number') {
+			value = String(data.chd_dispatchValue);
 		}
-		if (activeArgumentData.dd_displayInterface == 'ENUM') {
-			let chd_dispatchValue = activeArgumentData.chd_dispatchValue;
+		if (data.dd_displayInterface == 'ENUM') {
+			let chd_dispatchValue = data.chd_dispatchValue;
 			// check if array
 			if (Array.isArray(chd_dispatchValue) && chd_dispatchValue.length > 0) {
 				value = chd_dispatchValue.join(', ');
@@ -134,17 +136,16 @@
 				value = undefined;
 			}
 		} else {
-			if (Array.isArray(activeArgumentData.chd_dispatchValue)) {
-				value = activeArgumentData.chd_dispatchValue.join(', ');
-			} else if (typeof activeArgumentData.chd_dispatchValue == 'string') {
+			if (Array.isArray(data.chd_dispatchValue)) {
+				value = data.chd_dispatchValue.join(', ');
+			} else if (typeof data.chd_dispatchValue == 'string') {
 				value = string_transformerREVERSE(
-					((activeArgumentData.chd_dispatchValue as string) ||
-						(activeArgumentData.defaultValue as string)) as any
+					((data.chd_dispatchValue as string) || (data.defaultValue as string)) as any
 				) as string;
 			}
 		}
 
-		if (activeArgumentData.chd_dispatchValue && activeArgumentData.dd_displayInterface == 'geo') {
+		if (data.chd_dispatchValue && data.dd_displayInterface == 'geo') {
 			value = '[map]';
 		}
 
@@ -152,28 +153,20 @@
 	};
 	const CPItemContext = getContext(`${prefix}CPItemContext`) as any;
 	const CPItem = CPItemContext?.CPItem;
-	let expandedVersion: boolean = $state(false);
-	let valueToDisplay: string | undefined = $state(undefined);
-	$effect(() => {
-		if (true || activeArgumentData?.inUse) {
-			valueToDisplay = get_valueToDisplay();
-		}
-		// if (valueToDisplay !== undefined ) {
-		if (!CPItemContext) {
-			expandedVersion = false;
-		} else {
-			expandedVersion = true;
-		}
-	});
+	let expandedVersion: boolean = $state(!!CPItemContext);
+	let valueToDisplay: string | undefined = $derived(get_valueToDisplay(activeArgumentData));
 	const outermostQMSWraperContext = getContext(
 		`${prefix}OutermostQMSWraperContext`
 	) as QMSWraperContext;
 	const { mergedChildren_QMSWraperCtxData_Store } = outermostQMSWraperContext;
 
 	const handleChanged = (detail: Partial<ActiveArgumentData>): void => {
-		// Create a new object instead of mutating the bindable prop
-		// This ensures Svelte 5 reactivity works correctly
-		activeArgumentData = { ...activeArgumentData, ...detail };
+		// Mutate the existing object in place; the store update in
+		// updateActiveArgument() is the source of truth and will propagate
+		// via its own subscribers. Reassigning the $bindable prop would
+		// re-enter this component's own reactive effects through bind:group
+		// and feed back into the update chain.
+		Object.assign(activeArgumentData, detail);
 
 		const isValid: boolean = argumentCanRunQuery(activeArgumentData);
 		const isInUse: boolean | undefined = activeArgumentData.inUse;
@@ -187,7 +180,6 @@
 		}
 		onChanged?.(detail);
 		updateActiveArgument();
-		//finalGqlArgObj_Store.regenerate_groupsAndfinalGqlArgObj();
 	};
 	const handleClickOutside = (): void => {
 		//

@@ -34,7 +34,7 @@
 		handleDndFinalize as handleDndFinalizeUtil,
 		handleDeleteItem
 	} from '$lib/utils/dndUtils';
-	import { writable } from 'svelte/store';
+	import { writable, get } from 'svelte/store';
 	import AddNodeToControlPanel from './AddNodeToControlPanel.svelte';
 	import GroupDescriptionAndControls from './GroupDescriptionAndControls.svelte';
 	import SelectedRowsDisplay from './SelectedRowsDisplay.svelte';
@@ -162,7 +162,7 @@
 	const showInputField = getContext('showInputField');
 
 	const mutationVersion = getContext('mutationVersion') as any;
-	if (QMSType == 'mutation') {
+	if (QMSType == 'mutation' && mutationVersion && get(mutationVersion) !== true) {
 		$mutationVersion = true;
 	}
 
@@ -243,8 +243,11 @@
 
 	let groupDisplayTitle = $derived(generateGroupDisplayTitle(node, getPreciseType));
 
+	let defaultFieldsAdded = false;
 	$effect(() => {
+		if (defaultFieldsAdded) return;
 		if ((node as any)?.addDefaultFields || ((node as ContainerData)?.isMain && addDefaultFields)) {
+			defaultFieldsAdded = true;
 			untrack(() =>
 				nodeAddDefaultFields(
 					node as ContainerData,
@@ -292,7 +295,12 @@
 	});
 
 	$effect(() => {
-		updateNodeSteps(node, stepsOfFieldsFull, stepsOfFields, $state.snapshot(stepsOfNodes), filterElFromArr);
+		const snapshot = $state.snapshot(stepsOfNodes);
+		const full = stepsOfFieldsFull;
+		const short = stepsOfFields;
+		untrack(() => {
+			updateNodeSteps(node, full, short, snapshot, filterElFromArr);
+		});
 	});
 	$effect(() => {
 		if (labelEl) {
