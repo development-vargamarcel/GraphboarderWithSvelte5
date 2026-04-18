@@ -64,9 +64,16 @@ export function updateNodeSteps(
 	stepsOfNodes: Array<[string | undefined, string | undefined, string | undefined]>,
 	filterElFromArr: (arr: string[], toFilter: string[]) => string[]
 ): void {
+	const stepsOfFieldsStringified = JSON.stringify(stepsOfFields);
+	// Skip writes when nothing would change. Writing to $bindable-backed
+	// fields triggers parent updates and can re-enter the effect that
+	// calls this function, so the idempotency guard is required.
+	if (node.stepsOfFieldsStringified === stepsOfFieldsStringified) {
+		return;
+	}
 	node.stepsOfFieldsFull = stepsOfFieldsFull;
 	node.stepsOfFields = stepsOfFields;
 	node.stepsOfFieldsMinimal = filterElFromArr(stepsOfFields, ['_and', '_or', '_not']);
 	node.stepsOfNodes = stepsOfNodes;
-	node.stepsOfFieldsStringified = JSON.stringify(stepsOfFields);
+	node.stepsOfFieldsStringified = stepsOfFieldsStringified;
 }
