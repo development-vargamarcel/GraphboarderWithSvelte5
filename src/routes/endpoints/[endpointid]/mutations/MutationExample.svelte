@@ -128,8 +128,7 @@
 				if (result.error) {
 					error = result.error.message;
 					status = 'error';
-				}
-				if (result.data) {
+				} else if (result.data) {
 					data = result.data;
 				}
 
@@ -170,7 +169,9 @@
 					queryData.data,
 					stepsOfFieldsInput
 				) as any[];
-				if (rowsCurrent && !Array.isArray(rowsCurrent)) {
+				if (!rowsCurrent) {
+					rowsCurrent = [];
+				} else if (!Array.isArray(rowsCurrent)) {
 					rowsCurrent = [rowsCurrent];
 				}
 				if ($paginationOptions.infiniteScroll) {

@@ -31,7 +31,7 @@ export const endpointInfoDefaultValues: EndpointConfiguration = {
 			check: (QMS_info: FieldWithDerivedData, schemaData: SchemaData) => {
 				const QMS_infoRootType = getRootType(null, QMS_info.dd_rootName, schemaData);
 				if (!QMS_infoRootType?.fields) {
-					console.error('QMS_infoRootType.fields is undefined');
+					console.debug('QMS_infoRootType.fields is undefined');
 					return false;
 				}
 				return !!QMS_infoRootType.fields.find((field) => field.dd_displayName === 'edges');
