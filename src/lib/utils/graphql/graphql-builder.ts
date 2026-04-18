@@ -70,7 +70,7 @@ export const build_QMS_bodyPart = (
 
 	const inputString = JSON.stringify(fullObject, function (key, value) {
 		if (key === 'QMSarguments') {
-			return '(' + JSON.stringify(value) + ')';
+			return `(${gqlArgObjToString(value)})`;
 		}
 		return value;
 	}).replaceAll('"QMSarguments":', '');

@@ -51,12 +51,9 @@ export const deleteIfChildrenHaveOneKeyAndLastKeyIsQMSarguments = (
 
 		const keys = Object.keys(child);
 		const numberOfKeys = keys.length;
-		if (numberOfKeys == 1 && child[keys[0]] == 'QMSarguments') {
+		if (numberOfKeys == 1 && keys[0] == 'QMSarguments') {
 			delete typedObj[key];
-			// Recursive call or loop should continue?
-			// Original code returned undefined here which caused error.
-			// Assuming we should return the object.
-			return typedObj;
+			continue;
 		}
 		const result = findNestedChildWithMultipleKeysOrIfLastHasQMSargumentsKey(child);
 		if (result === true) {
