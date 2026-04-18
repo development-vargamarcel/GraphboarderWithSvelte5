@@ -15,7 +15,7 @@ const schema = buildSchema(`
 	}
 
 	type Query {
-		items: [Item!]!
+		items(filter: String): [Item!]!
 		item(id: ID!): Item
 	}
 
@@ -42,6 +42,17 @@ const createDatabase = () => {
 export const startMockGraphqlServer = async (): Promise<MockGraphqlServer> => {
 	const db = createDatabase();
 	const server = createServer(async (req, res) => {
+		// Add CORS headers
+		res.setHeader('Access-Control-Allow-Origin', '*');
+		res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+		if (req.method === 'OPTIONS') {
+			res.writeHead(204);
+			res.end();
+			return;
+		}
+
 		if (req.method !== 'POST') {
 			res.writeHead(405, { 'Content-Type': 'application/json' });
 			res.end(JSON.stringify({ errors: [{ message: 'Method Not Allowed' }] }));
@@ -57,8 +68,18 @@ export const startMockGraphqlServer = async (): Promise<MockGraphqlServer> => {
 			try {
 				const { query, variables } = JSON.parse(body);
 				const rootValue = {
-					items: () =>
-						db.prepare('SELECT id, name, created_at as createdAt FROM items ORDER BY id ASC').all(),
+					items: ({ filter }: { filter?: string }) => {
+						if (filter) {
+							return db
+								.prepare(
+									'SELECT id, name, created_at as createdAt FROM items WHERE name LIKE ? ORDER BY id ASC'
+								)
+								.all(`%${filter}%`);
+						}
+						return db
+							.prepare('SELECT id, name, created_at as createdAt FROM items ORDER BY id ASC')
+							.all();
+					},
 					item: ({ id }: { id: string }) =>
 						db.prepare('SELECT id, name, created_at as createdAt FROM items WHERE id = ?').get(id),
 					addItem: ({ name }: { name: string }) => {

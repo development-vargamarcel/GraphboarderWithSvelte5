@@ -27,7 +27,7 @@ test('can explore a mocked GraphQL endpoint', async ({ page }) => {
 
 	await card.click();
 
-	await expect(page.locator('button:has-text("Queries")')).toBeVisible();
+	await expect(page.locator('button:has-text("Queries")').first()).toBeVisible();
 	await page.click('button:has-text("Queries")');
 	await page.click('button:has-text("Explorer")');
 
