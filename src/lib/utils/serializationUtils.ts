@@ -51,6 +51,28 @@ export const stringToJs = (string: unknown): unknown => {
 };
 
 /**
+ * Serializes a GraphQL schema type object to a formatted JSON string.
+ * Strips internal derived-data properties (dd_* prefix) and handles circular references.
+ * @param typeObj - The type object to serialize.
+ * @returns Formatted JSON string of the raw schema data.
+ */
+export const typeToSchemaJson = (typeObj: unknown): string => {
+	const seen = new Set<object>();
+	return JSON.stringify(
+		typeObj,
+		(key, value) => {
+			if (key.startsWith('dd_')) return undefined;
+			if (typeof value === 'object' && value !== null) {
+				if (seen.has(value)) return '[Circular]';
+				seen.add(value);
+			}
+			return value;
+		},
+		2
+	);
+};
+
+/**
  * Converts an object into its source code string representation.
  * Handles nested objects, arrays, and functions.
  * @param obj - The object to convert.

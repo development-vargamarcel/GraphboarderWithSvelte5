@@ -9,6 +9,7 @@
 	import type { QMSMainWraperContext } from '$lib/types';
 	import { downloadJSON } from '$lib/utils/usefulFunctions';
 	import { proxySettings } from '$lib/stores/proxySettingsStore';
+	import { addToast } from '$lib/stores/toastStore';
 
 	interface Props {
 		forceVisibleSidebar?: boolean;
@@ -46,6 +47,15 @@
 			console.warn('Schema data is not ready or missing.');
 		}
 	};
+
+	const copySchema = async () => {
+		if (schemaData && $schemaData.isReady && $schemaData.schema) {
+			await navigator.clipboard.writeText(JSON.stringify($schemaData.schema, null, 2));
+			addToast('Introspection schema copied to clipboard!', 'success');
+		} else {
+			addToast('Schema is not ready yet.', 'warning');
+		}
+	};
 </script>
 
 <LocalStorageManager bind:show={showStorageManager} />
@@ -68,6 +78,15 @@
 					aria-label="Download Schema"
 				>
 					<i class="bi bi-download"></i>
+				</button>
+			</div>
+			<div class="tooltip tooltip-right" data-tip="Copy Schema JSON">
+				<button
+					class="btn btn-circle btn-ghost btn-sm"
+					onclick={copySchema}
+					aria-label="Copy Schema JSON"
+				>
+					<i class="bi bi-clipboard-data"></i>
 				</button>
 			</div>
 			<div class="tooltip tooltip-right" data-tip="Storage Manager">
