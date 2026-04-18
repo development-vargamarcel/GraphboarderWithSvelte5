@@ -60,9 +60,11 @@
 		return arg.dd_isRootArg;
 	});
 
-	let groupArgsPossibilities = group.group_isRoot
-		? rootArgs
-		: group.dd_relatedRoot.inputFields || group.inputFields || group.args;
+	let groupArgsPossibilities = $derived(
+		group.group_isRoot
+			? rootArgs
+			: group.dd_relatedRoot.inputFields || group.inputFields || group.args
+	);
 	let predefinedFirstSteps = group.group_isRoot ? [] : [group.group_name];
 	let QMSMainWraperContext = getContext<QMSMainWraperContextType>(`${prefix}QMSMainWraperContext`);
 	const endpointInfo = QMSMainWraperContext?.endpointInfo;

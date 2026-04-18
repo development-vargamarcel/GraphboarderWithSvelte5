@@ -70,20 +70,21 @@
 	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as any;
 	const schemaData = QMSMainWraperContext?.schemaData;
 	const nodeRootType = getRootType(null, node.dd_rootName, schemaData);
-	let groupArgsPossibilities = $state<any[]>([]);
-	$effect(() => {
+	let groupArgsPossibilities = $derived.by(() => {
+		let result: any[] = [];
 		if (group.group_isRoot) {
-			groupArgsPossibilities = rootArgs;
+			result = rootArgs;
 		} else if (node?.inputFields) {
-			groupArgsPossibilities = node?.inputFields;
+			result = node?.inputFields;
 		} else if (parent_inputFields) {
-			groupArgsPossibilities = parent_inputFields;
+			result = parent_inputFields;
 		} else {
-			groupArgsPossibilities = getRootType(null, group.dd_rootName, schemaData)?.inputFields || [];
+			result = getRootType(null, group.dd_rootName, schemaData)?.inputFields || [];
 		}
-		if (!groupArgsPossibilities) {
-			groupArgsPossibilities = node?.args || [];
+		if (!result || result.length === 0) {
+			result = node?.args || [];
 		}
+		return result;
 	});
 	let baseFilterOperators = ['_and', '_or', '_not']; //!!!this might create problem if there is some nonBase operator with the same name as one of these
 	// groupArgsPossibilities = groupArgsPossibilities.filter((arg) => {

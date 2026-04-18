@@ -39,7 +39,7 @@
 					value={$proxySettings.proxyUrl}
 					onchange={updateUrl}
 					placeholder="/api/proxy"
-					class="input input-bordered input-sm w-full max-w-sm font-mono text-sm"
+					class="input-bordered input input-sm w-full max-w-sm font-mono text-sm"
 				/>
 			</div>
 		{/if}
