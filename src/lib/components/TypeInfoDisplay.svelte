@@ -6,7 +6,8 @@
 		getRootType,
 		getValueAtPath,
 		setValueAtPath,
-		stepsOfFieldsToQueryFragmentObject
+		stepsOfFieldsToQueryFragmentObject,
+		typeToSchemaJson
 	} from '$lib/utils/usefulFunctions';
 	import _ from 'lodash';
 
@@ -95,6 +96,7 @@
 		return valueAtPath?.QMSarguments;
 	});
 
+	let showJsonInfo = $state(false);
 	let showModal = $state(false);
 	let finalGqlArgObj_Store: any;
 	let paginationState_derived: any;
@@ -194,8 +196,29 @@
 
 			<div class="flex"></div>
 		</div>
-		<div class="w-1/8 text-center text-xs"></div>
+		<div class="w-1/8 text-center text-xs">
+			<button
+				type="button"
+				class="btn btn-ghost btn-xs rounded px-1"
+				onclick={() => (showJsonInfo = true)}
+				title="Show type info as JSON"
+				aria-label="Show type info as JSON"
+			>
+				<i class="bi bi-braces"></i>
+			</button>
+		</div>
 	</div>
+
+	{#if showJsonInfo}
+		<Modal
+			modalIdentifier="typeJsonInfoModal"
+			showApplyBtn={false}
+			onCancel={() => (showJsonInfo = false)}
+		>
+			<h3 class="mb-2 font-bold">{dd_displayName} — type info</h3>
+			<pre class="max-h-96 overflow-auto rounded bg-base-200 p-3 text-xs">{typeToSchemaJson(type)}</pre>
+		</Modal>
+	{/if}
 {:else if template == 'columnAddDisplay'}
 	<div
 		class="flex w-full min-w-max cursor-pointer rounded-box text-base select-none hover:text-primary"
