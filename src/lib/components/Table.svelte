@@ -32,7 +32,7 @@
 	if (colsData === undefined) {
 		colsData = [];
 	}
-	if (rows === undefined) {
+	if (rows === undefined || rows === null) {
 		rows = [];
 	}
 </script>
