@@ -58,7 +58,9 @@
 		document.getElementById('my-drawer-3')?.click();
 	});
 
-	let dd_relatedRoot = getRootType(null, QMS_info.dd_rootName, schemaData);
+	let dd_relatedRoot = $derived(
+		QMS_info ? getRootType(null, QMS_info.dd_rootName, schemaData) : undefined
+	);
 	if (!QMS_info) {
 		//	goto('/queries');
 	}
@@ -74,10 +76,10 @@
 	// );
 	//
 
-	let scalarFields: any[] = [];
-	if (dd_relatedRoot) {
-		({ scalarFields } = getFields_Grouped(dd_relatedRoot, [], schemaData));
-	}
+	let fieldsGrouped = $derived(
+		dd_relatedRoot ? getFields_Grouped(dd_relatedRoot, [], schemaData) : { scalarFields: [] }
+	);
+	let scalarFields = $derived(fieldsGrouped.scalarFields);
 
 	let queryData = $state({ fetching: false, error: null, data: null });
 	let rows = $state<any[]>([]);
@@ -220,12 +222,13 @@
 		}
 	});
 
-	$effect(() => {});
-	if (scalarFields.length == 0) {
-		queryData = { fetching: false, error: null, data: null };
-	} else {
-		queryData = { fetching: true, error: null, data: null };
-	}
+	$effect(() => {
+		if (scalarFields.length == 0) {
+			queryData = { fetching: false, error: null, data: null };
+		} else {
+			queryData = { fetching: true, error: null, data: null };
+		}
+	});
 
 	const hideColumn = (detail: { column: string }) => {
 		tableColsData_Store.removeColumn(detail.column);
