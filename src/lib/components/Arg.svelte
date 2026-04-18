@@ -47,15 +47,15 @@
 	let { dd_kindsArray, dd_rootName, dd_displayName } = type;
 
 	let showExpand = $state(false);
-	let expandData: any = {};
+	let expandData: any = $state({});
 	let canExpand = false;
 	if (!dd_kindsArray.includes('SCALAR') && dd_kindsArray.length > 0) {
 		canExpand = true;
 	}
 	let inDuration = $state(300);
 	const expand = () => {
-		expandData = getRootType($schemaData.rootTypes, dd_rootName, schemaData);
-		if (expandData) {
+		expandData = getRootType($schemaData.rootTypes, dd_rootName, schemaData) || {};
+		if (expandData && Object.keys(expandData).length > 0) {
 			if (!showExpand) {
 				stepsOfFields.push(dd_displayName);
 			} else {

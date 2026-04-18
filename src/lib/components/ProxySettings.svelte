@@ -34,11 +34,7 @@
 
 	<div class="form-control mb-4">
 		<label class="label cursor-pointer justify-start gap-3">
-			<input
-				type="checkbox"
-				class="toggle toggle-primary"
-				bind:checked={tempEnabled}
-			/>
+			<input type="checkbox" class="toggle toggle-primary" bind:checked={tempEnabled} />
 			<span class="label-text font-medium">Enable proxy</span>
 		</label>
 	</div>
