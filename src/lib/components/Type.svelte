@@ -65,28 +65,23 @@
 
 	let inDuration = $state(300);
 	let expandData: any = $state({});
-	let canExpand = $derived(!dd_kindsArray?.includes('SCALAR') && dd_kindsArray.length > 0);
+	let canExpand = $derived(
+		(!dd_kindsArray?.includes('SCALAR') && dd_kindsArray.length > 0) || type?.args?.length > 0
+	);
 
 	const expand = () => {
 		expandData = getRootType($schemaData.rootTypes, dd_rootName, schemaData) || {};
-		if (expandData && Object.keys(expandData).length > 0) {
-			// if (!showExpand) {
-			// 	stepsOfFields.push(dd_displayName);
-			// } else {
-			// 	// does the trick if you hide one by one from last one
-			// 	stepsOfFields.splice(-1);
-			// }
-
+		const hasExpandableData = expandData && Object.keys(expandData).length > 0;
+		const hasArgs = type?.args?.length > 0;
+		if (hasExpandableData || hasArgs) {
 			showExpand = !showExpand;
 			let typeLen =
 				expandData?.fields?.length ||
 				expandData?.inputFields?.length ||
-				expandData?.enumValues?.length;
+				expandData?.enumValues?.length ||
+				0;
 
-			let argLen = 0;
-			if (type?.args) {
-				argLen = type?.args.length;
-			}
+			let argLen = type?.args?.length || 0;
 
 			inDuration = (typeLen + argLen) * 100;
 			inDuration = inDuration < 300 && inDuration > 200 ? inDuration : 300;
