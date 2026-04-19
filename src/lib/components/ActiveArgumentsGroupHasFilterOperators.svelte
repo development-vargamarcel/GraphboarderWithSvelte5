@@ -84,7 +84,6 @@
 	let stepsOfNodes = $state<unknown[]>([]);
 	let stepsOfFieldsFull = $derived(stepsOfNodesToStepsOfFields(stepsOfNodes as any[]));
 	let stepsOfFields = $derived(filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']));
-	let testName_stepsOFFieldsWasUpdated = $state(false);
 
 	const OutermostQMSWraperContext = getContext(
 		`${prefix}OutermostQMSWraperContext`
@@ -167,13 +166,10 @@
 	}
 
 	$effect(() => {
-		if (!testName_stepsOFFieldsWasUpdated) {
-			stepsOfNodes = getUpdatedStepsOfNodes(
-				JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || [])),
-				node
-			);
-			testName_stepsOFFieldsWasUpdated = true;
-		}
+		stepsOfNodes = getUpdatedStepsOfNodes(
+			JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || [])),
+			node
+		);
 	});
 
 	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
@@ -754,27 +750,22 @@
 							class="    border-2== max-w-min {$mutationVersion && 'mt-2'} "
 						>
 							<div class="dnd-item flex">
-								{#if testName_stepsOFFieldsWasUpdated}
-									{#key stepsOfFields}
-										<ActiveArgumentsGroupHasFilterOperators
-											onDeleteSubNode={(detail) => {
-												deleteItem({ detail });
-												//
-											}}
-											{originalNodes}
-											{onUpdateQuery}
-											{type}
-											bind:nodes
-											node={nodes[item.id]}
-											parentNode={node as ContainerData}
-											parentNodeId={node.id}
-											{onChanged}
-											{availableOperators}
-											onChildrenStartDrag={startDrag}
-											{group}
-										/>
-									{/key}
-								{/if}
+								<ActiveArgumentsGroupHasFilterOperators
+										onDeleteSubNode={(detail) => {
+											deleteItem({ detail });
+										}}
+										{originalNodes}
+										{onUpdateQuery}
+										{type}
+										bind:nodes
+										node={nodes[item.id]}
+										parentNode={node as ContainerData}
+										parentNodeId={node.id}
+										{onChanged}
+										{availableOperators}
+										onChildrenStartDrag={startDrag}
+										{group}
+									/>
 							</div>
 						</div>
 					{/each}

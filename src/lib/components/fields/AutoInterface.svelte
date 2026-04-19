@@ -13,7 +13,7 @@
 
 	let { typeInfo, alwaysOn_interfacePicker, onChanged }: Props = $props();
 	const choosenDisplayInterface = getContext('choosenDisplayInterface') as any;
-	const expectsInterfaceList = typeInfo.dd_kindList && $choosenDisplayInterface != 'ENUM';
+	let expectsInterfaceList = $derived(typeInfo.dd_kindList && $choosenDisplayInterface != 'ENUM');
 	let rawValue = $derived(
 		expectsInterfaceList && getPreciseType(typeInfo?.chd_rawValue) != 'array'
 			? [typeInfo?.chd_rawValue]
@@ -21,14 +21,6 @@
 	);
 	let dispatchValue = $derived(typeInfo?.chd_dispatchValue);
 
-	$effect(() => {
-		console.debug('AutoInterface: typeInfo updated', {
-			displayName: typeInfo?.dd_displayName,
-			dispatchValue: dispatchValue,
-			rawValue: rawValue,
-			interface: expectsInterfaceList ? 'List' : 'Single'
-		});
-	});
 </script>
 
 {#if expectsInterfaceList}

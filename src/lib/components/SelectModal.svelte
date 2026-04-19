@@ -322,11 +322,18 @@
 	});
 
 	$effect(() => {
-		(node as any).stepsOfFieldsFull = stepsOfFieldsFull;
-		(node as any).stepsOfFields = stepsOfFields;
-		(node as any).stepsOfFieldsMinimal = filterElFromArr(stepsOfFields, ['_and', '_or', '_not']);
-		(node as ContainerData).stepsOfNodes = $state.snapshot(stepsOfNodes);
-		(node as any).stepsOfFieldsStringified = JSON.stringify(stepsOfFields);
+		const full = stepsOfFieldsFull;
+		const short = stepsOfFields;
+		const snap = $state.snapshot(stepsOfNodes);
+		const str = JSON.stringify(short);
+		untrack(() => {
+			if ((node as any).stepsOfFieldsStringified === str) return;
+			(node as any).stepsOfFieldsFull = full;
+			(node as any).stepsOfFields = short;
+			(node as any).stepsOfFieldsMinimal = filterElFromArr(short, ['_and', '_or', '_not']);
+			(node as ContainerData).stepsOfNodes = snap;
+			(node as any).stepsOfFieldsStringified = str;
+		});
 	});
 	$effect(() => {
 		if (labelEl) {
