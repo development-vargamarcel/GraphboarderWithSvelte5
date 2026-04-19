@@ -338,7 +338,7 @@
 
 								{#if choice[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
 									<div
-										class="visible absolute top-0 left-0 mx-2 ml-8 w-11/12 rounded-box border-2 border-dotted border-accent/20 py-5 text-primary"
+										class="pointer-events-none absolute top-0 left-0 mx-2 ml-8 w-11/12 rounded-box border-2 border-dotted border-accent/20 py-5 text-primary"
 									></div>
 								{/if}
 							</div>
