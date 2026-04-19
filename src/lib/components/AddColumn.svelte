@@ -64,10 +64,15 @@
 	<!-- svelte-ignore a11y_label_has_associated_control -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<label tabindex="0" class="bi bi-node-plus-fill btn w-full p-1 text-lg btn-xs"></label>
+	<label
+		tabindex="0"
+		data-testid="add-column-button"
+		class="bi bi-node-plus-fill btn w-full p-1 text-lg btn-xs"
+	></label>
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		tabindex="0"
+		data-testid="add-column-dropdown"
 		class="dropdown-content ==w-max menu z-[9999] max-w-screen rounded-box bg-base-100 p-2 text-sm shadow-2xl"
 	>
 		<div

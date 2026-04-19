@@ -49,6 +49,7 @@
 		<input
 			type="checkbox"
 			class="toggle {otherClases}"
+			data-testid="toggle-{label}"
 			bind:checked={value}
 			{disabled}
 			onchange={handleChange}

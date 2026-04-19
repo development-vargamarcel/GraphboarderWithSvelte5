@@ -314,6 +314,7 @@
 					class="btn rounded px-2 normal-case btn-ghost btn-xs {hasQMSarguments
 						? 'text-success'
 						: ''} "
+					data-testid="funnel-button-{dd_displayName}"
 					onclick={(e) => {
 						e.stopPropagation();
 						showModal = true;
