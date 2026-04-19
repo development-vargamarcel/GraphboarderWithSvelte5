@@ -166,10 +166,13 @@
 	}
 
 	$effect(() => {
-		stepsOfNodes = getUpdatedStepsOfNodes(
-			JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || [])),
-			node
-		);
+		// Root nodes have parentNodeId === node.id (they use themselves as sentinel parent).
+		// Reading parentNode.stepsOfNodes for root would create a loop: the second effect
+		// writes node.stepsOfNodes, which re-triggers this effect, growing stepsOfNodes
+		// indefinitely. Non-root nodes safely track parentNode.stepsOfNodes.
+		const isRoot = parentNodeId === node.id;
+		const parentSteps = isRoot ? [] : (parentNode?.stepsOfNodes ?? []);
+		stepsOfNodes = getUpdatedStepsOfNodes(JSON.parse(JSON.stringify(parentSteps)), node);
 	});
 
 	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
