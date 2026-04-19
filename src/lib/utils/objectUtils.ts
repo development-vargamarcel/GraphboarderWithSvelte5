@@ -20,7 +20,11 @@ export const findNestedChildWithMultipleKeysOrIfLastHasQMSargumentsKey = (
 	if (objectKeysLength > 1) {
 		return typedObj;
 	}
-	if (Object.prototype.hasOwnProperty.call(typedObj, 'QMSarguments') && objectKeysLength == 1) {
+	if (
+		Object.prototype.hasOwnProperty.call(typedObj, 'QMSarguments') &&
+		objectKeysLength == 1 &&
+		objectIsEmpty(typedObj['QMSarguments'] as Record<string, unknown>)
+	) {
 		return true;
 	}
 	if (objectKeysLength == 1) {
@@ -51,7 +55,11 @@ export const deleteIfChildrenHaveOneKeyAndLastKeyIsQMSarguments = (
 
 		const keys = Object.keys(child);
 		const numberOfKeys = keys.length;
-		if (numberOfKeys == 1 && keys[0] == 'QMSarguments') {
+		if (
+			numberOfKeys == 1 &&
+			keys[0] == 'QMSarguments' &&
+			objectIsEmpty(child['QMSarguments'] as Record<string, unknown>)
+		) {
 			delete typedObj[key];
 			continue;
 		}
