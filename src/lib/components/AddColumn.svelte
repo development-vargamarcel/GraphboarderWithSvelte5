@@ -104,7 +104,7 @@
 					</button>
 				</div>
 
-				{#if dd_relatedRoot?.fields}
+				{#if QMS_info}
 					<Type
 						type={QMS_info}
 						template="columnAddDisplay"
