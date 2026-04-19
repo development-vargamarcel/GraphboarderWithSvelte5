@@ -472,7 +472,7 @@
 
 {#if activeArgumentData[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
 	<div
-		class=" visible absolute top-0 left-0 ml-8 h-0 w-11/12"
+		class="pointer-events-none absolute top-0 left-0 ml-8 h-0 w-11/12"
 		id="shadowEl"
 		bind:this={shadowEl}
 	></div>

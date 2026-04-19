@@ -777,6 +777,10 @@
 		{/if}
 	</div>
 	{#if node.id == SHADOW_PLACEHOLDER_ITEM_ID}
-		<div class=" visible top-0 left-0 ml-8 h-0" id="shadowEl" bind:this={shadowEl}></div>
+		<div
+			class="pointer-events-none absolute top-0 left-0 ml-8 h-0"
+			id="shadowEl"
+			bind:this={shadowEl}
+		></div>
 	{/if}
 {/if}
