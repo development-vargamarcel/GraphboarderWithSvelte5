@@ -131,3 +131,69 @@ test('clicking the group node button in the modal opens the inner editing modal'
 
 	await removeMockEndpoint(page);
 });
+
+test('clicking filter arg in inner modal adds it to DND zone and its value can be set', async ({
+	page
+}) => {
+	await registerMockEndpoint(page, mockServer.url);
+	await page.goto('/endpoints/mock-graphql/queries/items');
+
+	// Open the add-column dropdown
+	await page.locator('.bi-node-plus-fill').first().click();
+	const dropdown = page.locator('.dropdown-content').first();
+	await expect(dropdown).toBeVisible();
+
+	// Open the args modal via the funnel button
+	const funnelBtn = dropdown
+		.locator('button:has(icon.bi-funnel), button:has(icon.bi-funnel-fill)')
+		.first();
+	await funnelBtn.click();
+
+	// The first open dialog is the outer args modal
+	const outerDialog = page.locator('dialog[open]').first();
+	await expect(outerDialog).toBeVisible();
+
+	// Click the "items" main node button to open the inner editing modal
+	const groupNodeBtn = outerDialog.locator('button.btn-ghost', { hasText: 'items' }).first();
+	await groupNodeBtn.click();
+
+	// The inner editing dialog should be open (it's the last open dialog)
+	const innerDialog = page.locator('dialog[open]').last();
+	await expect(innerDialog).toBeVisible({ timeout: 5000 });
+
+	// The "filter" arg button is listed in the inner modal — click it to add to DND zone
+	const filterArgBtn = innerDialog.locator('button', { hasText: 'filter' }).first();
+	await expect(filterArgBtn).toBeVisible();
+	await filterArgBtn.click();
+
+	// Close the inner dialog via the ✕ button
+	await innerDialog.locator('button[aria-label="Close"]').click();
+
+	// Wait for inner dialog to fully close (only outer args dialog remains)
+	await expect(page.locator('dialog[open]')).toHaveCount(1, { timeout: 5000 });
+
+	// The outer dialog DND zone (section[role="list"]) should now contain the filter arg
+	const dndSection = page.locator('dialog[open]').first().locator('section[role="list"]').first();
+	await expect(dndSection.locator('text=filter').first()).toBeVisible({ timeout: 5000 });
+
+	// Click the "filter" arg name button in the DND zone to open its editing modal.
+	// ActiveArgument renders the arg name as a button — clicking it opens showModal with AutoInterface.
+	// Use force:true because the dialog transition may briefly mark the button inert.
+	const filterArgNameBtn = dndSection.locator('button', { hasText: 'filter' }).first();
+	await filterArgNameBtn.click({ force: true });
+
+	// The arg editing modal is now the last open dialog and always shows AutoInterface
+	const argEditModal = page.locator('dialog[open]').last();
+	await expect(argEditModal).toBeVisible({ timeout: 5000 });
+
+	// AutoInterface renders Interface.svelte which has input[placeholder=dd_displayName]
+	const filterInput = argEditModal.locator('input[placeholder="filter"]');
+	await expect(filterInput).toBeAttached({ timeout: 2000 });
+
+	// Set a value for the filter argument.
+	// Use force:true because stacked native dialogs can temporarily mark elements inert.
+	await filterInput.fill('Alpha', { force: true });
+	await expect(filterInput).toHaveValue('Alpha');
+
+	await removeMockEndpoint(page);
+});

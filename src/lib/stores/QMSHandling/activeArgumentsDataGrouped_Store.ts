@@ -293,8 +293,13 @@ export const Create_activeArgumentsDataGrouped_Store = (
 					activeArgumentsDataGrouped,
 					endpointInfo
 				);
-				// Return a new array to trigger reactivity
-				return [...result];
+				// Create new object references to trigger Svelte 5 reactivity at each level
+				return result.map((g) => {
+					if (g.group_name === groupName) {
+						return { ...g };
+					}
+					return g;
+				});
 			});
 		}
 	};
@@ -351,15 +356,26 @@ export const add_activeArgumentOrContainerTo_activeArgumentsDataGrouped = (
 			newArgumentOrContainerData.dd_relatedRoot =
 				'overwritten to evade error: Uncaught TypeError: Converting circular structure to JSON' as any;
 			newArgumentOrContainerData.not = false;
-			group.group_argsNode[newArgumentOrContainerData.id] =
-				newArgumentOrContainerData as ContainerData;
 
-			if (parentContainerId && group.group_argsNode[parentContainerId]) {
-				group.group_argsNode[parentContainerId].items.push(newArgumentOrContainerData as any);
-			} else if (group.group_argsNode.mainContainer) {
-				group.group_argsNode.mainContainer.items.push(newArgumentOrContainerData as any);
+			// Create a new argsNode object so Svelte 5 detects the reference change
+			const newArgsNode = { ...group.group_argsNode };
+			newArgsNode[newArgumentOrContainerData.id] = newArgumentOrContainerData as ContainerData;
+
+			if (parentContainerId && newArgsNode[parentContainerId]) {
+				// Create a new container object with a new items array
+				newArgsNode[parentContainerId] = {
+					...newArgsNode[parentContainerId],
+					items: [...newArgsNode[parentContainerId].items, newArgumentOrContainerData as any]
+				};
+			} else if (newArgsNode.mainContainer) {
+				// Create a new mainContainer object with a new items array
+				newArgsNode.mainContainer = {
+					...newArgsNode.mainContainer,
+					items: [...newArgsNode.mainContainer.items, newArgumentOrContainerData as any]
+				};
 			}
-			group.group_args.push(newArgumentOrContainerData);
+			group.group_argsNode = newArgsNode;
+			group.group_args = [...group.group_args, newArgumentOrContainerData];
 		} else {
 			if (
 				!group.group_args.some((el) => {
