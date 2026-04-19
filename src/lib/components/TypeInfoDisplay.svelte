@@ -320,47 +320,42 @@
 					}}
 				>
 					<icon class=" {currentQMSArguments ? 'bi-funnel-fill' : 'bi-funnel'} "></icon>
-
-					<!-- activeArgumentsDataGrouped_StoreInitialValue={getValueAtPath(
-							$mergedChildren_activeArgumentsDataGrouped_Store,
-							[...stepsOfFields, 'activeArgumentsDataGrouped']
-						)} -->
-
-					<QMSWraper
-						bind:QMSWraperContext={activeArgumentsQMSWraperContext}
-						QMSName={type.dd_displayName}
-						QMSType="query"
-						QMS_info={type}
-						QMSWraperContextGiven={currentQMSWraperCtxData}
-					>
-						{#if showModal}
-							<Modal
-								modalIdentifier="activeArgumentsDataModal"
-								showApplyBtn={false}
-								onCancel={(detail: any) => {
-									if (detail.modalIdentifier == 'activeArgumentsDataModal') {
-										showModal = false;
-									}
-								}}
-								><div class="  w-full">
-									<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-										<div class="w-2"></div>
-
-										<ActiveArguments
-											stepsOfFieldsThisAppliesTo={stepsOfFields}
-											QMSarguments={getValueAtPath($mergedChildren_finalGqlArgObj_Store, [
-												...stepsOfFields,
-												'QMSarguments'
-											])}
-										/>
-
-										<div class="w-2"></div>
-									</div>
-								</div>
-							</Modal>
-						{/if}
-					</QMSWraper>
 				</button>
+
+				<QMSWraper
+					bind:QMSWraperContext={activeArgumentsQMSWraperContext}
+					QMSName={type.dd_displayName}
+					QMSType="query"
+					QMS_info={type}
+					QMSWraperContextGiven={currentQMSWraperCtxData}
+				>
+					{#if showModal}
+						<Modal
+							modalIdentifier="activeArgumentsDataModal"
+							showApplyBtn={false}
+							onCancel={(detail: any) => {
+								if (detail.modalIdentifier == 'activeArgumentsDataModal') {
+									showModal = false;
+								}
+							}}
+							><div class="  w-full">
+								<div class="mx-auto mt-2 w-full space-y-2 pb-2">
+									<div class="w-2"></div>
+
+									<ActiveArguments
+										stepsOfFieldsThisAppliesTo={stepsOfFields}
+										QMSarguments={getValueAtPath($mergedChildren_finalGqlArgObj_Store, [
+											...stepsOfFields,
+											'QMSarguments'
+										])}
+									/>
+
+									<div class="w-2"></div>
+								</div>
+							</div>
+						</Modal>
+					{/if}
+				</QMSWraper>
 			{/if}
 		</div>
 		<!-- {#if canExpand && args?.length > 0}
