@@ -103,7 +103,7 @@
 	let finalGqlArgObjValue;
 	let activeArgumentsQMSWraperContext = $state<QMSWraperContext>();
 	let QMSarguments;
-	let canAcceptArguments = $derived(canExpand && args?.length > 0 && isUsedInSomeColumn);
+	let canAcceptArguments = $derived(canExpand && args?.length > 0);
 
 	const mergedChildren_finalGqlArgObj_Store = wraperContext.mergedChildren_finalGqlArgObj_Store;
 	const mergedChildren_QMSWraperCtxData_Store = wraperContext.mergedChildren_QMSWraperCtxData_Store;
