@@ -91,7 +91,7 @@
 	onfinalize={handleFinalize}
 	class=" rounded-box pt-2 pr-2"
 >
-	{#each group.group_args as any[] as activeArgumentData (activeArgumentData.id)}
+	{#each group.group_args as _, i (group.group_args[i].id)}
 		<div animate:flip={{ duration: flipDurationMs }} class="relative flex">
 			{#if $dndIsOn}
 				<div class="grid content-center rounded-full">
@@ -128,7 +128,7 @@
 					onInUseChanged={() => {
 						onUpdateQuery?.();
 					}}
-					{activeArgumentData}
+					bind:activeArgumentData={group.group_args[i]}
 					{group}
 					{activeArgumentsDataGrouped}
 				/>
