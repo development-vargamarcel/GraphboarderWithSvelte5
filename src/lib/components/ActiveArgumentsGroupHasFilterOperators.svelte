@@ -506,7 +506,7 @@
 	/>
 
 	{#if !(node as ContainerData)?.isMain}
-		<div class="   w-min-max grid w-max content-center rounded-full pointer-events-auto">
+		<div class="   w-min-max grid w-max content-center rounded-full">
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 			<div class="flex">
 				{#if $dndIsOn && !nodeIsInCP}
@@ -514,7 +514,7 @@
 						role="button"
 						tabindex={dragDisabled ? 0 : -1}
 						aria-label="drag-handle"
-						class=" pointer-events-auto transition:all bi bi-grip-vertical -mr-1 ml-2 rounded-l-md text-lg duration-500 {(
+						class="  transition:all bi bi-grip-vertical -mr-1 ml-2 rounded-l-md text-lg duration-500 {(
 							node as ContainerData
 						)?.operator == undefined || (node as ContainerData)?.operator == 'bonded'
 							? 'text-base-content'
@@ -546,7 +546,7 @@
 				<!-- node?.items?.length <= 1 -->
 				{#if (node as ContainerData)?.operator && !$mutationVersion}
 					<button
-						class="pointer-events-auto btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(
+						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(
 							node as ContainerData
 						)?.operator == 'bonded' || (node as ContainerData)?.operator == 'list'
 							? 'text-base-content'
@@ -582,7 +582,7 @@
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		role="group"
-		class="pointer-events-auto w-min-max w-max transition-all duration-500
+		class="  w-min-max w-max transition-all duration-500
 	
 	
 	{(node as ContainerData)?.operator &&
@@ -619,7 +619,7 @@
 	>
 		{#if (node as ContainerData)?.operator}
 			{#if $mutationVersion && !(node as ContainerData)?.isMain}
-				<div class="flex pointer-events-auto">
+				<div class="flex">
 					<button
 						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {getManyQMS ||
 						$selectedQMSAAA
@@ -673,7 +673,7 @@
 
 				<SelectedRowsDisplay />
 			{/if}
-			<div class="flex pointer-events-auto">
+			<div class="flex">
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<!-- node?.items?.length > 1 || node?.isMain -->
 
@@ -701,7 +701,7 @@
 				<p class="grow"></p>
 			</div>
 		{:else}
-			<div class="w-full rounded-box pr-2 pointer-events-auto">
+			<div class="w-full rounded-box pr-2">
 				<div class=" transition-color ringxxx ring-1xxx rounded-box duration-500">
 					<ActiveArgument
 						{onUpdateQuery}
@@ -739,7 +739,7 @@
 				)?.isMain && !isCPChild
 					? ' min-h-[40vh] border-l-2  border-l-transparent md:min-h-[60vh] '
 					: ' '}
-				 w-full pointer-events-auto"
+				 w-full"
 				use:dndzone={{
 					items: (node as ContainerData).items,
 					dragDisabled,
@@ -758,9 +758,9 @@
 					}) as item (item.id)}
 						<div
 							animate:flip={{ duration: flipDurationMs }}
-							class="pointer-events-auto    border-2== max-w-min {$mutationVersion && 'mt-2'} "
+							class="    border-2== max-w-min {$mutationVersion && 'mt-2'} "
 						>
-							<div class="dnd-item flex pointer-events-auto">
+							<div class="dnd-item flex">
 								<ActiveArgumentsGroupHasFilterOperators
 										onDeleteSubNode={(detail) => {
 											deleteItem({ detail });
@@ -787,7 +787,7 @@
 	{#if node.id == SHADOW_PLACEHOLDER_ITEM_ID}
 		<div
 			class="pointer-events-none absolute top-0 left-0 ml-8 h-0"
-			id="shadowEl-{node.id}"
+			id="shadowEl"
 			bind:this={shadowEl}
 		></div>
 	{/if}

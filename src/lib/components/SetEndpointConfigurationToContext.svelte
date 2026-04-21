@@ -311,8 +311,8 @@
 			<div class="md:max-w-[300px]">
 				<Sidebar bind:forceVisibleSidebar />
 			</div>
-			<div class="flex h-screen w-full grow flex-col md:w-[65vw] " >
-				<div class="flex min-h-[50px] bg-base-100  ">
+			<div class="flex h-screen w-full grow flex-col md:w-[65vw]">
+				<div class="flex min-h-[50px] bg-base-100">
 					<button
 						class="btn btn-square btn-ghost md:hidden"
 						onclick={() => {

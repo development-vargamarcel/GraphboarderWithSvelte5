@@ -76,7 +76,7 @@
 	</div>
 {/if}
 
-<div class="pointer-events-auto">
+<div class="">
 	{#each $activeArgumentsDataGrouped_Store as _, i}
 		<ActiveArgumentsGroupWraper
 			{onUpdateQuery}

@@ -53,10 +53,6 @@ export function updateShadowElement(
 
 	const labelElClone = labelEl.cloneNode(true) as HTMLElement;
 	labelElClone.classList.remove('dnd-item');
-	labelElClone.classList.add('pointer-events-none');
-	labelElClone.classList.add('');
-	labelElClone.classList.add('');
-	labelElClone.classList.add('');
 	labelElClone.classList.add('border-2', 'border-accent');
 
 	shadowEl.appendChild(labelElClone);
