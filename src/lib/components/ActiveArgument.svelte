@@ -80,17 +80,6 @@
 		`${prefix}QMSWraperContext`
 	) as QMSWraperContext;
 	const { finalGqlArgObj_Store } = getContext(`${prefix}QMSWraperContext`) as QMSWraperContext;
-
-	const MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
-	const schemaData = MainWraperContext?.schemaData;
-	const activeArgumentsContext = getContext(`${prefix}activeArgumentsContext`);
-	const showInputField = getContext('showInputField') as Writable<any>;
-	const mutationVersion = getContext('mutationVersion') as Writable<any>;
-
-	const outermostQMSWraperContext = getContext(
-		`${prefix}OutermostQMSWraperContext`
-	) as QMSWraperContext;
-	const nodeContext_forDynamicData = getContext(`${prefix}nodeContext_forDynamicData`) as any;
 	//
 	let idColNameOfSelectedRow: string | undefined;
 	//
@@ -110,13 +99,13 @@
 		if (labelEl) {
 			const h = labelEl.clientHeight;
 			const w = labelEl.clientWidth;
-			if (!isNaN(h) && h !== shadowHeight) shadowHeight = h;
-			if (!isNaN(w) && w !== shadowWidth) shadowWidth = w;
+			if (h !== shadowHeight) shadowHeight = h;
+			if (w !== shadowWidth) shadowWidth = w;
 		}
 	});
 
 	$effect(() => {
-		if (typeof shadowHeight === 'number' && !isNaN(shadowHeight) && shadowEl) {
+		if (shadowHeight && shadowEl) {
 			if (shadowEl.style.height == '0px' || shadowEl.style.height == '') {
 				shadowEl.style.height = `${shadowHeight + 18}px`;
 				shadowEl.style.width = `${shadowWidth}px`;
@@ -167,27 +156,22 @@
 	const CPItem = CPItemContext?.CPItem;
 	let expandedVersion: boolean = $state(!!CPItemContext);
 	let valueToDisplay: string | undefined = $derived(get_valueToDisplay(activeArgumentData));
+	const outermostQMSWraperContext = getContext(
+		`${prefix}OutermostQMSWraperContext`
+	) as QMSWraperContext;
 	const { mergedChildren_QMSWraperCtxData_Store } = outermostQMSWraperContext;
 
 	const handleChanged = (detail: Partial<ActiveArgumentData>): void => {
-		// Update dispatch value if raw value changed
-		if ('chd_rawValue' in detail) {
-			const endpointInfo = MainWraperContext?.endpointInfo;
-			const typeExtraData = endpointInfo?.get_typeExtraData(activeArgumentData);
-			if (typeExtraData?.use_transformer) {
-				detail.chd_dispatchValue = typeExtraData.use_transformer(detail.chd_rawValue);
-			} else {
-				detail.chd_dispatchValue = detail.chd_rawValue;
-			}
-		}
-
-		// Reassign to trigger Svelte 5 reactivity for the $bindable prop
-		activeArgumentData = { ...activeArgumentData, ...detail };
+		// Mutate the existing object in place; the store update in
+		// updateActiveArgument() is the source of truth and will propagate
+		// via its own subscribers. Reassigning the $bindable prop would
+		// re-enter this component's own reactive effects through bind:group
+		// and feed back into the update chain.
+		Object.assign(activeArgumentData, detail);
 
 		const isValid: boolean = argumentCanRunQuery(activeArgumentData);
 		const isInUse: boolean | undefined = activeArgumentData.inUse;
 		const isENUM: boolean = activeArgumentData.dd_displayInterface == 'ENUM';
-
 		if (!isInUse && isValid) {
 			inUse_set(true);
 		} else if (setNotInUseIfNotValidAndENUM && isInUse && isENUM && !isValid) {
@@ -225,19 +209,29 @@
 		}
 	};
 	const inUse_set = (inUse: boolean): void => {
-		// Reassign to trigger Svelte 5 reactivity for the $bindable prop
-		activeArgumentData = { ...activeArgumentData, inUse };
+		activeArgumentData.inUse = inUse;
 		updateActiveArgument();
+
 		onInUseChanged?.();
+		//finalGqlArgObj_Store.regenerate_groupsAndfinalGqlArgObj();
 	};
 	const inUse_toggle = (): void => {
 		inUse_set(!activeArgumentData.inUse);
 	};
 	let showModal: boolean = $state(false);
+	const mutationVersion = getContext('mutationVersion') as Writable<any>;
+	const showInputField = getContext('showInputField') as Writable<any>;
+
+	let activeArgumentsContext = getContext(`${prefix}activeArgumentsContext`);
+	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
+	const schemaData = MainWraperContext?.schemaData;
 	// const nodeRootType = getRootType(null, activeArgumentData.dd_rootName, schemaData); // schemaData might be null here if context is missing, careful
 	let showSelectModal: boolean = $state(false);
+	const OutermostQMSWraperContext = getContext(
+		`${prefix}OutermostQMSWraperContext`
+	) as QMSWraperContext;
 
-	const { QMSFieldToQMSGetMany_Store } = outermostQMSWraperContext;
+	const { QMSFieldToQMSGetMany_Store } = OutermostQMSWraperContext;
 	let selectedQMS = $state();
 	$effect(() => {
 		if ($QMSFieldToQMSGetMany_Store.length > 0) {
@@ -246,6 +240,7 @@
 			})?.getMany?.selectedQMS;
 		}
 	});
+	const nodeContext_forDynamicData = getContext(`${prefix}nodeContext_forDynamicData`) as any;
 	let selectedRowsColValues = nodeContext_forDynamicData?.selectedRowsColValues;
 </script>
 
@@ -312,7 +307,8 @@
 							type="checkbox"
 							class="toggle toggle-xs"
 							checked={activeArgumentData?.inUse}
-							onchange={(e) => {
+							onchangecapture={(e) => {
+								e.stopPropagation();
 								inUse_toggle();
 							}}
 						/>

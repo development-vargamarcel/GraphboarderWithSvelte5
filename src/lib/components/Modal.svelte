@@ -28,7 +28,6 @@
 	});
 
 	function close() {
-		if (!show) return; // guard against double-close (e.g. onclose firing after $effect calls dialog.close())
 		show = false;
 		if (onCancel) {
 			onCancel({ modalIdentifier });
@@ -69,6 +68,6 @@
 		{/if}
 	</div>
 	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
+		<button onclick={close}>close</button>
 	</form>
 </dialog>

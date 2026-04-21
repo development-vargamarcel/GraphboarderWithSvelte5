@@ -152,13 +152,10 @@
 	const { finalGqlArgObj_Store, QMS_info, activeArgumentsDataGrouped_Store, QMSType } =
 		correctQMSWraperContext;
 	const operatorChangeHandler = () => {
-		const newStepsOfNodes = getUpdatedStepsOfNodes(
+		stepsOfNodes = getUpdatedStepsOfNodes(
 			JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || [])),
 			node
 		);
-		if (JSON.stringify(stepsOfNodes) !== JSON.stringify(newStepsOfNodes)) {
-			stepsOfNodes = newStepsOfNodes;
-		}
 	};
 	const dndIsOn = getContext('dndIsOn') as any;
 	const showInputField = getContext('showInputField');
@@ -169,16 +166,13 @@
 	}
 
 	$effect(() => {
+		// Root nodes have parentNodeId === node.id (they use themselves as sentinel parent).
+		// Reading parentNode.stepsOfNodes for root would create a loop: the second effect
+		// writes node.stepsOfNodes, which re-triggers this effect, growing stepsOfNodes
+		// indefinitely. Non-root nodes safely track parentNode.stepsOfNodes.
 		const isRoot = parentNodeId === node.id;
 		const parentSteps = isRoot ? [] : (parentNode?.stepsOfNodes ?? []);
-		const newStepsOfNodes = getUpdatedStepsOfNodes(JSON.parse(JSON.stringify(parentSteps)), node);
-
-		// Use untrack to prevent infinite loops if stepsOfNodes update triggers side effects
-		untrack(() => {
-			if (JSON.stringify(stepsOfNodes) !== JSON.stringify(newStepsOfNodes)) {
-				stepsOfNodes = newStepsOfNodes;
-			}
-		});
+		stepsOfNodes = getUpdatedStepsOfNodes(JSON.parse(JSON.stringify(parentSteps)), node);
 	});
 
 	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
@@ -240,9 +234,7 @@
 	//
 
 	const handleChanged = () => {
-		untrack(() => {
-			finalGqlArgObj_Store.regenerate_groupsAndfinalGqlArgObj();
-		});
+		finalGqlArgObj_Store.regenerate_groupsAndfinalGqlArgObj();
 	};
 
 	let argsInfo = $state(QMS_info?.args);
@@ -312,12 +304,12 @@
 	$effect(() => {
 		if (labelEl) {
 			const dimensions = getShadowDimensions(labelEl);
-			if (!isNaN(dimensions.height)) shadowHeight = dimensions.height;
-			if (!isNaN(dimensions.width)) shadowWidth = dimensions.width;
+			shadowHeight = dimensions.height;
+			shadowWidth = dimensions.width;
 		}
 	});
 	$effect(() => {
-		if (typeof shadowHeight === 'number' && !isNaN(shadowHeight) && shadowEl) {
+		if (shadowHeight && shadowEl) {
 			labelElClone = updateShadowElement(
 				shadowEl,
 				labelEl as HTMLElement | null,

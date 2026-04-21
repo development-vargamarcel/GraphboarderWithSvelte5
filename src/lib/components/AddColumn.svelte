@@ -73,7 +73,7 @@
 	<div
 		tabindex="0"
 		data-testid="add-column-dropdown"
-		class="pointer-events-none dropdown-content ==w-max menu z-[100] max-w-screen rounded-box bg-base-100 p-2 text-sm shadow-2xl"
+		class="pointer-events-none dropdown-content ==w-max menu z-[9999] max-w-screen rounded-box bg-base-100 p-2 text-sm shadow-2xl"
 	>
 		<div
 			class="pointer-events-auto max-h-[70vh] max-w-xs overflow-auto overscroll-contain sm:max-h-[80vh] sm:max-w-md md:max-h-[80vh] md:max-w-xl lg:max-w-2xl"
