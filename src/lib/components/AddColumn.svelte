@@ -73,24 +73,24 @@
 	<div
 		tabindex="0"
 		data-testid="add-column-dropdown"
-		class="dropdown-content ==w-max menu z-[9999] max-w-screen rounded-box bg-base-100 p-2 text-sm shadow-2xl"
+		class="pointer-events-none dropdown-content ==w-max menu z-[100] max-w-screen rounded-box bg-base-100 p-2 text-sm shadow-2xl"
 	>
 		<div
-			class="max-h-[70vh] max-w-xs overflow-auto overscroll-contain sm:max-h-[80vh] sm:max-w-md md:max-h-[80vh] md:max-w-xl lg:max-w-2xl"
+			class="pointer-events-auto max-h-[70vh] max-w-xs overflow-auto overscroll-contain sm:max-h-[80vh] sm:max-w-md md:max-h-[80vh] md:max-w-xl lg:max-w-2xl"
 		>
 			<div
 				class="flex w-full min-w-max flex-col space-y-1 overflow-x-auto text-sm font-normal normal-case"
 			>
 				<input
 					type="text"
-					class="input-bordered input m-2 input-sm input-accent"
+					class="pointer-events-auto input-bordered input m-2 input-sm input-accent"
 					placeholder="(> or .) producer>films>title "
 					bind:value={column_stepsOfFields}
 					onkeypress={addColumnFromInput}
 				/>
 				<div class="bg-black= sticky left-0 mx-auto text-center">
 					<button
-						class="btn w-min btn-xs btn-primary"
+						class="pointer-events-auto btn w-min btn-xs btn-primary"
 						onclick={() => {
 							let stepsOfFields: string[] = [];
 							let tableColData = {

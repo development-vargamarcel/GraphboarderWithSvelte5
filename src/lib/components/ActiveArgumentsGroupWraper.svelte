@@ -65,9 +65,9 @@
 		<GroupDescriptionAndControls {hasGroup_argsNode} />
 	</div>{/if}
 
-<div class="pb-10==">
+<div class="pointer-events-auto pb-10==">
 	{#if hasGroup_argsNode}
-		<div class=" overflow-x-auto overflow-y-visible">
+		<div class="pointer-events-auto overflow-x-auto overflow-y-visible">
 			<ActiveArgumentsGroupHasFilterOperators
 				addDefaultFields={true}
 				onUpdateQuery={() => {
