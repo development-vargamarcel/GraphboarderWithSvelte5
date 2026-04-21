@@ -268,24 +268,23 @@
 		QMS_info={currentQMS_info}
 	/>
 	<div class="grow">
-		{#if showModal}
-			<Modal
-				modalIdentifier="activeArgumentsDataModal"
-				showApplyBtn={false}
-				onCancel={(detail: any) => {
-					if (detail.modalIdentifier == 'activeArgumentsDataModal') {
-						showModal = false;
-					}
-				}}
-				><div class="  w-full">
-					<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-						<div class="w-2"></div>
-						<ActiveArguments />
-						<div class="w-2"></div>
-					</div>
+		<Modal
+			bind:show={showModal}
+			modalIdentifier="activeArgumentsDataModal"
+			showApplyBtn={false}
+			onCancel={(detail: any) => {
+				if (detail.modalIdentifier == 'activeArgumentsDataModal') {
+					showModal = false;
+				}
+			}}
+			><div class="  w-full">
+				<div class="mx-auto mt-2 w-full space-y-2 pb-2">
+					<div class="w-2"></div>
+					<ActiveArguments />
+					<div class="w-2"></div>
 				</div>
-			</Modal>
-		{/if}
+			</div>
+		</Modal>
 		<Modal bind:show={showHeadersModal} modalIdentifier="headers-modal" showApplyBtn={false}>
 			<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
 		</Modal>
