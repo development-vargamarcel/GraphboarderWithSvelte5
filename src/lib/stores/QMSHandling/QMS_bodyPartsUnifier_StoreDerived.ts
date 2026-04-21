@@ -7,15 +7,9 @@ export const Create_QMS_bodyPartsUnifier_StoreDerived = (
 ) => {
 	return derived(_QMS_bodyPart_StoreDerived_array, ($stores: any[]) => {
 		const storesReduced = $stores.reduce((prevVal: string, currVal: string) => {
-			if (!currVal) {
-				return '';
-			}
-			return prevVal + currVal;
+			return prevVal + (currVal || '');
 		}, '');
 
-		if (!storesReduced) {
-			return '';
-		}
 		const QMS_body = `${QMS_type}-${QMS_name}{
             ${storesReduced}
         }`;

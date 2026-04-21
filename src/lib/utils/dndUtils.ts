@@ -44,8 +44,12 @@ export function updateShadowElement(
 		return null;
 	}
 
-	shadowEl.style.height = `${shadowHeight + 18}px`;
-	shadowEl.style.width = `${shadowWidth}px`;
+	if (typeof shadowHeight === 'number' && !isNaN(shadowHeight)) {
+		shadowEl.style.height = `${shadowHeight + 18}px`;
+	}
+	if (typeof shadowWidth === 'number' && !isNaN(shadowWidth)) {
+		shadowEl.style.width = `${shadowWidth}px`;
+	}
 
 	const labelElClone = labelEl.cloneNode(true) as HTMLElement;
 	labelElClone.classList.remove('dnd-item');

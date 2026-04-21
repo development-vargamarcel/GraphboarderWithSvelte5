@@ -172,6 +172,7 @@
 		dragDisabled = true;
 	}
 
+
 	const deleteItem = (e: any) => {
 		(node as ContainerData).items = (node as ContainerData).items.filter((item) => {
 			return item.id !== e.detail.id;
@@ -338,12 +339,14 @@
 	});
 	$effect(() => {
 		if (labelEl) {
-			shadowHeight = labelEl.clientHeight;
-			shadowWidth = labelEl.clientWidth;
+			const h = labelEl.clientHeight;
+			const w = labelEl.clientWidth;
+			if (!isNaN(h)) shadowHeight = h;
+			if (!isNaN(w)) shadowWidth = w;
 		}
 	});
 	$effect(() => {
-		if (shadowHeight && shadowEl) {
+		if (typeof shadowHeight === 'number' && !isNaN(shadowHeight) && shadowEl) {
 			if (shadowEl.style.height == '0px' || shadowEl.style.height == '') {
 				//if (shadowEl.style.height == 0) ensures the bellow runs only once per grab of element to move
 				shadowEl.style.height = `${shadowHeight + 18}px`;

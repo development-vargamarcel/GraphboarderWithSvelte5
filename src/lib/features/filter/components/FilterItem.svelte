@@ -272,8 +272,7 @@
 		<i class="bi bi-chevron-down ml-2 text-xs"></i>
 	{/if}
 </button>
-{#if modalVisible}
-	<Modal onApply={applyFilter} onCancel={hideModal}>
+<Modal bind:show={modalVisible} onApply={applyFilter} onCancel={hideModal}>
 		<div class="overflow-hidden rounded-box">
 			<div class="form-control mt-2 px-2 pt-2">
 				{#if type == 'radio'}
@@ -396,7 +395,6 @@
 			</div>
 		</div>
 	</Modal>
-{/if}
 
 {#if choisesWithId.some(c => c[SHADOW_ITEM_MARKER_PROPERTY_NAME])}
 	<div
