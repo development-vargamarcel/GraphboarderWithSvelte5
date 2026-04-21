@@ -128,7 +128,7 @@
 					onInUseChanged={() => {
 						onUpdateQuery?.();
 					}}
-					bind:activeArgumentData={group.group_args[i]}
+					{activeArgumentData}
 					{group}
 					{activeArgumentsDataGrouped}
 				/>

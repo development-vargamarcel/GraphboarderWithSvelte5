@@ -60,18 +60,15 @@ export const build_QMS_bodyPart = (
 	}
 
 	const QMSarguments = { [QMS_name]: { QMSarguments: QMS_args } };
-	const fullObject = _.cloneDeep(
-		deleteIfChildrenHaveOneKeyAndLastKeyIsQMSarguments(
-			_.mergeWith({}, QMSarguments, mergedChildren_finalGqlArgObj, QMS_fields)
+	const fullObject = JSON.parse(
+		JSON.stringify(
+			deleteIfChildrenHaveOneKeyAndLastKeyIsQMSarguments(
+				_.mergeWith({}, QMSarguments, mergedChildren_finalGqlArgObj, QMS_fields)
+			)
 		)
 	);
 
-	const seen = new WeakSet();
 	const inputString = JSON.stringify(fullObject, function (key, value) {
-		if (typeof value === 'object' && value !== null) {
-			if (seen.has(value)) return; // Prevents circular reference crash
-			seen.add(value);
-		}
 		if (key === 'QMSarguments') {
 			return `(${gqlArgObjToString(value)})`;
 		}
@@ -79,17 +76,7 @@ export const build_QMS_bodyPart = (
 	}).replaceAll('"QMSarguments":', '');
 	const listOfSubstrings = generateListOfSubstrings(inputString);
 	const outsideTextModifier = (text: string): string => {
-		return text
-			.replaceAll(/novaluehere|"|:/gi, '')
-			.replaceAll(/\{\s*,/g, '{')
-			.replaceAll(/,\s*\}/g, '}')
-			.replaceAll(/\[\s*,/g, '[')
-			.replaceAll(/,\s*\]/g, ']')
-			.replaceAll(/\(\s*,/g, '(')
-			.replaceAll(/,\s*\)/g, ')')
-			.replaceAll(/,\s*,/g, ',')
-			.replace(/^\s*,/, '')
-			.trim();
+		return text.replaceAll(/novaluehere|"|:/gi, '');
 	};
 
 	const modifiedString = smartModifyStringBasedOnBoundries(
@@ -200,21 +187,13 @@ export const generate_group_gqlArgObj = (
  */
 const validItems = (
 	items: { id: string }[],
-	nodes: Record<string, ContainerData>,
-	visitedIds: Set<string> = new Set()
+	nodes: Record<string, ContainerData>
 ): { id: string }[] => {
-	if (!Array.isArray(items)) return [];
 	return items.filter((item) => {
 		const itemData = nodes[item.id];
-		if (!itemData) return false;
-		if (visitedIds.has(item.id)) return false; // Break loop
-
-		const nextVisited = new Set(visitedIds);
-		nextVisited.add(item.id);
-
 		return (
 			itemData.inUse ||
-			(itemData.operator && validItems(itemData.items, nodes, nextVisited).length > 0) ||
+			(itemData.operator && validItems(itemData.items, nodes).length > 0) ||
 			itemData.selectedRowsColValues
 		);
 	});
@@ -230,8 +209,7 @@ const validItems = (
 export const generate_group_gqlArgObj_forHasOperators = (
 	items: { id: string }[],
 	group_name: string,
-	nodes: Record<string, ContainerData>,
-	visitedIds: Set<string> = new Set()
+	nodes: Record<string, ContainerData>
 ): {
 	resultingGqlArgObj: Record<string, unknown> | undefined;
 	itemsResultingData: Record<string, unknown>[];
@@ -239,7 +217,6 @@ export const generate_group_gqlArgObj_forHasOperators = (
 	let resultingGqlArgObj: Record<string, unknown> | undefined;
 	const itemsResultingData: Record<string, unknown>[] = [];
 	const spreadItemsIfInSpreadContainers = (items: { id: string }[]): { id: string }[] => {
-		if (!Array.isArray(items)) return [];
 		const spreadOutItems: { id: string }[] = [];
 		items.forEach((item) => {
 			if ((item as any)?.operator == '~spread~') {
@@ -255,8 +232,7 @@ export const generate_group_gqlArgObj_forHasOperators = (
 	const spreadOutItems = spreadItemsIfInSpreadContainers(items);
 	spreadOutItems.forEach((item) => {
 		const itemData = nodes[item.id];
-		if (!itemData) return;
-		const isContainer = Array.isArray(itemData.items);
+		const isContainer = Object.prototype.hasOwnProperty.call(itemData, 'items');
 		const nodeStep = itemData?.stepsOfNodes?.[itemData?.stepsOfNodes.length - 1];
 		const nodeStepClean = filterElFromArr(nodeStep as any, [null, undefined, 'bonded', 'list']);
 
@@ -267,26 +243,17 @@ export const generate_group_gqlArgObj_forHasOperators = (
 		let dataToAssign;
 
 		if (isContainer) {
-			if (visitedIds.has(item.id)) {
-				dataToAssign = {}; // Break recursion
+			const validItemsResult = validItems(spreadItemsIfInSpreadContainers(itemData.items), nodes);
+			const gqlArgObjForItems = generate_group_gqlArgObj_forHasOperators(
+				validItemsResult,
+				group_name,
+				nodes
+			).itemsResultingData;
+			if (operator == 'bonded' || !itemData?.dd_kindList) {
+				const merged_gqlArgObjForItems = _.merge({}, ...gqlArgObjForItems);
+				dataToAssign = merged_gqlArgObjForItems;
 			} else {
-				const nextVisited = new Set(visitedIds);
-				nextVisited.add(item.id);
-
-				const validItemsResult = validItems(spreadItemsIfInSpreadContainers(itemData.items), nodes);
-				const gqlArgObjForItems = generate_group_gqlArgObj_forHasOperators(
-					validItemsResult,
-					group_name,
-					nodes,
-					nextVisited
-				).itemsResultingData;
-
-				if (operator == 'bonded' || !itemData?.dd_kindList) {
-					const merged_gqlArgObjForItems = _.merge({}, ...gqlArgObjForItems);
-					dataToAssign = merged_gqlArgObjForItems;
-				} else {
-					dataToAssign = gqlArgObjForItems;
-				}
+				dataToAssign = gqlArgObjForItems;
 			}
 		} else {
 			dataToAssign = nodes[item.id]?.gqlArgObj;
@@ -359,24 +326,7 @@ export const generate_group_gqlArgObjAndCanRunQuery_forHasOperators = (
 		return { group_gqlArgObj: {}, group_gqlArgObj_string: '{}', group_canRunQuery: true };
 	}
 
-	const nodes: Record<string, any> = {};
-	for (const id in group_argsNode) {
-		const originalNode = group_argsNode[id];
-		if (!originalNode) continue;
-		nodes[id] = {
-			id: originalNode.id,
-			inUse: originalNode.inUse,
-			operator: originalNode.operator,
-			stepsOfNodes: originalNode.stepsOfNodes,
-			dd_displayName: originalNode.dd_displayName,
-			dd_kindList: originalNode.dd_kindList,
-			gqlArgObj: originalNode.gqlArgObj,
-			selectedRowsColValues: originalNode.selectedRowsColValues,
-			not: originalNode.not,
-			isMain: originalNode.isMain,
-			items: originalNode.items ? [...originalNode.items] : undefined
-		};
-	}
+	const nodes = JSON.parse(JSON.stringify(group_argsNode));
 	const nodesArray = Object.values(nodes);
 	const mainContainer = (nodesArray as any).filter((node: any) => {
 		return node.isMain;
