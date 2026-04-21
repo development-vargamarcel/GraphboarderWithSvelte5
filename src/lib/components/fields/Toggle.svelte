@@ -39,7 +39,7 @@
 	}
 </script>
 
-<div class="form-control pointer-events-auto">
+<div class="form-control">
 	<label class="label cursor-pointer">
 		{#if useSwap}
 			<span class="label-text mr-2">{swapOnText}</span>

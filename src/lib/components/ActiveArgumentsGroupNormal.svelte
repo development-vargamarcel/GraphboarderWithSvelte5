@@ -89,10 +89,10 @@
 	}}
 	onconsider={handleConsider}
 	onfinalize={handleFinalize}
-	class="pointer-events-auto rounded-box pt-2 pr-2"
+	class=" rounded-box pt-2 pr-2"
 >
-	{#each group.group_args as any[] as activeArgumentData (activeArgumentData.id)}
-		<div animate:flip={{ duration: flipDurationMs }} class="relative flex pointer-events-auto">
+	{#each group.group_args as _, i (group.group_args[i].id)}
+		<div animate:flip={{ duration: flipDurationMs }} class="relative flex">
 			{#if $dndIsOn}
 				<div class="grid content-center rounded-full">
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
