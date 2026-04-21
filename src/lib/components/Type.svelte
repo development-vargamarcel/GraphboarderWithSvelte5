@@ -100,23 +100,22 @@
 {/if}
 
 <div
-	class="  space-x-2 rounded-l-none rounded-r-sm pr-0 pb-0 pl-1 text-xs normal-case shadow-none {showExpand
-		? ''
-		: ''}"
+	class="pointer-events-auto space-x-2 rounded-l-none rounded-r-sm pr-0 pb-0 pl-1 text-xs normal-case shadow-none"
 	data-testid="type-container-{dd_displayName}"
 >
 	<TypeInfoDisplay {canExpand} {expand} {type} {index} {showExpand} {template} {stepsOfFields} />
 
 	{#if showExpand}
 		<div
+			class="pointer-events-none"
 			in:slide|global={{ duration: inDuration, easing: expoIn }}
 			out:slide|global={{ duration: inDuration, easing: expoOut }}
 		>
 			<div class="mb-2== text-center text-xs"></div>
 
 			{#if type?.args && template == 'default'}
-				<div class="border-l-2 border-secondary bg-accent/5">
-					<div class="">
+				<div class="pointer-events-none border-l-2 border-secondary bg-accent/5">
+					<div class="pointer-events-none">
 						{#each type?.args as arg, index}
 							<Arg {index} type={arg} {template} predefinedFirstSteps={[]} groupName="default" />
 						{/each}
@@ -124,8 +123,8 @@
 				</div>
 			{/if}
 
-			<div class="border-l-2 bg-accent/5">
-				<div class="w-min-max w-full">
+			<div class="pointer-events-none border-l-2 bg-accent/5">
+				<div class="pointer-events-none w-min-max w-full">
 					{#each expandData.fields || expandData.inputFields || expandData.enumValues as type, index (index)}
 						<Type
 							{index}

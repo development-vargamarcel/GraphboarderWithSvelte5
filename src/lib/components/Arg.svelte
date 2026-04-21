@@ -74,7 +74,7 @@
 {#if template == 'default'}<div class="pt-2 text-center text-xs"></div>{/if}
 
 <div
-	class="  min-w-max space-x-2 rounded-l-none rounded-r-sm pr-0 pb-0 pl-1 text-xs normal-case shadow-none {showExpand
+	class="pointer-events-auto min-w-max space-x-2 rounded-l-none rounded-r-sm pr-0 pb-0 pl-1 text-xs normal-case shadow-none {showExpand
 		? ''
 		: ''}"
 >
@@ -95,11 +95,11 @@
 		{#if template == 'default'}<div class="mb-2 text-center text-xs"></div>{/if}
 
 		<div
-			class="border-l-2 border-secondary bg-accent/5"
+			class="pointer-events-none border-l-2 border-secondary bg-accent/5"
 			in:slide|global={{ duration: inDuration, easing: expoIn }}
 			out:slide|global={{ duration: inDuration, easing: expoOut }}
 		>
-			<div class="">
+			<div class="pointer-events-none">
 				{#each expandData.inputFields || expandData.enumValues as arg, index}
 					<div>
 						<Arg

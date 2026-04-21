@@ -1,0 +1,14 @@
+--- src/routes/endpoints/[endpointid]/queries/[queryName]/ComponentForLayout.svelte
++++ src/routes/endpoints/[endpointid]/queries/[queryName]/ComponentForLayout.svelte
+@@ -388,8 +388,8 @@
+					if (detail.modalIdentifier == 'activeArgumentsDataModal') {
+						showModal = false;
+					}
+-				}}
+-				><div class="pointer-events-auto w-full">
+-					<div class="pointer-events-auto mx-auto mt-2 w-full space-y-2 pb-2">
++				}}
++				><div class="pointer-events-auto w-full">
++					<div class="pointer-events-auto mx-auto mt-2 w-full space-y-2 pb-2">
+						<div class="w-2"></div>
+						<ActiveArguments />

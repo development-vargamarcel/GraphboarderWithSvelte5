@@ -155,7 +155,7 @@
 </script>
 
 {#if template == 'default'}
-	<div class="flex w-full min-w-max space-x-2">
+	<div class="pointer-events-auto flex w-full min-w-max space-x-2">
 		<div class="flex w-1/3 w-full min-w-max space-x-2">
 			{#if canExpand}
 				<button type="button" class="btn rounded p-1 normal-case btn-xs" onclick={expand}>
@@ -221,7 +221,7 @@
 	{/if}
 {:else if template == 'columnAddDisplay'}
 	<div
-		class="flex w-full min-w-max cursor-pointer rounded-box text-base select-none hover:text-primary"
+		class="pointer-events-auto flex w-full min-w-max cursor-pointer rounded-box text-base select-none hover:text-primary"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 
@@ -339,8 +339,8 @@
 									showModal = false;
 								}
 							}}
-							><div class="  w-full">
-								<div class="mx-auto mt-2 w-full space-y-2 pb-2">
+							><div class="pointer-events-auto w-full">
+								<div class="pointer-events-auto mx-auto mt-2 w-full space-y-2 pb-2">
 									<div class="w-2"></div>
 
 									<ActiveArguments

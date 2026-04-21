@@ -211,7 +211,7 @@
 	<button
 		type="button"
 		aria-label="Close sidebar"
-		class="h-screen w-[100vw] cursor-default appearance-none border-none bg-transparent md:hidden"
+		class="h-screen w-[100vw] cursor-default appearance-none border-none bg-transparent md:hidden pointer-events-none"
 		onclick={() => {
 			onHideSidebar?.();
 		}}
