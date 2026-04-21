@@ -388,8 +388,8 @@
 						showModal = false;
 					}
 				}}
-				><div class="pointer-events-auto w-full">
-					<div class="pointer-events-auto mx-auto mt-2 w-full space-y-2 pb-2">
+				><div class="  w-full">
+					<div class="mx-auto mt-2 w-full space-y-2 pb-2">
 						<div class="w-2"></div>
 						<ActiveArguments />
 						<div class="w-2"></div>

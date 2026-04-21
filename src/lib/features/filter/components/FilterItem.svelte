@@ -113,12 +113,6 @@
 		choises = choisesNew;
 	};
 
-	let shadowEl = $state<HTMLElement>();
-	let shadowHeight = $state(20);
-	let shadowWidth = $state(20);
-	let labelEl = $state<HTMLElement>();
-	let labelElClone: any = $state();
-
 	function handleSort(e: CustomEvent<any>) {
 		choisesWithId = e.detail.items;
 		syncOrder();
@@ -136,27 +130,6 @@
 				?.classList.add('bg-accent/20', 'border-2', 'border-accent');
 		}
 	};
-
-	$effect(() => {
-		if (labelEl) {
-			shadowHeight = labelEl.clientHeight;
-			shadowWidth = labelEl.clientWidth;
-		}
-	});
-	$effect(() => {
-		if (shadowHeight && shadowEl) {
-			if (shadowEl.style.height == '0px' || shadowEl.style.height == '') {
-				shadowEl.style.height = `${shadowHeight + 18}px`;
-				shadowEl.style.width = `${shadowWidth}px`;
-				if (labelEl) {
-					labelElClone = labelEl.cloneNode(true);
-					labelElClone.classList.remove('dnd-item');
-					labelElClone.classList.add('border-2', 'border-accent', 'pointer-events-none');
-					shadowEl.appendChild(labelElClone);
-				}
-			}
-		}
-	});
 
 	//
 	function handleConsider(e: CustomEvent<any>) {
@@ -308,7 +281,7 @@
 						}}
 						onconsider={handleSort}
 						onfinalize={handleSort}
-						class="rounded-box pointer-events-none"
+						class="rounded-box"
 					>
 						{#each choisesWithId as choice (choice.id)}
 							<div animate:flip={{ duration: flipDurationMs }} class="relative flex">
@@ -338,12 +311,11 @@
 									}}
 								>
 									<label
-										bind:this={labelEl}
 										class="my-[1px] label cursor-pointer rounded-box border-[1px] border-transparent font-light transition-all duration-75 active:border-base-content/50 active:bg-primary/5 {chosenInternal?.includes(
 											choice.title
 										)
 											? 'font-extrabold '
-											: ''} dnd-item pointer-events-auto
+											: ''} dnd-item
 									"
 									>
 										<span class="label-text text-lg">
@@ -398,14 +370,6 @@
 	</Modal>
 {/if}
 
-{#if choisesWithId.some(c => c[SHADOW_ITEM_MARKER_PROPERTY_NAME])}
-	<div
-		class="pointer-events-none absolute top-0 left-0 ml-8 h-0"
-		id="shadowEl-{filter.id}"
-		bind:this={shadowEl}
-	></div>
-{/if}
-
 <style>
 	.noStyles {
 		all: unset;
@@ -421,6 +385,5 @@
 		background: lightblue;
 		opacity: 0.5;
 		margin: 0;
-		pointer-events: none;
 	}
 </style>

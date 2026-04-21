@@ -115,7 +115,6 @@
 					// Casting to Element to access classList
 					(labelElClone as Element).classList.remove('dnd-item');
 					(labelElClone as Element).classList.add('border-2', 'border-accent');
-					(labelElClone as Element).classList.add('pointer-events-none');
 					shadowEl.appendChild(labelElClone);
 				}
 			}
@@ -367,7 +366,7 @@
 	{expandedVersion ? ' pr-2 ' : ' '}
 	{$mutationVersion ? ' pr-2 pb-2 ' : ' '} 
 		{!expandedVersion && !$mutationVersion ? ' md:max-w-[25vw]' : ' '} 
-		 dnd-item pointer-events-auto my-1 flex
+		 dnd-item my-1 flex
 		 {activeArgumentData?.inUse && !$mutationVersion
 		? activeArgumentData.canRunQuery
 			? 'bg-base-200/75 ring  ring-[1px] ring-primary/25 '
@@ -474,7 +473,7 @@
 {#if activeArgumentData[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
 	<div
 		class="pointer-events-none absolute top-0 left-0 ml-8 h-0 w-11/12"
-		id="shadowEl-{activeArgumentData.id}"
+		id="shadowEl"
 		bind:this={shadowEl}
 	></div>
 {/if}

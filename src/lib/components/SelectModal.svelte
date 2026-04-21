@@ -8,7 +8,6 @@
 		hasDeepProperty,
 		passAllObjectValuesThroughStringTransformerAndReturnNewObject
 	} from '../utils/usefulFunctions';
-	import { SHADOW_PLACEHOLDER_ITEM_ID, SHADOW_ITEM_MARKER_PROPERTY_NAME } from "svelte-dnd-action";
 	import { getContext, setContext, untrack } from 'svelte';
 	import Modal from './Modal.svelte';
 	import { nodeAddDefaultFields } from '$lib/utils/usefulFunctions';
@@ -357,7 +356,6 @@
 					labelElClone = labelEl.cloneNode(true);
 					labelElClone.classList.remove('dnd-item');
 					labelElClone.classList.add('border-2', 'border-accent');
-					labelElClone.classList.add('pointer-events-none');
 					shadowEl.appendChild(labelElClone);
 				}
 			}
@@ -448,11 +446,4 @@
 			</div>
 		</div>
 	</Modal>
-{/if}
-{#if node.id == SHADOW_PLACEHOLDER_ITEM_ID || node[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
-	<div
-		class="pointer-events-none absolute top-0 left-0 ml-8 h-0"
-		id="shadowEl-{node.id}"
-		bind:this={shadowEl}
-	></div>
 {/if}

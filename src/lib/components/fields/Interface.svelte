@@ -40,7 +40,7 @@
 	}
 </script>
 
-<div class="form-control pointer-events-auto w-full">
+<div class="form-control w-full">
 	<input
 		type="text"
 		class="input input-bordered input-sm w-full"
