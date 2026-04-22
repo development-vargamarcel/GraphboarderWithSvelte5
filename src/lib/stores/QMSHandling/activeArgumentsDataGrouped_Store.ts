@@ -20,11 +20,13 @@ import type {
  * Creates a store to manage grouped active arguments for GraphQL operations.
  * @param initialValue Initial state of the store.
  * @param rootGroupArgsVisible Whether root group arguments are visible.
+ * @param schemaData The schema data store.
  * @returns The active arguments data grouped store.
  */
 export const Create_activeArgumentsDataGrouped_Store = (
 	initialValue: ActiveArgumentGroup[] = [],
-	rootGroupArgsVisible: boolean = true
+	rootGroupArgsVisible: boolean = true,
+	schemaData: SchemaData
 ): ActiveArgumentsDataGroupedStore => {
 	const store = writable<ActiveArgumentGroup[]>(initialValue);
 	const { subscribe, set, update } = store;
@@ -35,7 +37,7 @@ export const Create_activeArgumentsDataGrouped_Store = (
 		update,
 		set_groups: (
 			QMS_info: FieldWithDerivedData,
-			schemaData: SchemaData,
+			_schemaData: SchemaData,
 			QMSarguments: Record<string, unknown> | null,
 			endpointInfo: EndpointInfoStore
 		) => {
@@ -291,7 +293,9 @@ export const Create_activeArgumentsDataGrouped_Store = (
 					groupName,
 					parentContainerId,
 					activeArgumentsDataGrouped,
-					endpointInfo
+					endpointInfo,
+					undefined,
+					schemaData
 				);
 				// Create new object references to trigger Svelte 5 reactivity at each level
 				return result.map((g) => {
@@ -311,7 +315,8 @@ export const add_activeArgumentOrContainerTo_activeArgumentsDataGrouped = (
 	parentContainerId: string | null,
 	activeArgumentsDataGrouped: ActiveArgumentGroup[],
 	endpointInfo: EndpointInfoStore,
-	group?: ActiveArgumentGroup
+	group?: ActiveArgumentGroup,
+	schemaData?: SchemaData
 ): ActiveArgumentGroup[] => {
 	const dataIsForContainer = (newArgumentOrContainerData as ContainerData)?.items;
 	if (!group) {
@@ -359,21 +364,67 @@ export const add_activeArgumentOrContainerTo_activeArgumentsDataGrouped = (
 
 			// Create a new argsNode object so Svelte 5 detects the reference change
 			const newArgsNode = { ...group.group_argsNode };
+
+			// Handle deep argument addition: automatically create intermediate containers if needed
+			const steps = (newArgumentOrContainerData as any).stepsOfFields;
+			const groupNameFromStep = steps[0];
+			let currentParentId = parentContainerId || 'mainContainer';
+
+			// If the argument has multiple steps, we may need to find or create parent containers
+			if (steps && steps.length > 2 && groupNameFromStep === group.group_name) {
+				const intermediateSteps = steps.slice(1, -1);
+				const currentPath: string[] = [groupNameFromStep];
+
+				intermediateSteps.forEach((stepName: string) => {
+					currentPath.push(stepName);
+					const currentPathString = JSON.stringify(currentPath);
+
+					// Look for existing container for this path
+					let existingContainerId = Object.keys(newArgsNode).find((id) => {
+						return newArgsNode[id].stepsOfFieldsStringified === currentPathString;
+					});
+
+					if (!existingContainerId) {
+						// Create missing intermediate container
+						const parentNode = newArgsNode[currentParentId];
+						const parentRootType = getRootType(
+							null,
+							parentNode.dd_rootName,
+							schemaData as SchemaData
+						);
+						const fieldInfo = parentRootType?.inputFields?.find(
+							(f) => f.dd_displayName === stepName
+						);
+
+						if (fieldInfo) {
+							const newContainer = generateContainerData(currentPath.slice(0, -1), fieldInfo);
+							newArgsNode[newContainer.id] = newContainer;
+
+							// Link to current parent
+							newArgsNode[currentParentId] = {
+								...newArgsNode[currentParentId],
+								items: [...newArgsNode[currentParentId].items, { id: newContainer.id } as any]
+							};
+							existingContainerId = newContainer.id;
+						}
+					}
+
+					if (existingContainerId) {
+						currentParentId = existingContainerId;
+					}
+				});
+			}
+
 			newArgsNode[newArgumentOrContainerData.id] = newArgumentOrContainerData as ContainerData;
 
-			if (parentContainerId && newArgsNode[parentContainerId]) {
+			if (newArgsNode[currentParentId]) {
 				// Create a new container object with a new items array
-				newArgsNode[parentContainerId] = {
-					...newArgsNode[parentContainerId],
-					items: [...newArgsNode[parentContainerId].items, newArgumentOrContainerData as any]
-				};
-			} else if (newArgsNode.mainContainer) {
-				// Create a new mainContainer object with a new items array
-				newArgsNode.mainContainer = {
-					...newArgsNode.mainContainer,
-					items: [...newArgsNode.mainContainer.items, newArgumentOrContainerData as any]
+				newArgsNode[currentParentId] = {
+					...newArgsNode[currentParentId],
+					items: [...newArgsNode[currentParentId].items, newArgumentOrContainerData as any]
 				};
 			}
+
 			group.group_argsNode = newArgsNode;
 			group.group_args = [...group.group_args, newArgumentOrContainerData];
 		} else {
@@ -474,7 +525,9 @@ const addAllRootArgs = (
 			groupName,
 			null,
 			activeArgumentsDataGrouped,
-			endpointInfo
+			endpointInfo,
+			undefined,
+			schemaData
 		);
 	});
 };
@@ -542,7 +595,8 @@ const gqlArgObjToActiveArgumentsDataGrouped = (
 					null,
 					activeArgumentsDataGrouped,
 					endpointInfo,
-					undefined
+					undefined,
+					schemaData
 				);
 			});
 		} else {
@@ -581,7 +635,8 @@ const gqlArgObjToActiveArgumentsDataGrouped = (
 					null,
 					activeArgumentsDataGrouped,
 					endpointInfo,
-					group
+					group,
+					schemaData
 				);
 			});
 		}

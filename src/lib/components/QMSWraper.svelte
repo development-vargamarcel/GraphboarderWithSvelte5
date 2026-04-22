@@ -230,7 +230,9 @@
 	// Initialize stores that weren't provided via props
 	if (!activeArgumentsDataGrouped_Store) {
 		activeArgumentsDataGrouped_Store = Create_activeArgumentsDataGrouped_Store(
-			activeArgumentsDataGrouped_StoreInitialValue
+			activeArgumentsDataGrouped_StoreInitialValue,
+			true,
+			schemaData
 		);
 	}
 

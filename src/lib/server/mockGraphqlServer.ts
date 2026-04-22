@@ -14,9 +14,28 @@ const schema = buildSchema(`
 		createdAt: String!
 	}
 
+	type User {
+		id: ID!
+		name: String!
+	}
+
+	input AddressFilter {
+		city: String
+	}
+
+	input UserFilter {
+		name: String
+		address: AddressFilter
+	}
+
+	input FilterInput {
+		user: UserFilter
+	}
+
 	type Query {
 		items(filter: String): [Item!]!
 		item(id: ID!): Item
+		users(filter: FilterInput): [User!]!
 	}
 
 	type Mutation {
@@ -79,6 +98,9 @@ export const startMockGraphqlServer = async (): Promise<MockGraphqlServer> => {
 						return db
 							.prepare('SELECT id, name, created_at as createdAt FROM items ORDER BY id ASC')
 							.all();
+					},
+					users: () => {
+						return [{ id: '1', name: 'Alice' }];
 					},
 					item: ({ id }: { id: string }) =>
 						db.prepare('SELECT id, name, created_at as createdAt FROM items WHERE id = ?').get(id),
