@@ -360,7 +360,7 @@
 <label
 	use:clickOutside
 	onclick_outside={handleClickOutside}
-	class="   rounded-box {group.group_isRoot ? ' w-min min-w-fit' : 'w-min-fit '}  {!expandedVersion
+	class="pointer-events-auto rounded-box {group.group_isRoot ? ' w-min min-w-fit' : 'w-min-fit '}  {!expandedVersion
 		? ' pr-1 '
 		: ' '} 
 	{expandedVersion ? ' pr-2 ' : ' '}

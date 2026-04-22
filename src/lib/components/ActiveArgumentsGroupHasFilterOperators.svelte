@@ -538,7 +538,7 @@
 				<!-- node?.items?.length <= 1 -->
 				{#if (node as ContainerData)?.operator && !$mutationVersion}
 					<button
-						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(
+						class="pointer-events-auto btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(
 							node as ContainerData
 						)?.operator == 'bonded' || (node as ContainerData)?.operator == 'list'
 							? 'text-base-content'
@@ -611,7 +611,7 @@
 	>
 		{#if (node as ContainerData)?.operator}
 			{#if $mutationVersion && !(node as ContainerData)?.isMain}
-				<div class="flex">
+				<div class="pointer-events-auto flex">
 					<button
 						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {getManyQMS ||
 						$selectedQMSAAA
@@ -671,7 +671,7 @@
 
 				{#if (node as ContainerData)?.isMain}
 					<button
-						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(
+						class="pointer-events-auto btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {(
 							node as ContainerData
 						)?.operator == 'bonded' || (node as ContainerData)?.operator == 'list'
 							? 'text-base-content'

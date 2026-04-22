@@ -43,7 +43,7 @@
 <div class="form-control w-full">
 	<input
 		type="text"
-		class="input input-bordered input-sm w-full"
+		class="pointer-events-auto input input-bordered input-sm w-full"
 		value={rawValue ?? ''}
 		oninput={handleInput}
 		placeholder={typeInfo?.dd_displayName || 'Value'}
