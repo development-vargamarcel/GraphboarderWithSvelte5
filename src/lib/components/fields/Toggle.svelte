@@ -48,7 +48,7 @@
 		{/if}
 		<input
 			type="checkbox"
-			class="toggle {otherClases}"
+			class="pointer-events-auto toggle {otherClases}"
 			data-testid="toggle-{label}"
 			bind:checked={value}
 			{disabled}

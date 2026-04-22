@@ -63,7 +63,7 @@
 </script>
 
 {#if template == 'default'}
-	<div class="flex space-x-2">
+	<div class="pointer-events-auto flex space-x-2">
 		<div class="flex w-1/3 space-x-2">
 			{#if dd_canExpand}
 				<button type="button" class="btn rounded p-1 normal-case btn-xs" onclick={expand}>
@@ -114,7 +114,7 @@
 	<!-- svelte-ignore a11y_label_has_associated_control -->
 	<button
 		type="button"
-		class=" flex w-full min-w-max cursor-pointer rounded-box px-2 py-2 text-base duration-100 select-none hover:text-primary active:font-black"
+		class="pointer-events-auto flex w-full min-w-max cursor-pointer rounded-box px-2 py-2 text-base duration-100 select-none hover:text-primary active:font-black"
 		onclick={() => {
 			/////
 			if (dd_kindEl == 'INPUT_OBJECT') {
