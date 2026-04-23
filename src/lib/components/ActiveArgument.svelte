@@ -161,12 +161,8 @@
 	const { mergedChildren_QMSWraperCtxData_Store } = outermostQMSWraperContext;
 
 	const handleChanged = (detail: Partial<ActiveArgumentData>): void => {
-		// Mutate the existing object in place; the store update in
-		// updateActiveArgument() is the source of truth and will propagate
-		// via its own subscribers. Reassigning the $bindable prop would
-		// re-enter this component's own reactive effects through bind:group
-		// and feed back into the update chain.
-		Object.assign(activeArgumentData, detail);
+		// Reassign the prop to trigger Svelte 5 reactivity for bound parent state.
+		activeArgumentData = { ...activeArgumentData, ...detail };
 
 		const isValid: boolean = argumentCanRunQuery(activeArgumentData);
 		const isInUse: boolean | undefined = activeArgumentData.inUse;
@@ -360,7 +356,9 @@
 <label
 	use:clickOutside
 	onclick_outside={handleClickOutside}
-	class="pointer-events-auto rounded-box {group.group_isRoot ? ' w-min min-w-fit' : 'w-min-fit '}  {!expandedVersion
+	class="pointer-events-auto rounded-box {group.group_isRoot
+		? ' w-min min-w-fit'
+		: 'w-min-fit '}  {!expandedVersion
 		? ' pr-1 '
 		: ' '} 
 	{expandedVersion ? ' pr-2 ' : ' '}
@@ -392,7 +390,7 @@
 											"
 			>
 				<button
-					class=" {activeArgumentData.inUse
+					class="pointer-events-auto {activeArgumentData.inUse
 						? activeArgumentData.canRunQuery
 							? 'outline outline-1  outline-success/30 '
 							: 'outline outline-2 outline-error'
@@ -438,7 +436,7 @@
 				>
 					{#if !expandedVersion && !$mutationVersion && !$showInputField}
 						<button
-							class="btn mx-2 shrink-0 pt-[1px] text-xs font-light text-base-content normal-case btn-ghost btn-xs"
+							class="pointer-events-auto btn mx-2 shrink-0 pt-[1px] text-xs font-light text-base-content normal-case btn-ghost btn-xs"
 							onclick={(e) => {
 								if (e.target === e.currentTarget) {
 									e.stopPropagation();

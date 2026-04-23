@@ -155,9 +155,13 @@
 
 {#if template == 'default'}
 	<div class="flex w-full min-w-max space-x-2">
-		<div class="pointer-events-auto flex w-1/3 w-full min-w-max space-x-2">
+		<div class="flex w-1/3 w-full min-w-max space-x-2">
 			{#if canExpand}
-				<button type="button" class="btn rounded p-1 normal-case btn-xs" onclick={expand}>
+				<button
+					type="button"
+					class="pointer-events-auto btn rounded p-1 normal-case btn-xs"
+					onclick={expand}
+				>
 					{showExpand ? '-' : '+'}
 				</button>
 			{:else}
@@ -229,7 +233,7 @@
 				<button
 					type="button"
 					aria-label={showExpand ? 'Collapse' : 'Expand'}
-					class="mx-auto w-10 w-min pl-1 duration-100 {hasSelected
+					class="pointer-events-auto mx-auto w-10 w-min pl-1 duration-100 {hasSelected
 						? 'text-secondary'
 						: ''} {showExpand ? 'bi-arrow-90deg-down mt-2 ' : 'bi-chevron-expand'}"
 					onclick={expand}
@@ -241,7 +245,7 @@
 			{isSelected} -->
 			<input
 				type="checkbox"
-				class=" checkbox mr-1 ml-1 self-center checkbox-xs input-accent"
+				class="pointer-events-auto checkbox mr-1 ml-1 self-center checkbox-xs input-accent"
 				bind:checked={isSelected}
 				onchange={() => {
 					if (isSelected) {

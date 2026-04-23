@@ -25,7 +25,9 @@
 		} else if (!show && dialog && dialog.open) {
 			dialog.close();
 		}
+	});
 
+	$effect(() => {
 		return () => {
 			if (dialog && dialog.open) {
 				dialog.close();

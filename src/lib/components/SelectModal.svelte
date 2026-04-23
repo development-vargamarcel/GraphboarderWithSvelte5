@@ -19,6 +19,11 @@
 		processSelectedRowsColValues,
 		getRequiredColumnNames
 	} from '$lib/utils/rowSelectionUtils';
+	import {
+		stepsOfNodesToStepsOfFields,
+		getUpdatedStepsOfNodes,
+		updateNodeSteps
+	} from '../utils/nodeStepsUtils';
 	import type {
 		ContainerData,
 		ActiveArgumentData,
@@ -64,7 +69,6 @@
 	}: Props = $props();
 
 	let stepsOfNodes = $state<unknown[]>([]);
-	let testName_stepsOFFieldsWasUpdated = false;
 
 	const OutermostQMSWraperContext = getContext(
 		`${prefix}OutermostQMSWraperContext`
@@ -99,7 +103,8 @@
 
 	const operatorChangeHandler = () => {
 		stepsOfNodes = getUpdatedStepsOfNodes(
-			JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || []))
+			JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || [])),
+			node
 		);
 	};
 	const dndIsOn = getContext('dndIsOn');
@@ -108,49 +113,13 @@
 		// $mutationVersion = true; // Cannot assign to store directly if not using $ store syntax from import, handled by parent context usually
 	}
 
-	const stepsOfNodesToStepsOfFields = (stepsOfNodes: any[]) => {
-		const stepsOfFields = stepsOfNodes
-			.filter((step) => {
-				const [not, displayName, operator] = step;
-				return displayName || operator || not;
-			})
-			.map((step) => {
-				const [not, displayName, operator] = step;
-				const stepMod = [];
-				if (not) {
-					stepMod.push(not);
-				}
-				if (displayName) {
-					stepMod.push(displayName);
-				}
-				if (operator && (operator != 'bonded' || (operator == 'bonded' && displayName == null))) {
-					stepMod.push(operator);
-				}
-
-				return stepMod;
-			})
-			.flat(Infinity);
-		return stepsOfFields;
-	};
 	let stepsOfFieldsFull = $derived(stepsOfNodesToStepsOfFields(stepsOfNodes as any[]));
 	let stepsOfFields = $derived(filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']));
-	const getUpdatedStepsOfNodes = (stepsOfNodesParent: any[]) => {
-		testName_stepsOFFieldsWasUpdated = true;
-		let stepsOfNodesCopy = JSON.parse(JSON.stringify(stepsOfNodesParent));
-		stepsOfNodesCopy.push([
-			node?.not ? '_not' : undefined,
-			node?.dd_displayName,
-			(node as ContainerData)?.operator
-		]);
-		return stepsOfNodesCopy;
-	};
 
 	$effect(() => {
-		if (!testName_stepsOFFieldsWasUpdated) {
-			stepsOfNodes = getUpdatedStepsOfNodes(
-				JSON.parse(JSON.stringify(parentNode?.stepsOfNodes || []))
-			);
-		}
+		const isRoot = parentNodeId === node.id;
+		const parentSteps = isRoot ? [] : (parentNode?.stepsOfNodes ?? []);
+		stepsOfNodes = getUpdatedStepsOfNodes(JSON.parse(JSON.stringify(parentSteps)), node);
 	});
 
 	let MainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as QMSMainWraperContext;
@@ -270,12 +239,20 @@
 	let idColName = nodeContext_forDynamicData.idColName;
 	let requiredColNames = nodeContext_forDynamicData.requiredColNames;
 
-	if (bindSelectedQMS !== undefined) {
-		selectedQMS = bindSelectedQMS;
-	}
-	if (bindSelectedRowsColValues !== undefined) {
-		selectedRowsColValues = bindSelectedRowsColValues;
-	}
+	$effect(() => {
+		if (bindSelectedQMS !== undefined) {
+			$selectedQMS = bindSelectedQMS;
+		}
+	});
+	$effect(() => {
+		if (bindSelectedRowsColValues !== undefined) {
+			$selectedRowsColValues = bindSelectedRowsColValues;
+		}
+	});
+	$effect(() => {
+		bindSelectedQMS = $selectedQMS;
+		bindSelectedRowsColValues = $selectedRowsColValues;
+	});
 
 	if ((node as any)?.selectedQMS) {
 		$selectedQMS = (node as any).selectedQMS;
@@ -324,15 +301,9 @@
 	$effect(() => {
 		const full = stepsOfFieldsFull;
 		const short = stepsOfFields;
-		const snap = $state.snapshot(stepsOfNodes);
-		const str = JSON.stringify(short);
+		const snapshot = $state.snapshot(stepsOfNodes);
 		untrack(() => {
-			if ((node as any).stepsOfFieldsStringified === str) return;
-			(node as any).stepsOfFieldsFull = full;
-			(node as any).stepsOfFields = short;
-			(node as any).stepsOfFieldsMinimal = filterElFromArr(short, ['_and', '_or', '_not']);
-			(node as ContainerData).stepsOfNodes = snap;
-			(node as any).stepsOfFieldsStringified = str;
+			updateNodeSteps(node, full, short, snapshot as any, filterElFromArr);
 		});
 	});
 	$effect(() => {

@@ -13,7 +13,7 @@
 		index: any;
 		type: any;
 		template: string;
-		stepsOfFields?: any;
+		stepsOfFields?: string[];
 		predefinedFirstSteps?: any;
 		groupName?: any;
 		onArgAddRequest?: (detail: any) => void;
@@ -27,7 +27,7 @@
 		index,
 		type,
 		template,
-		stepsOfFields = $bindable(),
+		stepsOfFields,
 		predefinedFirstSteps,
 		groupName,
 		onArgAddRequest,
@@ -35,8 +35,11 @@
 		prefix = ''
 	}: Props = $props();
 
-	if (stepsOfFields.length == 0 && predefinedFirstSteps) {
-		stepsOfFields = [...predefinedFirstSteps];
+	let currentStepsOfFields = $state<string[]>([]);
+	if (stepsOfFields && stepsOfFields.length > 0) {
+		currentStepsOfFields = [...stepsOfFields];
+	} else if (predefinedFirstSteps) {
+		currentStepsOfFields = [...predefinedFirstSteps];
 	}
 
 	let QMSMainWraperContext = getContext<QMSMainWraperContextType>(`${prefix}QMSMainWraperContext`);
@@ -55,10 +58,10 @@
 		dd_filterOperators
 	} = type;
 	const addFilter = () => {
-		onArgAddRequest?.(generateArgData(stepsOfFields, type, schemaData));
+		onArgAddRequest?.(generateArgData(currentStepsOfFields, type, schemaData));
 	};
 	const addContainer = () => {
-		onContainerAddRequest?.(generateContainerData(stepsOfFields, type));
+		onContainerAddRequest?.(generateContainerData(currentStepsOfFields, type));
 	};
 </script>
 
@@ -66,7 +69,11 @@
 	<div class="pointer-events-auto flex space-x-2">
 		<div class="flex w-1/3 space-x-2">
 			{#if dd_canExpand}
-				<button type="button" class="btn rounded p-1 normal-case btn-xs" onclick={expand}>
+				<button
+					type="button"
+					class="pointer-events-auto btn rounded p-1 normal-case btn-xs"
+					onclick={expand}
+				>
 					{showExpand ? '-' : '+'}
 				</button>
 			{:else}
