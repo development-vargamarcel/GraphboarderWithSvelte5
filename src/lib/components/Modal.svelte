@@ -25,6 +25,12 @@
 		} else if (!show && dialog && dialog.open) {
 			dialog.close();
 		}
+
+		return () => {
+			if (dialog && dialog.open) {
+				dialog.close();
+			}
+		};
 	});
 
 	function close() {
@@ -46,19 +52,18 @@
 <dialog
 	bind:this={dialog}
 	class="modal"
+	data-modal-identifier={modalIdentifier}
 	onclose={close}
-	onclick={(e) => {
-		if (e.target === dialog) close();
+	oncancel={(e) => {
+		e.preventDefault();
 	}}
 >
 	<div class="modal-box">
-		{#if onCancel}
-			<button
-				class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
-				onclick={close}
-				aria-label="Close">✕</button
-			>
-		{/if}
+		<button
+			class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
+			onclick={close}
+			aria-label="Close">✕</button
+		>
 		{@render children?.()}
 
 		{#if (showApplyBtn && onApply) || onApply}
@@ -67,7 +72,4 @@
 			</div>
 		{/if}
 	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button onclick={close}>close</button>
-	</form>
 </dialog>
