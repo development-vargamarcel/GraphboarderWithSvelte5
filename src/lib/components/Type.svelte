@@ -12,7 +12,7 @@
 		template: any;
 		index: any;
 		type: any;
-		stepsOfFields?: any;
+		stepsOfFields?: string[];
 		isOnMainList?: any;
 		//stepsOfFields = [...stepsOfFields]; // so each tree will have it's own stepsOfFields
 		depth?: number;
@@ -25,7 +25,7 @@
 		template,
 		index,
 		type,
-		stepsOfFields = $bindable(),
+		stepsOfFields,
 		isOnMainList = !stepsOfFields,
 		depth = 0,
 		showExpand = $bindable(),
@@ -57,10 +57,11 @@
 	} = type;
 
 	// Update stepsOfFields
+	let currentStepsOfFields = $state<string[]>([]);
 	if (!stepsOfFields) {
-		stepsOfFields = [dd_displayName];
+		currentStepsOfFields = [dd_displayName];
 	} else {
-		stepsOfFields = [...stepsOfFields, dd_displayName];
+		currentStepsOfFields = [...stepsOfFields, dd_displayName];
 	}
 
 	let inDuration = $state(300);
@@ -105,7 +106,15 @@
 		: ''}"
 	data-testid="type-container-{dd_displayName}"
 >
-	<TypeInfoDisplay {canExpand} {expand} {type} {index} {showExpand} {template} {stepsOfFields} />
+	<TypeInfoDisplay
+		{canExpand}
+		{expand}
+		{type}
+		{index}
+		{showExpand}
+		{template}
+		stepsOfFields={currentStepsOfFields}
+	/>
 
 	{#if showExpand}
 		<div
@@ -131,7 +140,7 @@
 							{index}
 							{type}
 							{template}
-							{stepsOfFields}
+							stepsOfFields={currentStepsOfFields}
 							{depth}
 							{oncolAddRequest}
 							isOnMainList={false}

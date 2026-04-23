@@ -13,7 +13,7 @@
 		type: any;
 		template: string;
 		predefinedFirstSteps: any;
-		stepsOfFields?: any;
+		stepsOfFields?: any[];
 		groupName: any;
 		onArgAddRequest?: (detail: any) => void;
 		onContainerAddRequest?: (detail: any) => void;
@@ -25,24 +25,22 @@
 		type,
 		template,
 		predefinedFirstSteps,
-		stepsOfFields = $bindable(),
+		stepsOfFields,
 		groupName,
 		onArgAddRequest,
 		onContainerAddRequest,
 		prefix = ''
 	}: Props = $props();
 
-	if (stepsOfFields === undefined) {
-		stepsOfFields = [];
-	}
-
 	let QMSMainWraperContext = getContext<QMSMainWraperContextType>(`${prefix}QMSMainWraperContext`);
 	const schemaData = QMSMainWraperContext?.schemaData;
 
-	if (stepsOfFields.length == 0 && predefinedFirstSteps) {
-		stepsOfFields = [...predefinedFirstSteps];
+	let currentStepsOfFields = $state<string[]>([]);
+	if (stepsOfFields && stepsOfFields.length > 0) {
+		currentStepsOfFields = [...stepsOfFields];
+	} else if (predefinedFirstSteps) {
+		currentStepsOfFields = [...predefinedFirstSteps];
 	}
-	stepsOfFields = [...stepsOfFields]; // so each tree will have it's own stepsOfFields
 	let indetifier = Math.random();
 	let { dd_kindsArray, dd_rootName, dd_displayName } = type;
 
@@ -57,10 +55,10 @@
 		expandData = getRootType($schemaData.rootTypes, dd_rootName, schemaData) || {};
 		if (expandData && Object.keys(expandData).length > 0) {
 			if (!showExpand) {
-				stepsOfFields.push(dd_displayName);
+				currentStepsOfFields.push(dd_displayName);
 			} else {
 				// does the trick if you hide one by one from last one
-				stepsOfFields.splice(-1);
+				currentStepsOfFields.splice(-1);
 			}
 
 			showExpand = !showExpand;
@@ -85,7 +83,7 @@
 		{showExpand}
 		{index}
 		{type}
-		{stepsOfFields}
+		stepsOfFields={currentStepsOfFields}
 		{groupName}
 		{onArgAddRequest}
 		{onContainerAddRequest}
@@ -106,7 +104,7 @@
 							{index}
 							type={arg}
 							{template}
-							{stepsOfFields}
+							stepsOfFields={currentStepsOfFields}
 							predefinedFirstSteps={[]}
 							{groupName}
 							{onArgAddRequest}
