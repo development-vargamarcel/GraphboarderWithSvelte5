@@ -8,12 +8,20 @@ test('modal behavior: closes only on button click, handles nested modals', async
 	const outerModal = page.locator('dialog[data-modal-identifier="outer"]');
 	await expect(outerModal).toBeVisible();
 
-	// 2. Try to close by clicking backdrop (should NOT close)
+	// 2. Try to close by clicking backdrop (should close)
 	await page.mouse.click(10, 10);
+	await expect(outerModal).not.toBeVisible();
+
+	// Reopen for next steps
+	await page.click('button:has-text("Open Outer Modal")');
 	await expect(outerModal).toBeVisible();
 
-	// 3. Try to close with Escape key (should NOT close)
+	// 3. Try to close with Escape key (should close)
 	await page.keyboard.press('Escape');
+	await expect(outerModal).not.toBeVisible();
+
+	// Reopen for next steps
+	await page.click('button:has-text("Open Outer Modal")');
 	await expect(outerModal).toBeVisible();
 
 	// 4. Open inner modal

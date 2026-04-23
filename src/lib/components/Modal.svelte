@@ -35,14 +35,17 @@
 		};
 	});
 
-	function close() {
+	function close(e?: Event) {
+		if (e) e.stopPropagation();
+		if (!show) return;
 		show = false;
 		if (onCancel) {
 			onCancel({ modalIdentifier });
 		}
 	}
 
-	function apply() {
+	function apply(e: Event) {
+		e.stopPropagation();
 		if (onApply) {
 			onApply({ modalIdentifier });
 		}
@@ -56,11 +59,9 @@
 	class="modal"
 	data-modal-identifier={modalIdentifier}
 	onclose={close}
-	oncancel={(e) => {
-		e.preventDefault();
-	}}
+	oncancel={close}
 >
-	<div class="modal-box">
+	<div class="modal-box" onclick={(e) => e.stopPropagation()}>
 		<button
 			class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
 			onclick={close}
@@ -74,4 +75,7 @@
 			</div>
 		{/if}
 	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button onclick={close}>close</button>
+	</form>
 </dialog>
