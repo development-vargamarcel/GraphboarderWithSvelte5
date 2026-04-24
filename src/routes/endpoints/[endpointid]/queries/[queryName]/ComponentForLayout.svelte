@@ -379,24 +379,23 @@
 		}}
 	/>
 	<div class="grow==">
-		{#if showModal}
-			<Modal
-				modalIdentifier="activeArgumentsDataModal"
-				showApplyBtn={false}
-				onCancel={(detail: any) => {
-					if (detail.modalIdentifier == 'activeArgumentsDataModal') {
-						showModal = false;
-					}
-				}}
-				><div class="  w-full">
-					<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-						<div class="w-2"></div>
-						<ActiveArguments />
-						<div class="w-2"></div>
-					</div>
+		<Modal
+			bind:show={showModal}
+			modalIdentifier="activeArgumentsDataModal"
+			showApplyBtn={false}
+			onCancel={(detail: any) => {
+				if (detail.modalIdentifier == 'activeArgumentsDataModal') {
+					showModal = false;
+				}
+			}}
+			><div class="  w-full">
+				<div class="mx-auto mt-2 w-full space-y-2 pb-2">
+					<div class="w-2"></div>
+					<ActiveArguments />
+					<div class="w-2"></div>
 				</div>
-			</Modal>
-		{/if}
+			</div>
+		</Modal>
 
 		<!-- <div class="flex space-x-2 mb-2 px-2">
 			<button
@@ -467,16 +466,12 @@
 		{/if}
 	</div>
 
-	{#if showHeadersModal}
-		<Modal bind:show={showHeadersModal} modalIdentifier="headersModal" showApplyBtn={false}>
-			<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
-		</Modal>
-	{/if}
-	{#if showVarsModal}
-		<Modal bind:show={showVarsModal} modalIdentifier="varsModal" showApplyBtn={false}>
-			<EnvVarsManager onClose={() => (showVarsModal = false)} />
-		</Modal>
-	{/if}
+	<Modal bind:show={showHeadersModal} modalIdentifier="headersModal" showApplyBtn={false}>
+		<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
+	</Modal>
+	<Modal bind:show={showVarsModal} modalIdentifier="varsModal" showApplyBtn={false}>
+		<EnvVarsManager onClose={() => (showVarsModal = false)} />
+	</Modal>
 
 	{#if QMS_bodyPart_StoreDerived_rowsCount}
 		<div class="badge flex space-x-2 badge-primary">

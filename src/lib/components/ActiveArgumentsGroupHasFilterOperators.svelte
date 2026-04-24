@@ -327,22 +327,21 @@
 </script>
 
 {#if visible}
-	{#if showAddModal}
-		<Modal
-			showApplyBtn={false}
-			onCancel={() => {
-				showAddModal = false;
-			}}
-		/>
-	{/if}
+	<Modal
+		bind:show={showAddModal}
+		showApplyBtn={false}
+		onCancel={() => {
+			showAddModal = false;
+		}}
+	/>
 
-	{#if showModal}
-		<Modal
-			showApplyBtn={false}
-			onCancel={() => {
-				showModal = false;
-			}}
-		>
+	<Modal
+		bind:show={showModal}
+		showApplyBtn={false}
+		onCancel={() => {
+			showModal = false;
+		}}
+	>
 			<div class="flex flex-col">
 				<div class="mb-2 w-full text-center text-lg">
 					<p class="badge font-bold badge-info">
@@ -474,7 +473,7 @@
 					/>
 				</div>
 			</div>
-		</Modal>{/if}
+	</Modal>
 
 	<SelectModal
 		onDeleteSubNode={(detail: any) => {

@@ -212,16 +212,15 @@
 		</div>
 	</div>
 
-	{#if showJsonInfo}
-		<Modal
-			modalIdentifier="typeJsonInfoModal"
-			showApplyBtn={false}
-			onCancel={() => (showJsonInfo = false)}
-		>
-			<h3 class="mb-2 font-bold">{dd_displayName} — type info</h3>
-			<pre class="max-h-96 overflow-auto rounded bg-base-200 p-3 text-xs">{typeToSchemaJson(type)}</pre>
-		</Modal>
-	{/if}
+	<Modal
+		bind:show={showJsonInfo}
+		modalIdentifier="typeJsonInfoModal"
+		showApplyBtn={false}
+		onCancel={() => (showJsonInfo = false)}
+	>
+		<h3 class="mb-2 font-bold">{dd_displayName} — type info</h3>
+		<pre class="max-h-96 overflow-auto rounded bg-base-200 p-3 text-xs">{typeToSchemaJson(type)}</pre>
+	</Modal>
 {:else if template == 'columnAddDisplay'}
 	<div
 		class="pointer-events-auto flex w-full min-w-max cursor-pointer rounded-box text-base select-none hover:text-primary"
@@ -333,32 +332,31 @@
 					QMS_info={type}
 					QMSWraperContextGiven={currentQMSWraperCtxData}
 				>
-					{#if showModal}
-						<Modal
-							modalIdentifier="activeArgumentsDataModal"
-							showApplyBtn={false}
-							onCancel={(detail: any) => {
-								if (detail.modalIdentifier == 'activeArgumentsDataModal') {
-									showModal = false;
-								}
-							}}
-							><div class="  w-full">
-								<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-									<div class="w-2"></div>
+					<Modal
+						bind:show={showModal}
+						modalIdentifier="activeArgumentsDataModal"
+						showApplyBtn={false}
+						onCancel={(detail: any) => {
+							if (detail.modalIdentifier == 'activeArgumentsDataModal') {
+								showModal = false;
+							}
+						}}
+						><div class="  w-full">
+							<div class="mx-auto mt-2 w-full space-y-2 pb-2">
+								<div class="w-2"></div>
 
-									<ActiveArguments
-										stepsOfFieldsThisAppliesTo={stepsOfFields}
-										QMSarguments={getValueAtPath($mergedChildren_finalGqlArgObj_Store, [
-											...stepsOfFields,
-											'QMSarguments'
-										])}
-									/>
+								<ActiveArguments
+									stepsOfFieldsThisAppliesTo={stepsOfFields}
+									QMSarguments={getValueAtPath($mergedChildren_finalGqlArgObj_Store, [
+										...stepsOfFields,
+										'QMSarguments'
+									])}
+								/>
 
-									<div class="w-2"></div>
-								</div>
+								<div class="w-2"></div>
 							</div>
-						</Modal>
-					{/if}
+						</div>
+					</Modal>
 				</QMSWraper>
 			{/if}
 		</div>
