@@ -67,8 +67,9 @@ export const Create_activeArgumentsDataGrouped_Store = (
 							not: false,
 							items: [],
 							id: 'mainContainer',
-							stepsOfFields: [],
-							stepsOfFieldsStringified: '[]'
+							stepsOfFields: [QMS_info.dd_displayName],
+							stepsOfFieldsStringified: JSON.stringify([QMS_info.dd_displayName]),
+							stepsOfNodes: [[undefined, QMS_info.dd_displayName, 'bonded']]
 						} as unknown as ContainerData // Type assertion needed as FieldWithDerivedData vs ContainerData properties differ
 					}
 				};
@@ -105,8 +106,9 @@ export const Create_activeArgumentsDataGrouped_Store = (
 									not: false,
 									items: [],
 									id: 'mainContainer',
-									stepsOfFields: [],
-									stepsOfFieldsStringified: '[]'
+									stepsOfFields: [el.dd_displayName],
+									stepsOfFieldsStringified: JSON.stringify([el.dd_displayName]),
+									stepsOfNodes: [[undefined, el.dd_displayName, 'bonded']]
 								} as unknown as ContainerData
 							}
 						};

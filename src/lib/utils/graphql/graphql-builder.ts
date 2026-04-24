@@ -211,10 +211,10 @@ export const generate_group_gqlArgObj_forHasOperators = (
 	group_name: string,
 	nodes: Record<string, ContainerData>
 ): {
-	resultingGqlArgObj: Record<string, unknown> | undefined;
+	resultingGqlArgObj: Record<string, unknown>;
 	itemsResultingData: Record<string, unknown>[];
 } => {
-	let resultingGqlArgObj: Record<string, unknown> | undefined;
+	let resultingGqlArgObj: Record<string, unknown> = {};
 	const itemsResultingData: Record<string, unknown>[] = [];
 	const spreadItemsIfInSpreadContainers = (items: { id: string }[]): { id: string }[] => {
 		const spreadOutItems: { id: string }[] = [];
@@ -265,16 +265,17 @@ export const generate_group_gqlArgObj_forHasOperators = (
 				dataToAssign = _.merge({}, itemData.selectedRowsColValues[0], dataToAssign);
 			}
 		}
-		resultingGqlArgObj = setValueAtPath(
+		const resultingGqlArgObjForItem = setValueAtPath(
 			{},
 			nodeStepClean as string[],
 			dataToAssign,
 			true
 		) as Record<string, unknown>;
-		if (resultingGqlArgObj == undefined) {
-			// let itemObjectTest2 = 'set'
-			//itemObjectTest2 = dataToAssign
-			resultingGqlArgObj = dataToAssign as Record<string, unknown>;
+
+		if (resultingGqlArgObjForItem == undefined) {
+			_.merge(resultingGqlArgObj, dataToAssign);
+		} else {
+			_.merge(resultingGqlArgObj, resultingGqlArgObjForItem);
 		}
 
 		if (isContainer) {
@@ -350,6 +351,10 @@ export const generate_group_gqlArgObjAndCanRunQuery_forHasOperators = (
 			generate_group_gqlArgObj_forHasOperatorsRESULT.resultingGqlArgObj?.[
 				mainContainer.dd_displayName
 			];
+
+		if (!group_gqlArgObj) {
+			group_gqlArgObj = generate_group_gqlArgObj_forHasOperatorsRESULT.resultingGqlArgObj;
+		}
 	} else {
 		group_gqlArgObj = generate_group_gqlArgObj_forHasOperatorsRESULT.resultingGqlArgObj;
 	}
