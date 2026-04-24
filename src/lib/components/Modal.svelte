@@ -62,7 +62,10 @@
 	oncancel={(e) => e.preventDefault()}
 	onclose={() => (show = false)}
 >
-	<div class="modal-box" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="modal-box w-11/12 max-w-5xl max-h-[calc(100vh-2rem)] overflow-y-auto"
+		onclick={(e) => e.stopPropagation()}
+	>
 		<button
 			class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
 			onclick={close}
