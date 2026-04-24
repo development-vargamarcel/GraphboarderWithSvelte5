@@ -257,13 +257,13 @@
 	{availableOperators}
 	{group}
 />
-{#if showModal}
-	<Modal
-		showApplyBtn={false}
-		onCancel={() => {
-			showModal = false;
-		}}
-	>
+<Modal
+	bind:show={showModal}
+	showApplyBtn={false}
+	onCancel={() => {
+		showModal = false;
+	}}
+>
 		<div class="flex flex-col">
 			<div class="mb-2 w-full text-center text-lg">
 				<p class="badge font-bold badge-info">
@@ -349,8 +349,8 @@
 					oncolAddRequest={(e) => {}}
 				/>
 			</div>
-		</div>
-	</Modal>{/if}
+	</div>
+</Modal>
 
 <!-- svelte-ignore a11y_label_has_associated_control -->
 <label

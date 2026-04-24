@@ -92,17 +92,13 @@
 	});
 </script>
 
-{#if showSelectQMSModal}
-	<!--
-		on:apply={() => {
-			showSelectQMSModal = false;
-		}} -->
-	<Modal
-		showApplyBtn={false}
-		onCancel={() => {
-			showSelectQMSModal = false;
-		}}
-	>
+<Modal
+	bind:show={showSelectQMSModal}
+	showApplyBtn={false}
+	onCancel={() => {
+		showSelectQMSModal = false;
+	}}
+>
 		<div class="flex flex-col">
 			<!-- <div class="w-full text-lg text-center  mb-2 ">
 				<p class="badge badge-info font-bold">
@@ -137,6 +133,5 @@
 				/>
 				<!-- {/if} -->
 			</div>
-		</div>
-	</Modal>
-{/if}
+	</div>
+</Modal>

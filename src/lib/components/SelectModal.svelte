@@ -348,10 +348,10 @@
 	});
 </script>
 
-{#if showSelectModal}
-	<Modal
-		showApplyBtn={true}
-		onApply={() => {
+<Modal
+	bind:show={showSelectModal}
+	showApplyBtn={true}
+	onApply={() => {
 			$rowSelectionState = getRowSelectionState(selectedRowsModel);
 			$requiredColNames = getRequiredColumnNames(node);
 
@@ -415,6 +415,5 @@
 					showSelectQMSModal
 				</button>
 			</div>
-		</div>
-	</Modal>
-{/if}
+	</div>
+</Modal>
