@@ -111,21 +111,35 @@ const replaceBetween = (input: string, start: number, end: number, replacement: 
 };
 
 function modifyString(input: string): { modifiedSubstring: string; remainingString: string } {
-	const matchParenthesis = input.match(/\(([^)]+)\)/);
-	if (!matchParenthesis) {
+	const startMarker = '_QMS_ARGS_START_';
+	const endMarker = '_QMS_ARGS_END_';
+
+	const startIndex = input.indexOf(startMarker);
+	const endIndex = input.indexOf(endMarker);
+
+	if (startIndex === -1 || endIndex === -1) {
 		return { modifiedSubstring: input, remainingString: '' };
 	}
 
-	const parenthesisLength = matchParenthesis[0].length;
-	const parenthesisStart = matchParenthesis.index!;
-	const parenthesisEnd = parenthesisStart + parenthesisLength;
+	const markerContent = input.substring(startIndex, endIndex + endMarker.length);
+	const contentBefore = input.substring(0, startIndex);
+	const contentAfter = input.substring(endIndex + endMarker.length);
 
-	input = replaceBetween(input, parenthesisStart, parenthesisEnd, '');
-	input = replaceLastOccurrence(input, matchParenthesis.index!, `${matchParenthesis[0]}:{`);
+	// In GraphQL, arguments precede the selection set: field(args) { selection }
+	// The incoming JSON-stringified structure often looks like {"field":{"(args)":"novaluehere", "subfield":"..."}}
+	// which stringifies as ... "field":{"(args)","subfield": ... } (after "QMSarguments": is removed)
+	// We want to transform it to something like ... "field"(args):{"subfield": ... }
+	// The generateListOfSubstrings loop then uses this to build the final query string.
+
+	const modifiedInput = contentBefore.replace(/[:{"]+$/, '') + markerContent + ':{' + contentAfter;
+
+	// Determine where this substring should end to be picked up by generateListOfSubstrings
+	// We want to include everything up to the newly placed ':{'
+	const cutIndex = contentBefore.replace(/[:{"]+$/, '').length + markerContent.length + 2;
 
 	return {
-		modifiedSubstring: input.substring(0, parenthesisEnd),
-		remainingString: input.substring(parenthesisEnd)
+		modifiedSubstring: modifiedInput.substring(0, cutIndex),
+		remainingString: modifiedInput.substring(cutIndex)
 	};
 }
 

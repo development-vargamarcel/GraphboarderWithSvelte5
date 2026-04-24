@@ -70,7 +70,7 @@ export const build_QMS_bodyPart = (
 
 	const inputString = JSON.stringify(fullObject, function (key, value) {
 		if (key === 'QMSarguments') {
-			return `(${gqlArgObjToString(value)})`;
+			return `_QMS_ARGS_START_${gqlArgObjToString(value)}_QMS_ARGS_END_`;
 		}
 		return value;
 	}).replaceAll('"QMSarguments":', '');
@@ -81,13 +81,16 @@ export const build_QMS_bodyPart = (
 
 	const modifiedString = smartModifyStringBasedOnBoundries(
 		listOfSubstrings.join(''),
-		'(',
-		')',
-		stringToQMSString_transformer as any,
+		'_QMS_ARGS_START_',
+		'_QMS_ARGS_END_',
+		(text: string) => text,
 		outsideTextModifier
 	);
 
-	const QMS_bodyPart = modifiedString.slice(1, -1);
+	const QMS_bodyPart = modifiedString
+		.slice(1, -1)
+		.replaceAll('_QMS_ARGS_START_', '(')
+		.replaceAll('_QMS_ARGS_END_', ')');
 
 	console.debug('[build_QMS_bodyPart] Result:', QMS_bodyPart);
 	return QMS_bodyPart;
