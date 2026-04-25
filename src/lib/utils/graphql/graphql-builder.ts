@@ -60,10 +60,27 @@ export const build_QMS_bodyPart = (
 	}
 
 	const QMSarguments = { [QMS_name]: { QMSarguments: QMS_args } };
+	// QMS_fields uses the string sentinel 'novaluehere' to mark scalar leaves.
+	// mergedChildren_finalGqlArgObj attaches { QMSarguments: {...} } at field paths.
+	// With lodash's default merge, when QMS_fields is applied last, the sentinel
+	// string overwrites the object holding the child args — silently dropping
+	// any argument the user set on a selected scalar field. The customizer keeps
+	// the argument-bearing object whenever the incoming value is the sentinel.
+	const preserveChildArgs = (objValue: unknown, srcValue: unknown): unknown => {
+		if (
+			srcValue === 'novaluehere' &&
+			objValue &&
+			typeof objValue === 'object' &&
+			Object.prototype.hasOwnProperty.call(objValue, 'QMSarguments')
+		) {
+			return objValue;
+		}
+		return undefined;
+	};
 	const fullObject = JSON.parse(
 		JSON.stringify(
 			deleteIfChildrenHaveOneKeyAndLastKeyIsQMSarguments(
-				_.mergeWith({}, QMSarguments, mergedChildren_finalGqlArgObj, QMS_fields)
+				_.mergeWith({}, QMSarguments, mergedChildren_finalGqlArgObj, QMS_fields, preserveChildArgs)
 			)
 		)
 	);
