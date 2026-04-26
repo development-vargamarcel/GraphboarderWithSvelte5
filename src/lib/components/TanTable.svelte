@@ -6,6 +6,11 @@
 	import ColumnInfo from './ColumnInfo.svelte';
 	import { getContext } from 'svelte';
 	import InfiniteLoading from 'svelte-infinite-loading';
+	import * as Table from '$lib/components/ui/table';
+	import { Button } from '$lib/components/ui/button';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { FileJson, FileSpreadsheet, ChevronDown, EyeOff, Info } from 'lucide-svelte';
 
 	interface Props {
 		prefix?: string;
@@ -39,7 +44,6 @@
 		rowSelectionState = {};
 	}
 	let loadMore = $state(false);
-	// let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`); // Unused
 	let QMSWraperContext = getContext(`${prefix}QMSWraperContext`) as any;
 	let idColName = QMSWraperContext?.idColName;
 	const { paginationOptions } = getContext(`${prefix}QMSWraperContext`) as any;
@@ -122,17 +126,11 @@
 
 	const downloadCSV = () => {
 		if (!data || data.length === 0) return;
-
-		// Extract headers
 		const headers = cols.map((col) => `"${col.title.replace(/"/g, '""')}"`);
-
-		// Create CSV content
 		const csvRows = [headers.join(',')];
-
 		for (const row of data) {
 			const values = cols.map((col) => {
-				const cellData = getTableCellData(row, col, 0); // index 0 as approximation if not array
-				// Handle different data types
+				const cellData = getTableCellData(row, col, 0);
 				let stringValue = '';
 				if (cellData === null || cellData === undefined) {
 					stringValue = '';
@@ -141,14 +139,11 @@
 				} else {
 					stringValue = String(cellData);
 				}
-
-				// Escape quotes by doubling them
 				const escaped = stringValue.replace(/"/g, '""');
 				return `"${escaped}"`;
 			});
 			csvRows.push(values.join(','));
 		}
-
 		const csvString = csvRows.join('\n');
 		const blob = new Blob([csvString], { type: 'text/csv' });
 		const url = URL.createObjectURL(blob);
@@ -162,38 +157,38 @@
 	};
 </script>
 
-<div class=" h-[80vh] overflow-y-auto overscroll-contain rounded-box pb-32">
+<div class="h-[80vh] overflow-y-auto overscroll-contain rounded-xl border bg-card shadow-sm pb-32">
 	{#if data && data.length > 0}
-		<div class="mb-2 flex justify-end gap-2 px-2">
-			<button class="btn gap-2 btn-ghost btn-sm" onclick={downloadCSV} aria-label="Export CSV">
-				<i class="bi bi-filetype-csv"></i> Export CSV
-			</button>
-			<button class="btn gap-2 btn-ghost btn-sm" onclick={downloadJSON} aria-label="Export JSON">
-				<i class="bi bi-filetype-json"></i> Export JSON
-			</button>
+		<div class="sticky top-0 z-30 flex items-center justify-end gap-2 border-b bg-card/95 p-2 backdrop-blur">
+			<Button variant="ghost" size="sm" class="gap-2" onclick={downloadCSV}>
+				<FileSpreadsheet class="h-4 w-4" /> Export CSV
+			</Button>
+			<Button variant="ghost" size="sm" class="gap-2" onclick={downloadJSON}>
+				<FileJson class="h-4 w-4" /> Export JSON
+			</Button>
 		</div>
 	{/if}
-	<table class="table-compact table static w-full rounded-none table-zebra">
-		<thead class="sticky top-0 z-20 bg-base-300">
+
+	<Table.Root>
+		<Table.Header class="sticky top-[49px] z-20 bg-muted/50">
 			{#each $table.getHeaderGroups() as headerGroup}
-				<tr class="sticky top-0 z-20">
+				<Table.Row>
 					{#if enableRowSelectionState}
-						<th>
-							<label>
-								<input type="checkbox" class="checkbox" />
-							</label>
-						</th>
+						<Table.Head class="w-12">
+							<Checkbox />
+						</Table.Head>
 					{/if}
-					<th>#</th>
+					<Table.Head class="w-12 text-center">#</Table.Head>
 					{#each headerGroup.headers as header}
-						<th class="normal-case">
-							<div class="dropdown dropdown-end">
-								<div role="button" tabindex="0" class="cursor-pointer">
-									<div class="flex space-x-2 rounded-box hover:text-primary">
-										<div
-											class={idColName == header.column.columnDef.header
-												? ' underline decoration-dotted'
-												: ''}
+						<Table.Head>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									{#snippet child({ props })}
+										<Button
+											variant="ghost"
+											size="sm"
+											class="h-8 gap-2 px-2 hover:bg-muted/80 {idColName == header.column.columnDef.header ? 'underline decoration-dotted' : ''}"
+											{...props}
 										>
 											{#if !header.isPlaceholder}
 												{@const SvelteComponent = flexRender(
@@ -202,116 +197,77 @@
 												)}
 												<SvelteComponent />
 											{/if}
-										</div>
-										<div class="bi bi-chevron-down"></div>
+											<ChevronDown class="h-3 w-3 opacity-50" />
+										</Button>
+									{/snippet}
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content align="start" class="w-56">
+									<DropdownMenu.Label class="flex items-center gap-2">
+										<Info class="h-4 w-4" /> Column Details
+									</DropdownMenu.Label>
+									<div class="p-2 text-xs text-muted-foreground border-b mb-1">
+										<ColumnInfo stepsOfFields={(header.column.columnDef as any).stepsOfFields} />
 									</div>
-								</div>
-								<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-								<div
-									tabindex="0"
-									class="dropdown-content menu w-max rounded-box bg-base-100 p-2 text-sm shadow shadow-2xl"
-								>
-									<div
-										class="flex w-full flex-col space-y-2 overflow-x-auto text-sm font-normal normal-case"
-									>
-										<div class="flex w-full flex-col space-y-2 rounded-box p-2">
-											<div
-												class="w-full max-w-xs cursor-pointer overflow-x-auto pr-2 hover:text-primary md:max-w-sm"
-											>
-												<ColumnInfo
-													stepsOfFields={(header.column.columnDef as any).stepsOfFields}
-												/>
-												<!-- {colsData[index].stepsOfFields.join(' > ')} -->
-											</div>
-											<button
-												type="button"
-												class="w-full cursor-pointer pr-2 text-left hover:text-primary"
-												onclick={() => {
-													onHideColumn?.({ column: header.column.columnDef.header as string });
-												}}
-											>
-												hide field
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</th>
+									<DropdownMenu.Item onclick={() => onHideColumn?.({ column: header.column.columnDef.header as string })}>
+										<EyeOff class="mr-2 h-4 w-4" /> Hide field
+									</DropdownMenu.Item>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+						</Table.Head>
 					{/each}
-				</tr>
+				</Table.Row>
 			{/each}
-		</thead>
-		<tbody>
+		</Table.Header>
+		<Table.Body>
 			{#each $table.getRowModel().rows as row, i (row.id)}
-				<tr
-					tabindex="0"
-					class="hover z-0 cursor-pointer bg-base-100 hover:bg-base-300"
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							onRowClicked?.(row.original);
-						}
-					}}
-					onclick={() => {
-						onRowClicked?.(row.original);
-						//goto(`${$page.url.origin}/queries/${$page.params.queryName}/${row.id}`);
-					}}
+				<Table.Row
+					class="cursor-pointer transition-colors hover:bg-muted/30"
+					onclick={() => onRowClicked?.(row.original)}
 				>
 					{#if enableRowSelectionState}
-						<th
-							class="z-0"
-							onclick={(e) => {
-								e.stopPropagation();
-							}}
-						>
-							<label>
-								<input
-									checked={row.getIsSelected()}
-									name="rows"
-									type={row.getCanMultiSelect() ? 'checkbox' : 'radio'}
-									class={row.getCanMultiSelect() ? 'checkbox' : 'radio'}
-									onchange={(e) => {
-										const toggleSelectedHandler = row.getToggleSelectedHandler();
-										toggleSelectedHandler(e);
-									}}
-								/>
-							</label>
-						</th>
+						<Table.Cell onclick={(e) => e.stopPropagation()}>
+							<Checkbox
+								checked={row.getIsSelected()}
+								onCheckedChange={(checked) => {
+									const toggleSelectedHandler = row.getToggleSelectedHandler();
+									toggleSelectedHandler({ target: { checked } });
+								}}
+							/>
+						</Table.Cell>
 					{/if}
 
-					<td>{parseInt(row.index.toString()) + 1}</td>
+					<Table.Cell class="text-center font-mono text-xs text-muted-foreground">
+						{row.index + 1}
+					</Table.Cell>
 
 					{#each row.getVisibleCells() as cell}
-						<td class="break-no" title={cell.renderValue() as string}>
-							<!-- {cell.renderValue()} -->
+						<Table.Cell class="max-w-md truncate font-mono text-xs" title={cell.renderValue() as string}>
 							{formatData(cell.renderValue(), 40, true)}
 							{#if getPreciseType(cell.renderValue()) == 'array'}
 								{@const val = cell.renderValue() as any[]}
-								<sup>{val.length}</sup>
+								<Badge variant="outline" class="ml-1 h-4 px-1 text-[10px] font-normal">{val.length}</Badge>
 							{/if}
-							<!-- <svelte:component this={flexRender(cell.column.columnDef.cell, cell.getContext())} /> -->
-						</td>
+						</Table.Cell>
 					{/each}
-				</tr>
+				</Table.Row>
 			{/each}
-		</tbody>
-	</table>
+		</Table.Body>
+	</Table.Root>
+
 	{#if $paginationOptions?.infiniteScroll && !loadMore && data?.length > 0}
-		<!-- content here -->
-		<button
-			class="btn sticky left-0 mt-4 w-full btn-primary"
-			onclick={() => {
-				loadMore = true;
-			}}
-		>
-			Load more
-		</button>
-		<div class="sticky left-0 mt-4 text-center text-xs text-gray-500">
-			For now pagination works for 'limit' over 20 if set using 'filters',works for any 'limit' if
-			set by 'pagination store'.
+		<div class="p-4 flex flex-col items-center gap-4 border-t bg-muted/10">
+			<Button class="w-full max-w-sm" onclick={() => (loadMore = true)}>
+				Load more
+			</Button>
+			<p class="text-xs text-muted-foreground text-center">
+				Pagination currently optimized for 'limit' over 20 via filters or pagination store.
+			</p>
 		</div>
 	{/if}
 	{#if $paginationOptions?.infiniteScroll && data?.length > 0 && loadMore}
-		<InfiniteLoading on:infinite={infiniteHandler} identifier={infiniteId} distance={100} />
+		<div class="py-8">
+			<InfiniteLoading on:infinite={infiniteHandler} identifier={infiniteId} distance={100} />
+		</div>
 	{/if}
 	<div class="h-4"></div>
 </div>

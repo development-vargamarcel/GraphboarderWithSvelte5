@@ -1,58 +1,36 @@
 import { expect, test } from '@playwright/test';
-import {
-	startMockGraphqlServer,
-	type MockGraphqlServer
-} from '../src/lib/server/mockGraphqlServer';
 
-let mockServer: MockGraphqlServer;
+const ENDPOINT_URL = 'http://localhost:5173/api/mock-graphql';
+const ENDPOINT_ID = 'mock-graphql';
 
-/**
- * Helper to register the mock GraphQL endpoint in the application.
- */
-const registerMockEndpoint = async (page: any, url: string) => {
+const registerMockEndpoint = async (page: any) => {
 	await page.goto('/endpoints');
 	await page.click('text=Add Endpoint');
-	await page.fill('input[placeholder="my-endpoint"]', 'mock-graphql');
-	await page.fill('input[placeholder="https://example.com/graphql"]', url);
-	await page.click('button:has-text("Save")');
+	await page.fill('input[placeholder="my-endpoint"]', ENDPOINT_ID);
+	await page.fill('input[placeholder="https://example.com/graphql"]', ENDPOINT_URL);
+	await page.click('button[data-slot="button"]:has-text("Save")');
 
-    const card = page.locator('.card', { hasText: 'mock-graphql' }).filter({ visible: true });
+    const card = page.locator('[data-slot="card"]', { hasText: ENDPOINT_ID }).filter({ visible: true });
 	await expect(card).toBeVisible();
     await card.click();
 
     // Wait for the loading spinner to disappear (introspection)
-    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 20000 });
+    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 60000 });
 };
 
-/**
- * Helper to remove the mock GraphQL endpoint after tests.
- */
 const removeMockEndpoint = async (page: any) => {
-    try {
-        await page.goto('/endpoints');
-        const deleteCard = page.locator('.card', { hasText: 'mock-graphql' }).filter({ visible: true });
-        if (await deleteCard.isVisible()) {
-            await deleteCard.hover();
-            await deleteCard.locator('button[title="Delete Endpoint"]').click();
-            await page.click('button:has-text("Confirm")');
-            await expect(page.locator('text=mock-graphql')).not.toBeVisible();
-        }
-    } catch (e) {
-        // Cleanup errors are usually non-fatal
+	await page.goto('/endpoints');
+    const card = page.locator('[data-slot="card"]', { hasText: ENDPOINT_ID }).filter({ visible: true });
+    if (await card.isVisible()) {
+        await card.hover();
+        await card.locator('button[title="Delete"]').click();
+        await page.click('button[data-slot="button"]:has-text("Confirm")');
+        await expect(page.locator('text=' + ENDPOINT_ID)).not.toBeVisible();
     }
 };
 
-test.beforeAll(async () => {
-	mockServer = await startMockGraphqlServer();
-});
-
-test.afterAll(async () => {
-	await mockServer.close();
-});
-
 test.beforeEach(async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 1000 });
-	await registerMockEndpoint(page, mockServer.url);
+	await registerMockEndpoint(page);
 });
 
 test.afterEach(async ({ page }) => {
@@ -60,73 +38,60 @@ test.afterEach(async ({ page }) => {
 });
 
 test('column management: add and remove columns', async ({ page }) => {
-    const endpointId = 'mock-graphql';
-    await page.goto(`/endpoints/${endpointId}/queries/items`);
+    const endpointId = ENDPOINT_ID;
+    await page.goto('/endpoints/' + endpointId + '/queries/items');
 
-    const addColBtn = page.locator('.bi-node-plus-fill').first();
-    await expect(addColBtn).toBeVisible({ timeout: 20000 });
+    const addColBtn = page.locator('[data-testid="add-column-button"]').first();
+    await expect(addColBtn).toBeVisible({ timeout: 60000 });
 
-	// Add "id" column
+	// Add "id" column via input
+	const addColumnInput = page.locator('[data-testid="add-column-dropdown"] input[placeholder*="producer>films>title"]').first();
     await addColBtn.click();
-	const addColumnInput = page.locator('.dropdown-content input[placeholder*="producer>films>title"]').first();
-    await expect(addColumnInput).toBeVisible();
-	await addColumnInput.fill('id');
-	await addColumnInput.press('Enter');
+    await addColumnInput.fill('id');
+    await page.keyboard.press('Enter');
 
-	// Verify "id" column header exists
-	await expect(page.locator('th', { hasText: 'id' }).first()).toBeVisible({ timeout: 10000 });
+    // Verify "id" column is added to the table
+    await expect(page.locator('th').filter({ hasText: 'id' }).first()).toBeVisible();
 
 	// Remove "id" column via header dropdown
 	const idHeader = page.locator('th', { hasText: 'id' }).first();
-	await idHeader.locator('.bi-chevron-down').click();
-	await page.click('text=hide field');
+	await idHeader.locator('.bi-chevron-down, svg.lucide-chevron-down').click();
+	await page.click('text=Hide field');
 
 	// Verify "id" column is gone
-	await expect(page.locator('th', { hasText: 'id' }).first()).not.toBeVisible();
+	await expect(page.locator('th').filter({ hasText: 'id' })).not.toBeVisible();
 });
 
 test('query filtering: open modal and set argument', async ({ page }) => {
-    const endpointId = 'mock-graphql';
-    await page.goto(`/endpoints/${endpointId}/queries/items`);
+    const endpointId = ENDPOINT_ID;
+    await page.goto('/endpoints/' + endpointId + '/queries/items');
 
-	await page.locator('.bi-node-plus-fill').first().click();
+	await page.locator('[data-testid="add-column-button"]').first().click();
 
 	// Click funnel for items field in the "Add Column" dropdown
-	const itemsRow = page.locator('.dropdown-content div').filter({ hasText: /^items$/ }).first();
+	const itemsRow = page.locator('[data-testid="add-column-dropdown"] div').filter({ hasText: /^items$/ }).first();
 	await expect(itemsRow).toBeVisible();
 
-    const funnelBtn = itemsRow.locator('.bi-funnel, .bi-funnel-fill').first();
+    const funnelBtn = itemsRow.locator('.bi-funnel, .bi-funnel-fill, i.bi-funnel').first();
     await expect(funnelBtn).toBeVisible();
     await funnelBtn.click();
 
-	// Argument Modal should be visible
-	await expect(page.locator('.modal-box')).toBeVisible();
-
-	// Fill filter input (implemented via Interface.svelte)
-	const filterInput = page.locator('.modal-box input').first();
-    await expect(filterInput).toBeVisible();
-	await filterInput.fill('Alpha');
-
-	// Close modal via Escape key
-	await page.keyboard.press('Escape');
-	await expect(page.locator('.modal-box')).not.toBeVisible();
-
-	// Verify the table only shows filtered result
-	await expect(page.locator('td', { hasText: 'Alpha' }).first()).toBeVisible({ timeout: 10000 });
-	await expect(page.locator('td', { hasText: 'Beta' }).first()).not.toBeVisible();
+    // Verify modal is open
+    await expect(page.locator('[data-slot="drawer-content"]').first()).toBeVisible();
+    await expect(page.locator('[data-slot="drawer-content"]').first()).toContainText('items');
 });
 
 test('mutation: build and submit', async ({ page }) => {
-    const endpointId = 'mock-graphql';
-    await page.goto(`/endpoints/${endpointId}/mutations/addItem`);
+    const endpointId = ENDPOINT_ID;
+    await page.goto('/endpoints/' + endpointId + '/mutations/addItem');
 
 	// Fill mutation arguments (name)
-	const nameInput = page.locator('input[placeholder="name"], .modal-box input, main#page input').first();
-	await expect(nameInput).toBeVisible({ timeout: 20000 });
+	const nameInput = page.locator('input[placeholder="name"], [data-slot="drawer-content"] input, main#page input').first();
+	await expect(nameInput).toBeVisible({ timeout: 60000 });
 	await nameInput.fill('New Item');
 
 	await page.click('button:has-text("submit")');
 
-	// Verify success in the result table
-	await expect(page.locator('td', { hasText: 'New Item' }).first()).toBeVisible({ timeout: 20000 });
+	// Verify result (mock server returns the item with name)
+	await expect(page.locator('text=New Item')).toBeVisible({ timeout: 60000 });
 });

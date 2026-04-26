@@ -31,6 +31,11 @@
 	import { logger } from '$lib/utils/logger';
 	import { pinnedResponseStore } from '$lib/stores/pinnedResponseStore';
 	import JsonDiffViewer from './JsonDiffViewer.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { Star, Share2, Code2, Copy, Download, History, Pin, Check, Eye } from 'lucide-svelte';
 
 	/**
 	 * Props for GraphqlCodeDisplay component.
@@ -400,10 +405,10 @@
 	});
 </script>
 
-<div class="bg-base text-content mockup-code mx-2 my-1 px-2">
-	<div class="max-h-[50vh] overflow-y-auto">
+<div class="relative group mx-2 my-2 overflow-hidden rounded-lg border bg-muted/30">
+	<div class="max-h-[60vh] overflow-y-auto p-4">
 		{#if language === 'json'}
-			<div class="mx-4 mt-2">
+			<div class="mt-2">
 				{#if showDiff && pinnedResponse}
 					<JsonDiffViewer left={pinnedResponse.response} right={value} />
 				{:else}
@@ -418,130 +423,144 @@
 				{/if}
 			</div>
 		{:else if showNonPrettifiedQMSBody}
-			<code class="px-10">{value}</code>
-			<div class="mt-4">
-				<code class="px-10">{astAsString}</code>
+			<div class="space-y-4">
+				<div class="rounded bg-background p-4 font-mono text-xs">
+					<code>{value}</code>
+				</div>
+				<div class="rounded bg-background p-4 font-mono text-xs">
+					<code>{astAsString}</code>
+				</div>
 			</div>
 		{:else}
-			<!-- eslint-disable svelte/no-at-html-tags -->
-			<code class="language-graphql"
-				>{@html hljs.highlight(format(value), { language: 'graphql' }).value.trim()}</code
-			>
-			<!-- eslint-enable svelte/no-at-html-tags -->
-			<div class="mx-4 mt-2">
-				<CodeEditor
-					rawValue={value}
-					language="graphql"
-					{readonly}
-					onChanged={(detail) => {
-						if (!readonly) valueModifiedManually = detail.chd_rawValue;
-					}}
-				/>
-			</div>
-			<div class="mx-4 mt-2">
-				<CodeEditor rawValue={astAsString} language="javascript" />
-			</div>
-			{#if astPrinted}
-				<div class="mx-4 mt-2">
-					<CodeEditor rawValue={astPrinted} language="graphql" />
+			<div class="space-y-4">
+				<div class="rounded bg-background p-4">
+					<!-- eslint-disable svelte/no-at-html-tags -->
+					<pre class="language-graphql text-sm font-mono leading-relaxed">{@html hljs.highlight(format(value), { language: 'graphql' }).value.trim()}</pre>
+					<!-- eslint-enable svelte/no-at-html-tags -->
 				</div>
-			{/if}
+				<div class="mt-2">
+					<CodeEditor
+						rawValue={value}
+						language="graphql"
+						{readonly}
+						onChanged={(detail) => {
+							if (!readonly) valueModifiedManually = detail.chd_rawValue;
+						}}
+					/>
+				</div>
+				{#if astPrinted}
+					<div class="mt-2">
+						<Label class="text-[10px] uppercase tracking-wider text-muted-foreground mb-1 block">AST Printed</Label>
+						<CodeEditor rawValue={astPrinted} language="graphql" />
+					</div>
+				{/if}
+			</div>
 		{/if}
 	</div>
-	<div class="absolute top-3 right-4 flex gap-2">
+
+	<div class="absolute top-2 right-2 flex flex-wrap justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
 		{#if language === 'graphql'}
-			<div class="badge h-6 badge-outline text-xs">
+			<Badge variant="outline" class="bg-background/80 backdrop-blur-sm shadow-sm h-7">
 				Complexity: {complexity}
-			</div>
-			<button
-				class="btn normal-case btn-xs btn-warning"
+			</Badge>
+			<Button
+				variant="outline"
+				size="xs"
+				class="bg-background/80 backdrop-blur-sm h-7"
 				onclick={() => (showFavoriteModal = true)}
-				aria-label="Save to Favorites"
-				title="Save this query to favorites"
+				title="Save to favorites"
 			>
-				<i class="bi bi-star-fill"></i> Save
-			</button>
-			<button
-				class="btn normal-case btn-xs btn-info"
+				<Star class="mr-1.5 h-3.5 w-3.5 fill-yellow-500 text-yellow-500" /> Save
+			</Button>
+			<Button
+				variant="outline"
+				size="xs"
+				class="bg-background/80 backdrop-blur-sm h-7"
 				onclick={handleShare}
-				aria-label="Share Link"
-				title="Generate and copy a shareable link"
+				title="Share link"
 			>
 				{#if shareFeedback}
-					<i class="bi bi-check"></i> Copied!
+					<Check class="mr-1.5 h-3.5 w-3.5" /> Copied!
 				{:else}
-					<i class="bi bi-share-fill"></i> Share
+					<Share2 class="mr-1.5 h-3.5 w-3.5" /> Share
 				{/if}
-			</button>
-			<button
-				class="btn normal-case btn-xs btn-primary"
+			</Button>
+			<Button
+				variant="outline"
+				size="xs"
+				class="bg-background/80 backdrop-blur-sm h-7"
 				onclick={() => (showExportModal = true)}
-				aria-label="Export Code"
-				title="Export query as code"
+				title="Export code"
 			>
-				<i class="bi bi-code-slash"></i> Export Code
-			</button>
+				<Code2 class="mr-1.5 h-3.5 w-3.5" /> Export
+			</Button>
 		{/if}
 		{#if language === 'json'}
 			{#if pinnedResponse}
-				<button
-					class="btn normal-case btn-xs {showDiff ? 'btn-active' : 'btn-ghost'}"
+				<Button
+					variant={showDiff ? 'secondary' : 'outline'}
+					size="xs"
+					class="bg-background/80 backdrop-blur-sm h-7"
 					onclick={() => {
 						showDiff = !showDiff;
 						logger.info('User toggled diff view', { showDiff });
 					}}
-					aria-label={showDiff ? 'Show Code' : 'Compare with Pinned'}
 					title={showDiff ? 'Back to code view' : 'Compare with pinned response'}
 				>
-					<i class="bi bi-code-square"></i>
+					<History class="mr-1.5 h-3.5 w-3.5" />
 					{showDiff ? 'Show Code' : 'Diff'}
-				</button>
+				</Button>
 			{/if}
-			<button
-				class="btn normal-case btn-xs btn-secondary"
+			<Button
+				variant="outline"
+				size="xs"
+				class="bg-background/80 backdrop-blur-sm h-7"
 				onclick={() => {
 					pinnedResponseStore.pin(value, queryName || 'Response');
 					addToast('Response pinned!', 'success');
 				}}
-				aria-label="Pin Response"
-				title="Pin this response for comparison"
+				title="Pin response for comparison"
 			>
-				<i class="bi bi-pin-angle-fill"></i> Pin
-			</button>
-			<button
-				class="btn normal-case btn-xs btn-primary"
+				<Pin class="mr-1.5 h-3.5 w-3.5" /> Pin
+			</Button>
+			<Button
+				variant="outline"
+				size="xs"
+				class="bg-background/80 backdrop-blur-sm h-7"
 				onclick={handleDownloadJSON}
-				aria-label="Download JSON"
-				title="Download response as JSON file"
+				title="Download JSON"
 			>
 				{#if downloadFeedback}
-					<i class="bi bi-check"></i> Downloaded!
+					<Check class="mr-1.5 h-3.5 w-3.5" /> Done
 				{:else}
-					<i class="bi bi-download"></i> Download JSON
+					<Download class="mr-1.5 h-3.5 w-3.5" /> Download
 				{/if}
-			</button>
+			</Button>
 		{/if}
-		<button
-			class="btn normal-case btn-xs btn-primary"
+		<Button
+			variant="outline"
+			size="xs"
+			class="bg-background/80 backdrop-blur-sm h-7"
 			onclick={copyToClipboard}
-			aria-label="Copy Content"
-			title="Copy raw content string"
+			title="Copy to clipboard"
 		>
 			{#if copyFeedback}
-				<i class="bi bi-check"></i> Copied!
+				<Check class="mr-1.5 h-3.5 w-3.5" /> Copied!
 			{:else}
-				<i class="bi bi-clipboard"></i> Copy
+				<Copy class="mr-1.5 h-3.5 w-3.5" /> Copy
 			{/if}
-		</button>
+		</Button>
 		{#if language === 'graphql'}
-			<button
-				class="mx-atuo btn normal-case btn-xs btn-accent"
+			<Button
+				variant="outline"
+				size="xs"
+				class="bg-background/80 backdrop-blur-sm h-7"
 				onclick={() => {
 					showNonPrettifiedQMSBody = !showNonPrettifiedQMSBody;
 				}}
-				title="Toggle between prettified and raw view"
+				title="Toggle view"
 			>
-				{showNonPrettifiedQMSBody ? ' show prettified ' : ' show non-prettified '}</button
+				<Eye class="mr-1.5 h-3.5 w-3.5" /> {showNonPrettifiedQMSBody ? 'Prettified' : 'Raw'}</Button
 			>
 		{/if}
 	</div>
@@ -553,64 +572,86 @@
 	onApply={handleSaveFavorite}
 	showApplyBtn={true}
 >
-	<h3 class="text-lg font-bold">Save Favorite Query</h3>
-	<div class="form-control mt-4 w-full">
-		<label class="label" for="fav-name">
-			<span class="label-text">Name</span>
-		</label>
-		<input
-			id="fav-name"
-			type="text"
-			placeholder="My Awesome Query"
-			class="input-bordered input w-full"
-			bind:value={favoriteName}
-			onkeydown={(e) => e.key === 'Enter' && handleSaveFavorite()}
-		/>
-	</div>
-	<div class="form-control mt-4 w-full">
-		<label class="label" for="fav-folder">
-			<span class="label-text">Folder (Optional)</span>
-		</label>
-		<input
-			id="fav-folder"
-			type="text"
-			placeholder="e.g. Auth, Users"
-			class="input-bordered input w-full"
-			bind:value={favoriteFolder}
-			list="folder-suggestions"
-			onkeydown={(e) => e.key === 'Enter' && handleSaveFavorite()}
-		/>
-		<datalist id="folder-suggestions">
-			{#each existingFolders as folder}
-				<option value={folder}></option>
-			{/each}
-		</datalist>
+	<div class="space-y-6 p-2">
+		<div class="flex items-center gap-3">
+			<div class="flex h-10 w-10 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-500">
+				<Star class="h-6 w-6 fill-current" />
+			</div>
+			<div>
+				<h3 class="text-xl font-bold tracking-tight">Save Favorite</h3>
+				<p class="text-sm text-muted-foreground">Keep your important queries organized.</p>
+			</div>
+		</div>
+
+		<div class="grid gap-4">
+			<div class="space-y-2">
+				<Label for="fav-name">Name</Label>
+				<Input
+					id="fav-name"
+					placeholder="My Awesome Query"
+					bind:value={favoriteName}
+					onkeydown={(e) => e.key === 'Enter' && handleSaveFavorite()}
+				/>
+			</div>
+			<div class="space-y-2">
+				<Label for="fav-folder">Folder (Optional)</Label>
+				<Input
+					id="fav-folder"
+					placeholder="e.g. Auth, Users"
+					bind:value={favoriteFolder}
+					list="folder-suggestions"
+					onkeydown={(e) => e.key === 'Enter' && handleSaveFavorite()}
+				/>
+				<datalist id="folder-suggestions">
+					{#each existingFolders as folder}
+						<option value={folder}></option>
+					{/each}
+				</datalist>
+			</div>
+		</div>
 	</div>
 </Modal>
 
 <Modal bind:show={showExportModal} modalIdentifier="export-code-modal" showApplyBtn={false}>
-	<h3 class="mb-4 text-lg font-bold">Export Code</h3>
+	<div class="space-y-6 p-2">
+		<div class="flex items-center gap-3">
+			<div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+				<Code2 class="h-6 w-6" />
+			</div>
+			<div>
+				<h3 class="text-xl font-bold tracking-tight">Export Code</h3>
+				<p class="text-sm text-muted-foreground">Generate snippets for your favorite language or client.</p>
+			</div>
+		</div>
 
-	<div class="tabs-boxed mb-4 tabs">
-		{#each exportOptions as option (option.id)}
-			<button
-				class="tab"
-				class:tab-active={exportLanguage === option.id}
-				onclick={() => (exportLanguage = option.id)}
+		<div class="flex flex-wrap gap-1 rounded-lg bg-muted p-1">
+			{#each exportOptions as option (option.id)}
+				<Button
+					variant={exportLanguage === option.id ? 'secondary' : 'ghost'}
+					size="sm"
+					class="flex-1 h-8 rounded-md text-xs shadow-none"
+					onclick={() => (exportLanguage = option.id)}
+				>
+					{option.label}
+				</Button>
+			{/each}
+		</div>
+
+		<div class="relative group/code h-80 overflow-hidden rounded-xl border bg-background shadow-inner">
+			<div class="h-full overflow-auto p-4">
+				<CodeEditor rawValue={exportCode} language="javascript" readonly={true} />
+			</div>
+			<Button
+				size="sm"
+				class="absolute top-3 right-3 shadow-lg"
+				onclick={copyExportCode}
 			>
-				{option.label}
-			</button>
-		{/each}
-	</div>
-
-	<div class="relative h-64 overflow-hidden rounded-lg border border-base-300">
-		<CodeEditor rawValue={exportCode} language="javascript" readonly={true} />
-		<button class="btn absolute top-2 right-2 btn-sm btn-primary" onclick={copyExportCode}>
-			{#if exportCopyFeedback}
-				<i class="bi bi-check"></i> Copied!
-			{:else}
-				<i class="bi bi-clipboard"></i> Copy
-			{/if}
-		</button>
+				{#if exportCopyFeedback}
+					<Check class="mr-1.5 h-4 w-4" /> Copied!
+				{:else}
+					<Copy class="mr-1.5 h-4 w-4" /> Copy Snippet
+				{/if}
+			</Button>
+		</div>
 	</div>
 </Modal>

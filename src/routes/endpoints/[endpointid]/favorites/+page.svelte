@@ -5,11 +5,14 @@
 	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/stores/toastStore';
 	import Modal from '$lib/components/Modal.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Table from '$lib/components/ui/table';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Download, Upload, Info, Pencil, Trash2, Play, ChevronDown, ChevronRight } from 'lucide-svelte';
 
-	// Keep endpointId stable for store APIs that require a concrete string.
 	let endpointId = $derived($page.params.endpointid ?? '');
-
-	// Filter favorites for current endpoint
 	let favorites = $derived($favoriteQueries.filter((q) => q.endpointId === endpointId));
 
 	let groupedFavorites = $derived.by(() => {
@@ -46,8 +49,6 @@
 			addToast('No favorites to export.', 'info');
 			return;
 		}
-		// Export without ID and timestamp for cleaner portability
-		// The store import expects Omit<FavoriteQuery, 'id' | 'timestamp'>
 		const exportData = favorites.map(({ id, timestamp, ...rest }) => rest);
 		downloadJSON(exportData, `favorites-${endpointId}.json`);
 		addToast('Favorites exported', 'success');
@@ -78,7 +79,6 @@
 				console.error(err);
 				addToast('Failed to parse JSON file', 'error');
 			}
-			// Reset input
 			target.value = '';
 		};
 		reader.readAsText(file);
@@ -86,7 +86,6 @@
 
 	const navigateToQuery = async (q: any) => {
 		const url = `/endpoints/${endpointId}/${q.type === 'query' ? 'queries' : 'mutations'}/${q.name}`;
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		await goto(url);
 	};
 
@@ -148,18 +147,31 @@
 		addToast(`Folder "${renameFromFolder}" updated`, 'success');
 		closeRenameFolderModal();
 	};
+
+	let expandedFolders = $state<Record<string, boolean>>({});
+	$effect(() => {
+		sortedFolders.forEach(folder => {
+			if (expandedFolders[folder] === undefined) {
+				expandedFolders[folder] = true;
+			}
+		});
+	});
+
+	const toggleFolder = (folder: string) => {
+		expandedFolders[folder] = !expandedFolders[folder];
+	};
 </script>
 
 <div class="p-4">
 	<div class="mb-4 flex items-center justify-between">
 		<h1 class="text-2xl font-bold">Favorites</h1>
 		<div class="flex gap-2">
-			<button class="btn btn-outline btn-sm" onclick={handleExport}>
-				<i class="bi bi-download"></i> Export
-			</button>
-			<button class="btn btn-outline btn-sm" onclick={handleImportClick}>
-				<i class="bi bi-upload"></i> Import
-			</button>
+			<Button variant="outline" size="sm" onclick={handleExport}>
+				<Download class="mr-2 h-4 w-4" /> Export
+			</Button>
+			<Button variant="outline" size="sm" onclick={handleImportClick}>
+				<Upload class="mr-2 h-4 w-4" /> Import
+			</Button>
 			<input
 				type="file"
 				bind:this={fileInput}
@@ -171,101 +183,113 @@
 	</div>
 
 	{#if favorites.length === 0}
-		<div class="alert alert-info">
-			<i class="bi bi-info-circle"></i>
-			<span>No favorites saved for this endpoint yet. Save queries from the execution view.</span>
-		</div>
+		<Alert.Root>
+			<Info class="h-4 w-4" />
+			<Alert.Title>No favorites</Alert.Title>
+			<Alert.Description>
+				No favorites saved for this endpoint yet. Save queries from the execution view.
+			</Alert.Description>
+		</Alert.Root>
 	{:else}
 		{#each sortedFolders as folder (folder)}
-			<details
-				class="collapse-arrow collapse mb-2 rounded-box border border-base-300 bg-base-100"
-				open
-			>
-				<summary class="collapse-title text-xl font-medium">
-					<div class="flex items-center justify-between gap-2">
-						<div class="flex items-center gap-2">
-							<span>{folder}</span>
-							<span class="badge badge-outline badge-sm">{groupedFavorites[folder].length}</span>
-						</div>
-						{#if folder !== 'Uncategorized'}
-							<button
-								class="btn btn-ghost btn-xs"
-								type="button"
-								onclick={(event) => {
-									event.stopPropagation();
-									openRenameFolderModal(folder);
-								}}
-								title="Rename folder"
-								aria-label="Rename folder"
-							>
-								<i class="bi bi-pencil-square"></i>
-							</button>
+			<div class="mb-2 overflow-hidden rounded-lg border border-border bg-card">
+				<button
+					class="flex w-full items-center justify-between p-4 text-left font-medium transition-colors hover:bg-muted/50"
+					onclick={() => toggleFolder(folder)}
+				>
+					<div class="flex items-center gap-2">
+						{#if expandedFolders[folder]}
+							<ChevronDown class="h-4 w-4" />
+						{:else}
+							<ChevronRight class="h-4 w-4" />
 						{/if}
+						<span class="text-lg font-semibold">{folder}</span>
+						<Badge variant="outline" class="ml-2">
+							{groupedFavorites[folder].length}
+						</Badge>
 					</div>
-				</summary>
-				<div class="collapse-content">
-					<div class="overflow-x-auto">
-						<table class="table w-full">
-							<thead>
-								<tr>
-									<th>Name</th>
-									<th>Type</th>
-									<th>Saved At</th>
-									<th class="text-right">Actions</th>
-								</tr>
-							</thead>
-							<tbody>
+					{#if folder !== 'Uncategorized'}
+						<Button
+							variant="ghost"
+							size="icon"
+							class="h-8 w-8"
+							onclick={(event) => {
+								event.stopPropagation();
+								openRenameFolderModal(folder);
+							}}
+							title="Rename folder"
+						>
+							<Pencil class="h-4 w-4" />
+						</Button>
+					{/if}
+				</button>
+
+				{#if expandedFolders[folder]}
+					<div class="border-t border-border">
+						<Table.Root>
+							<Table.Header>
+								<Table.Row>
+									<Table.Head>Name</Table.Head>
+									<Table.Head>Type</Table.Head>
+									<Table.Head>Saved At</Table.Head>
+									<Table.Head class="text-right">Actions</Table.Head>
+								</Table.Row>
+							</Table.Header>
+							<Table.Body>
 								{#each groupedFavorites[folder] as fav (fav.id)}
-									<tr class="hover">
-										<td class="font-medium">
+									<Table.Row>
+										<Table.Cell class="font-medium">
 											<button
-												class="link font-bold text-primary link-hover"
+												class="hover:underline text-left font-bold text-primary"
 												onclick={async () => await navigateToQuery(fav)}
 											>
 												{fav.name}
 											</button>
-										</td>
-										<td>
-											<span
-												class="badge {fav.type === 'query' ? 'badge-primary' : 'badge-secondary'}"
-											>
+										</Table.Cell>
+										<Table.Cell>
+											<Badge variant={fav.type === 'query' ? 'default' : 'secondary'}>
 												{fav.type}
-											</span>
-										</td>
-										<td>{new Date(fav.timestamp).toLocaleString()}</td>
-										<td class="space-x-1 text-right">
-											<button
-												class="btn btn-ghost btn-xs"
-												onclick={async () => await navigateToQuery(fav)}
-												title="Run"
-												aria-label="Run query"
-											>
-												<i class="bi bi-play-fill text-lg"></i>
-											</button>
-											<button
-												class="btn btn-ghost btn-xs"
-												onclick={() => openEditModal(fav)}
-												title="Edit"
-												aria-label="Edit favorite"
-											>
-												<i class="bi bi-pencil-square"></i>
-											</button>
-											<button
-												class="btn text-error btn-ghost btn-xs"
-												onclick={() => handleDelete(fav.id)}
-												title="Delete"
-												aria-label="Delete favorite"
-											>
-												<i class="bi bi-trash"></i>
-											</button>
-										</td>
-									</tr>
+											</Badge>
+										</Table.Cell>
+										<Table.Cell class="text-xs text-muted-foreground">{new Date(fav.timestamp).toLocaleString()}</Table.Cell>
+										<Table.Cell class="text-right">
+											<div class="flex justify-end gap-1">
+												<Button
+													variant="ghost"
+													size="icon"
+													class="h-8 w-8"
+													onclick={async () => await navigateToQuery(fav)}
+													title="Run"
+												>
+													<Play class="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="icon"
+													class="h-8 w-8"
+													onclick={() => openEditModal(fav)}
+													title="Edit"
+												>
+													<Pencil class="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="icon"
+													class="h-8 w-8 text-destructive hover:text-destructive"
+													onclick={() => handleDelete(fav.id)}
+													title="Delete"
+												>
+													<Trash2 class="h-4 w-4" />
+												</Button>
+											</div>
+										</Table.Cell>
+									</Table.Row>
 								{/each}
-							</tbody>
-						</table>
+							</Table.Body>
+						</Table.Root>
 					</div>
-				</div>
-			</details>
+				{/if}
+			</div>
 		{/each}
 	{/if}
 </div>
@@ -273,42 +297,23 @@
 <Modal bind:show={showEditModal} showApplyBtn={false} onCancel={closeEditModal}>
 	<div class="space-y-4">
 		<h2 class="text-lg font-semibold">Edit Favorite</h2>
-		<div class="form-control">
-			<label class="label" for="favorite-name">
-				<span class="label-text">Name</span>
-			</label>
-			<input
-				id="favorite-name"
-				class="input-bordered input w-full"
-				type="text"
-				bind:value={editName}
-				placeholder="Favorite name"
-			/>
+		<div class="space-y-2">
+			<label class="text-sm font-medium" for="favorite-name">Name</label>
+			<Input id="favorite-name" bind:value={editName} placeholder="Favorite name" />
 		</div>
-		<div class="form-control">
-			<label class="label" for="favorite-folder">
-				<span class="label-text">Folder (optional)</span>
-			</label>
-			<input
-				id="favorite-folder"
-				class="input-bordered input w-full"
-				type="text"
-				list="favorite-folders"
-				bind:value={editFolder}
-				placeholder="Folder name"
-			/>
+		<div class="space-y-2">
+			<label class="text-sm font-medium" for="favorite-folder">Folder (optional)</label>
+			<Input id="favorite-folder" bind:value={editFolder} list="favorite-folders" placeholder="Folder name" />
 			<datalist id="favorite-folders">
 				{#each existingFolders as folder}
 					<option value={folder}></option>
 				{/each}
 			</datalist>
-			<p class="mt-1 text-xs text-base-content/60">
-				Leave blank to move the favorite into "Uncategorized".
-			</p>
+			<p class="text-xs text-muted-foreground">Leave blank to move to "Uncategorized".</p>
 		</div>
 		<div class="flex justify-end gap-2">
-			<button class="btn btn-ghost" onclick={closeEditModal}>Cancel</button>
-			<button class="btn btn-primary" onclick={handleUpdateFavorite}>Save</button>
+			<Button variant="ghost" onclick={closeEditModal}>Cancel</Button>
+			<Button onclick={handleUpdateFavorite}>Save</Button>
 		</div>
 	</div>
 </Modal>
@@ -316,36 +321,17 @@
 <Modal bind:show={showRenameFolderModal} showApplyBtn={false} onCancel={closeRenameFolderModal}>
 	<div class="space-y-4">
 		<h2 class="text-lg font-semibold">Rename Folder</h2>
-		<div class="form-control">
-			<label class="label" for="rename-from-folder">
-				<span class="label-text">Current folder</span>
-			</label>
-			<input
-				id="rename-from-folder"
-				class="input-bordered input w-full"
-				type="text"
-				value={renameFromFolder}
-				disabled
-			/>
+		<div class="space-y-2">
+			<label class="text-sm font-medium" for="rename-from-folder">Current folder</label>
+			<Input id="rename-from-folder" value={renameFromFolder} disabled />
 		</div>
-		<div class="form-control">
-			<label class="label" for="rename-to-folder">
-				<span class="label-text">New folder name</span>
-			</label>
-			<input
-				id="rename-to-folder"
-				class="input-bordered input w-full"
-				type="text"
-				bind:value={renameToFolder}
-				placeholder="Folder name (leave blank to clear)"
-			/>
-			<p class="mt-1 text-xs text-base-content/60">
-				Leave blank to move favorites into "Uncategorized".
-			</p>
+		<div class="space-y-2">
+			<label class="text-sm font-medium" for="rename-to-folder">New folder name</label>
+			<Input id="rename-to-folder" bind:value={renameToFolder} placeholder="Folder name" />
 		</div>
 		<div class="flex justify-end gap-2">
-			<button class="btn btn-ghost" onclick={closeRenameFolderModal}>Cancel</button>
-			<button class="btn btn-primary" onclick={handleRenameFolder}>Save</button>
+			<Button variant="ghost" onclick={closeRenameFolderModal}>Cancel</Button>
+			<Button onclick={handleRenameFolder}>Save</Button>
 		</div>
 	</div>
 </Modal>

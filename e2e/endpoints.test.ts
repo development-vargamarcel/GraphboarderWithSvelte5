@@ -18,16 +18,16 @@ test.describe('Endpoints Page', () => {
 		await page.fill('input[placeholder="my-endpoint"]', 'test-endpoint');
 		await page.fill('input[placeholder="https://example.com/graphql"]', 'https://test.com/graphql');
 
-		await page.click('button:has-text("Save")');
+		await page.click('button[data-slot="button"]:has-text("Save")');
 
-		// Verify added - updated selector from .card to something that matches Shadcn Card
+		// Verify added - updated selector from [data-slot="card"] to something that matches Shadcn Card
 		// Shadcn Card usually has class 'border', 'rounded-xl', etc. or we can use data-testid if we added it.
 		// For now let's use text content.
-		const newCard = page.locator('div', { hasText: 'test-endpoint' }).filter({ hasText: 'User Defined' }).first();
+		const newCard = page.locator('[data-slot="card"]', { hasText: 'test-endpoint' }).filter({ hasText: 'User Defined' }).first();
 		await expect(newCard).toBeVisible();
 
 		// 2. Edit Endpoint
-		const editBtn = newCard.locator('button[title="Edit Endpoint"]');
+		const editBtn = newCard.locator('button[title="Edit"]');
 		await newCard.hover();
 		await editBtn.click();
 
@@ -39,17 +39,17 @@ test.describe('Endpoints Page', () => {
 			'input[placeholder="https://example.com/graphql"]',
 			'https://test.com/graphql/v2'
 		);
-		await page.click('button:has-text("Save")');
+		await page.click('button[data-slot="button"]:has-text("Save")');
 
 		// Verify updated
 		await expect(page.locator('text=https://test.com/graphql/v2')).toBeVisible();
 
 		// 3. Delete Endpoint
 		await newCard.hover();
-		await newCard.locator('button[title="Delete Endpoint"]').click();
+		await newCard.locator('button[title="Delete"]').click();
 
 		await expect(page.locator('text=Are you sure?')).toBeVisible();
-		await page.click('button:has-text("Confirm")');
+		await page.click('button[data-slot="button"]:has-text("Confirm")');
 
 		await expect(page.locator('text=test-endpoint')).not.toBeVisible();
 	});
@@ -59,12 +59,12 @@ test.describe('Endpoints Page', () => {
 		await page.click('text=Add Endpoint');
 		await page.fill('input[placeholder="my-endpoint"]', 'A-Endpoint');
 		await page.fill('input[placeholder="https://example.com/graphql"]', 'https://a.com');
-		await page.click('button:has-text("Save")');
+		await page.click('button[data-slot="button"]:has-text("Save")');
 
 		await page.click('text=Add Endpoint');
 		await page.fill('input[placeholder="my-endpoint"]', 'Z-Endpoint');
 		await page.fill('input[placeholder="https://example.com/graphql"]', 'https://z.com');
-		await page.click('button:has-text("Save")');
+		await page.click('button[data-slot="button"]:has-text("Save")');
 
 		// Default sort is A-Z
 		// Shadcn Select might be used instead of raw select if we migrated it.
@@ -75,14 +75,14 @@ test.describe('Endpoints Page', () => {
 		await page.selectOption('select', 'name-desc');
 
 		// Clean up
-		const aCard = page.locator('div', { hasText: 'A-Endpoint' }).filter({ hasText: 'User Defined' }).first();
+		const aCard = page.locator('[data-slot="card"]', { hasText: 'A-Endpoint' }).filter({ hasText: 'User Defined' }).first();
 		await aCard.hover();
-		await aCard.locator('button[title="Delete Endpoint"]').click();
-		await page.click('button:has-text("Confirm")');
+		await aCard.locator('button[title="Delete"]').click();
+		await page.click('button[data-slot="button"]:has-text("Confirm")');
 
-		const zCard = page.locator('div', { hasText: 'Z-Endpoint' }).filter({ hasText: 'User Defined' }).first();
+		const zCard = page.locator('[data-slot="card"]', { hasText: 'Z-Endpoint' }).filter({ hasText: 'User Defined' }).first();
 		await zCard.hover();
-		await zCard.locator('button[title="Delete Endpoint"]').click();
-		await page.click('button:has-text("Confirm")');
+		await zCard.locator('button[title="Delete"]').click();
+		await page.click('button[data-slot="button"]:has-text("Confirm")');
 	});
 });

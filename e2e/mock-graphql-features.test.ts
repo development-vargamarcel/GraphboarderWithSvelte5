@@ -11,16 +11,16 @@ const registerMockEndpoint = async (page: any, url: string) => {
 	await page.click('text=Add Endpoint');
 	await page.fill('input[placeholder="my-endpoint"]', 'mock-graphql');
 	await page.fill('input[placeholder="https://example.com/graphql"]', url);
-	await page.click('button:has-text("Save")');
-	await expect(page.locator('.card', { hasText: 'mock-graphql' })).toBeVisible();
+	await page.click('button[data-slot="button"]:has-text("Save")');
+	await expect(page.locator('[data-slot="card"]', { hasText: 'mock-graphql' })).toBeVisible();
 };
 
 const removeMockEndpoint = async (page: any) => {
 	await page.goto('/endpoints');
-	const deleteCard = page.locator('.card', { hasText: 'mock-graphql' });
+	const deleteCard = page.locator('[data-slot="card"]', { hasText: 'mock-graphql' });
 	await deleteCard.hover();
-	await deleteCard.locator('button[title="Delete Endpoint"]').click();
-	await page.click('button:has-text("Confirm")');
+	await deleteCard.locator('button[title="Delete"]').click();
+	await page.click('button[data-slot="button"]:has-text("Confirm")');
 	await expect(page.locator('text=mock-graphql')).not.toBeVisible();
 };
 
