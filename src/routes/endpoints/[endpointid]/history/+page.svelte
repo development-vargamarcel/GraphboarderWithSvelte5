@@ -10,6 +10,12 @@
 	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/stores/toastStore';
 	import { logger } from '$lib/utils/logger';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import * as Table from '$lib/components/ui/table';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Alert from '$lib/components/ui/alert';
+	import { Download, Upload, Trash2, RotateCcw, Info } from 'lucide-svelte';
 
 	let endpointId = $derived($page.params.endpointid);
 
@@ -43,7 +49,6 @@
 			return;
 		}
 		logger.info('User exported history', { count: history.length, endpointId });
-		// Export without ID for portability (IDs regenerated on import)
 		const exportData = history.map(({ id, ...rest }) => rest);
 		downloadJSON(exportData, `history-${endpointId}.json`);
 		addToast('History exported', 'success');
@@ -82,7 +87,6 @@
 
 	const restoreQuery = async (q: any) => {
 		const url = `/endpoints/${endpointId}/${q.type === 'query' ? 'queries' : 'mutations'}/${q.queryName}?historyId=${q.id}`;
-		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		await goto(url);
 	};
 
@@ -99,15 +103,15 @@
 		<div class="flex items-center justify-between">
 			<h1 class="text-2xl font-bold">History</h1>
 			<div class="flex gap-2">
-				<button class="btn btn-outline btn-sm" onclick={handleExport}>
-					<i class="bi bi-download"></i> Export
-				</button>
-				<button class="btn btn-outline btn-sm" onclick={handleImportClick}>
-					<i class="bi bi-upload"></i> Import
-				</button>
-				<button class="btn btn-outline btn-sm btn-error" onclick={handleClear}>
-					<i class="bi bi-trash"></i> Clear All
-				</button>
+				<Button variant="outline" size="sm" onclick={handleExport}>
+					<Download class="mr-2 h-4 w-4" /> Export
+				</Button>
+				<Button variant="outline" size="sm" onclick={handleImportClick}>
+					<Upload class="mr-2 h-4 w-4" /> Import
+				</Button>
+				<Button variant="destructive" size="sm" onclick={handleClear}>
+					<Trash2 class="mr-2 h-4 w-4" /> Clear All
+				</Button>
 				<input
 					type="file"
 					bind:this={fileInput}
@@ -119,18 +123,24 @@
 		</div>
 
 		<div class="flex flex-col gap-2 md:flex-row">
-			<input
+			<Input
 				type="text"
 				placeholder="Search by name..."
-				class="input-bordered input input-sm w-full md:w-1/3"
+				class="w-full md:w-1/3"
 				bind:value={searchTerm}
 			/>
-			<select class="select-bordered select select-sm" bind:value={filterType}>
+			<select
+				class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-[180px]"
+				bind:value={filterType}
+			>
 				<option value="all">All Types</option>
 				<option value="query">Query</option>
 				<option value="mutation">Mutation</option>
 			</select>
-			<select class="select-bordered select select-sm" bind:value={filterStatus}>
+			<select
+				class="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:w-[180px]"
+				bind:value={filterStatus}
+			>
 				<option value="all">All Statuses</option>
 				<option value="success">Success</option>
 				<option value="error">Error</option>
@@ -139,65 +149,69 @@
 	</div>
 
 	{#if history.length === 0}
-		<div class="alert alert-info">
-			<i class="bi bi-info-circle"></i>
-			<span>No history for this endpoint. Run some queries!</span>
-		</div>
+		<Alert.Root>
+			<Info class="h-4 w-4" />
+			<Alert.Title>No history</Alert.Title>
+			<Alert.Description>
+				No history for this endpoint. Run some queries!
+			</Alert.Description>
+		</Alert.Root>
 	{:else}
-		<div class="overflow-x-auto">
-			<table class="table w-full">
-				<thead>
-					<tr>
-						<th>Status</th>
-						<th>Name</th>
-						<th>Executed At</th>
-						<th>Duration</th>
-						<th class="text-right">Actions</th>
-					</tr>
-				</thead>
-				<tbody>
+		<div class="overflow-x-auto rounded-md border">
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Status</Table.Head>
+						<Table.Head>Name</Table.Head>
+						<Table.Head>Executed At</Table.Head>
+						<Table.Head>Duration</Table.Head>
+						<Table.Head class="text-right">Actions</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
 					{#each history as item (item.id)}
-						<tr class="hover">
-							<td>
+						<Table.Row>
+							<Table.Cell>
 								{#if item.status === 'success'}
-									<span class="badge badge-sm badge-success">OK</span>
+									<Badge variant="default" class="bg-green-500 hover:bg-green-600">OK</Badge>
 								{:else}
-									<span class="badge badge-sm badge-error">ERR</span>
+									<Badge variant="destructive">ERR</Badge>
 								{/if}
-							</td>
-							<td class="font-medium">
+							</Table.Cell>
+							<Table.Cell class="font-medium">
 								<button
-									class="link font-bold link-hover"
+									class="hover:underline text-left font-bold"
 									onclick={async () => await restoreQuery(item)}
 								>
 									{item.queryName}
 								</button>
-								<span class="ml-1 text-xs opacity-50">({item.type})</span>
-							</td>
-							<td>{new Date(item.timestamp).toLocaleString()}</td>
-							<td>{item.duration} ms</td>
-							<td class="text-right">
-								<button
-									class="btn btn-ghost btn-xs"
+								<span class="ml-1 text-xs text-muted-foreground">({item.type})</span>
+							</Table.Cell>
+							<Table.Cell>{new Date(item.timestamp).toLocaleString()}</Table.Cell>
+							<Table.Cell>{item.duration} ms</Table.Cell>
+							<Table.Cell class="text-right">
+								<Button
+									variant="ghost"
+									size="icon"
 									onclick={async () => await restoreQuery(item)}
 									title="Restore State"
-									aria-label="Restore query"
 								>
-									<i class="bi bi-arrow-counterclockwise text-lg"></i>
-								</button>
-								<button
-									class="btn text-error btn-ghost btn-xs"
+									<RotateCcw class="h-4 w-4" />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
+									class="text-destructive hover:text-destructive"
 									onclick={() => handleDelete(item.id)}
 									title="Delete history item"
-									aria-label="Delete history item"
 								>
-									<i class="bi bi-trash text-lg"></i>
-								</button>
-							</td>
-						</tr>
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							</Table.Cell>
+						</Table.Row>
 					{/each}
-				</tbody>
-			</table>
+				</Table.Body>
+			</Table.Root>
 		</div>
 	{/if}
 </div>

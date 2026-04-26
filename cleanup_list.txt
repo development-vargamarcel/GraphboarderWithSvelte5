@@ -1,0 +1,40 @@
+src/lib/components/GroupDescriptionAndControls.svelte:<div class="btn ml-4 flex w-min btn-ghost btn-xs {hasGroup_argsNode ? '' : 'pt-1'}">
+src/lib/components/GroupDescriptionAndControls.svelte:<div class="btn ml-4 flex w-min btn-ghost btn-xs {hasGroup_argsNode ? '' : 'pt-1'}">
+src/lib/components/GroupDescriptionAndControls.svelte:<div class="btn ml-4 flex w-min btn-ghost btn-xs {hasGroup_argsNode ? '' : 'pt-1'}">
+src/lib/components/SelectQMS.svelte:				<p class="badge badge-info font-bold">
+src/lib/components/GraphqlCodeDisplay.svelte:			<div class="badge h-6 badge-outline text-xs">
+src/lib/components/GraphqlCodeDisplay.svelte:				class="btn normal-case btn-xs btn-warning"
+src/lib/components/GraphqlCodeDisplay.svelte:				class="btn normal-case btn-xs btn-info"
+src/lib/components/GraphqlCodeDisplay.svelte:				class="btn normal-case btn-xs btn-primary"
+src/lib/components/GraphqlCodeDisplay.svelte:					class="btn normal-case btn-xs {showDiff ? 'btn-active' : 'btn-ghost'}"
+src/lib/components/GraphqlCodeDisplay.svelte:				class="btn normal-case btn-xs btn-secondary"
+src/lib/components/GraphqlCodeDisplay.svelte:				class="btn normal-case btn-xs btn-primary"
+src/lib/components/GraphqlCodeDisplay.svelte:			class="btn normal-case btn-xs btn-primary"
+src/lib/components/GraphqlCodeDisplay.svelte:				class="mx-atuo btn normal-case btn-xs btn-accent"
+src/lib/components/GraphqlCodeDisplay.svelte:			class="input-bordered input w-full"
+src/lib/components/GraphqlCodeDisplay.svelte:			class="input-bordered input w-full"
+src/lib/components/GraphqlCodeDisplay.svelte:		<button class="btn absolute top-2 right-2 btn-sm btn-primary" onclick={copyExportCode}>
+src/lib/components/ThemeToggle.svelte:	class="btn btn-circle btn-ghost"
+src/lib/components/SidebarAndMainArea.svelte:				<button class="btn btn-sm btn-ghost" aria-label="Add">
+src/lib/components/EndpointsList.svelte:			class="btn join-item btn-xs {viewMode === 'table' ? 'btn-active' : ''}"
+src/lib/components/EndpointsList.svelte:			class="btn join-item btn-xs {viewMode === 'json' ? 'btn-active' : ''}"
+src/lib/components/EndpointsList.svelte:		class="btn normal-case btn-xs"
+src/lib/components/EndpointsList.svelte:		class="btn normal-case btn-xs"
+src/lib/components/EndpointsList.svelte:		class=" btn grow normal-case btn-xs"
+src/lib/components/EndpointsList.svelte:		<div class="badge gap-2 badge-ghost">
+src/lib/components/EndpointsList.svelte:		<div class="badge gap-2 badge-ghost">
+src/lib/components/EndpointsList.svelte:		<div class="badge flex space-x-2 badge-primary">
+src/lib/components/EndpointsList.svelte:	<button class="btn btn-xs btn-primary" aria-label="Add">
+src/lib/components/EndpointsList.svelte:					class="btn p-0 btn-ghost btn-sm"
+src/lib/components/SetEndpointConfigurationToContext.svelte:						class="btn btn-square btn-ghost md:hidden"
+src/lib/components/SetEndpointConfigurationToContext.svelte:		<button class="btn mt-4 btn-primary" onclick={() => location.reload()}>Retry</button>
+src/lib/components/ProxySettings.svelte:			class="input-bordered input w-full font-mono text-sm"
+src/lib/components/ProxySettings.svelte:		<button class="btn btn-ghost" onclick={() => (show = false)}>Cancel</button>
+src/lib/components/ProxySettings.svelte:		<button class="btn btn-primary" onclick={handleSave}>Save</button>
+src/lib/components/Page.svelte:				<button class="btn btn-square btn-ghost" onclick={backButtonClick} aria-label="Go Back">
+src/lib/components/TypeInfoDisplay.svelte:					class="pointer-events-auto btn rounded p-1 normal-case btn-xs"
+src/lib/components/TypeInfoDisplay.svelte:					class="btn btn-disabled rounded p-1 normal-case btn-xs"
+src/lib/components/TypeInfoDisplay.svelte:			<div class="btn font-light normal-case btn-xs btn-info">
+src/lib/components/TypeInfoDisplay.svelte:			<div class="btn rounded bg-base-200 p-1 btn-xs">
+src/lib/components/TypeInfoDisplay.svelte:			<div class="btn rounded px-2 py-1 normal-case btn-xs btn-accent">
+src/lib/components/TypeInfoDisplay.svelte:				class="btn btn-ghost btn-xs rounded px-1"

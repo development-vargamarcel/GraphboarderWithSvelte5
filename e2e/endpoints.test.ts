@@ -7,13 +7,12 @@ test.describe('Endpoints Page', () => {
 
 	test('should display default endpoints', async ({ page }) => {
 		await expect(page.locator('text=Select an Endpoint')).toBeVisible();
-		// Assuming some default endpoints exist (e.g. SWAPI from test data)
-		// If not, we can at least check the structure
 	});
 
 	test('should add, edit and delete a user endpoint', async ({ page }) => {
 		// 1. Add Endpoint
 		await page.click('text=Add Endpoint');
+		// The modal content might be in the drawer
 		await expect(page.locator('h2:has-text("Add new Endpoint")')).toBeVisible();
 
 		await page.fill('input[placeholder="my-endpoint"]', 'test-endpoint');
@@ -21,23 +20,18 @@ test.describe('Endpoints Page', () => {
 
 		await page.click('button:has-text("Save")');
 
-		// Verify added
-		const newCard = page.locator('.card', { hasText: 'test-endpoint' });
+		// Verify added - updated selector from .card to something that matches Shadcn Card
+		// Shadcn Card usually has class 'border', 'rounded-xl', etc. or we can use data-testid if we added it.
+		// For now let's use text content.
+		const newCard = page.locator('div', { hasText: 'test-endpoint' }).filter({ hasText: 'User Defined' }).first();
 		await expect(newCard).toBeVisible();
-		await expect(newCard.locator('text=User Defined')).toBeVisible();
 
 		// 2. Edit Endpoint
-		// Find the edit button for the new endpoint.
-		// We need to target the card that contains 'test-endpoint'
-		const card = page.locator('.card', { hasText: 'test-endpoint' });
-		const editBtn = card.locator('button[title="Edit Endpoint"]');
-
-		// Hover to make sure button is visible (it has opacity transition)
-		await card.hover();
+		const editBtn = newCard.locator('button[title="Edit Endpoint"]');
+		await newCard.hover();
 		await editBtn.click();
 
 		await expect(page.locator('h2:has-text("Edit Endpoint")')).toBeVisible();
-		// ID should be there
 		await expect(page.locator('input[placeholder="my-endpoint"]')).toHaveValue('test-endpoint');
 
 		// Change URL
@@ -51,8 +45,8 @@ test.describe('Endpoints Page', () => {
 		await expect(page.locator('text=https://test.com/graphql/v2')).toBeVisible();
 
 		// 3. Delete Endpoint
-		await card.hover();
-		await card.locator('button[title="Delete Endpoint"]').click();
+		await newCard.hover();
+		await newCard.locator('button[title="Delete Endpoint"]').click();
 
 		await expect(page.locator('text=Are you sure?')).toBeVisible();
 		await page.click('button:has-text("Confirm")');
@@ -73,29 +67,22 @@ test.describe('Endpoints Page', () => {
 		await page.click('button:has-text("Save")');
 
 		// Default sort is A-Z
-		const cards = page.locator('.card-title');
-		// We might have other endpoints, but A-Endpoint should be before Z-Endpoint
+		// Shadcn Select might be used instead of raw select if we migrated it.
+		// In endpoints/+page.svelte we used Shadcn Select? Let me check.
 
 		// Select Z-A
+		// If it's a native select:
 		await page.selectOption('select', 'name-desc');
 
-		// Now Z-Endpoint should be before A-Endpoint (relative order)
-		// Let's just check the text content of the first few cards or specific logic
-		// But verifying strict order might be hard if there are other endpoints.
-
 		// Clean up
-		await page.locator('.card', { hasText: 'A-Endpoint' }).hover();
-		await page
-			.locator('.card', { hasText: 'A-Endpoint' })
-			.locator('button[title="Delete Endpoint"]')
-			.click();
+		const aCard = page.locator('div', { hasText: 'A-Endpoint' }).filter({ hasText: 'User Defined' }).first();
+		await aCard.hover();
+		await aCard.locator('button[title="Delete Endpoint"]').click();
 		await page.click('button:has-text("Confirm")');
 
-		await page.locator('.card', { hasText: 'Z-Endpoint' }).hover();
-		await page
-			.locator('.card', { hasText: 'Z-Endpoint' })
-			.locator('button[title="Delete Endpoint"]')
-			.click();
+		const zCard = page.locator('div', { hasText: 'Z-Endpoint' }).filter({ hasText: 'User Defined' }).first();
+		await zCard.hover();
+		await zCard.locator('button[title="Delete Endpoint"]').click();
 		await page.click('button:has-text("Confirm")');
 	});
 });

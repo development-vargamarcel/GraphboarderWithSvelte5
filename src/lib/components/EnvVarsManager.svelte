@@ -3,6 +3,13 @@
 	import { addToast } from '$lib/stores/toastStore';
 	import { downloadJSON } from '$lib/utils/downloadUtils';
 	import { logger } from '$lib/utils/logger';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Switch } from '$lib/components/ui/switch';
+	import { Label } from '$lib/components/ui/label';
+	import * as Table from '$lib/components/ui/table';
+	import { Separator } from '$lib/components/ui/separator';
+	import { Download, Upload, Trash2, Plus, Eye, EyeOff } from 'lucide-react-svelte';
 
 	interface Props {
 		onClose: () => void;
@@ -95,13 +102,13 @@
 <div class="flex flex-col gap-4">
 	<div class="flex items-center justify-between">
 		<h3 class="text-lg font-bold">Environment Variables</h3>
-		<div class="flex items-center gap-2">
-			<button class="btn btn-ghost btn-xs" onclick={handleExport} title="Export Variables">
-				<i class="bi bi-download"></i>
-			</button>
-			<button class="btn btn-ghost btn-xs" onclick={handleImportClick} title="Import Variables">
-				<i class="bi bi-upload"></i>
-			</button>
+		<div class="flex items-center gap-3">
+			<Button variant="ghost" size="icon" onclick={handleExport} title="Export Variables">
+				<Download class="h-4 w-4" />
+			</Button>
+			<Button variant="ghost" size="icon" onclick={handleImportClick} title="Import Variables">
+				<Upload class="h-4 w-4" />
+			</Button>
 			<input
 				type="file"
 				bind:this={fileInput}
@@ -109,81 +116,89 @@
 				accept=".json"
 				class="hidden"
 			/>
-			<div class="divider mx-0 divider-horizontal"></div>
-			<label class="label cursor-pointer p-0">
-				<span class="label-text mr-2 text-xs">Show Values</span>
-				<input type="checkbox" class="toggle toggle-xs" bind:checked={showValues} />
-			</label>
+			<Separator orientation="vertical" class="h-6" />
+			<div class="flex items-center space-x-2">
+				<Switch id="show-values" bind:checked={showValues} />
+				<Label for="show-values" class="text-xs">Show Values</Label>
+			</div>
 		</div>
 	</div>
 
-	<p class="text-sm text-gray-500">
+	<p class="text-sm text-muted-foreground">
 		Variables can be used in headers as <code>{`{{VARIABLE_NAME}}`}</code>. They are stored locally.
 	</p>
 
-	<div class="max-h-60 overflow-y-auto rounded border border-base-200 p-2">
+	<div class="max-h-60 overflow-y-auto rounded-md border">
 		{#if Object.keys($envVars).length === 0}
-			<div class="p-4 text-center opacity-50">No variables defined.</div>
+			<div class="p-8 text-center text-sm text-muted-foreground">No variables defined.</div>
 		{:else}
-			<table class="table-compact table w-full">
-				<thead>
-					<tr>
-						<th>Key</th>
-						<th>Value</th>
-						<th>Action</th>
-					</tr>
-				</thead>
-				<tbody>
+			<Table.Root>
+				<Table.Header>
+					<Table.Row>
+						<Table.Head>Key</Table.Head>
+						<Table.Head>Value</Table.Head>
+						<Table.Head class="w-[50px]">Action</Table.Head>
+					</Table.Row>
+				</Table.Header>
+				<Table.Body>
 					{#each Object.entries($envVars) as [key, val]}
-						<tr>
-							<td class="font-mono">{key}</td>
-							<td class="font-mono text-sm opacity-70">
+						<Table.Row>
+							<Table.Cell class="font-mono">{key}</Table.Cell>
+							<Table.Cell class="font-mono text-sm opacity-70">
 								{#if showValues}
 									{val}
 								{:else}
 									••••••••
 								{/if}
-							</td>
-							<td>
-								<button
-									class="btn text-error btn-ghost btn-xs"
+							</Table.Cell>
+							<Table.Cell>
+								<Button
+									variant="ghost"
+									size="icon"
+									class="text-destructive hover:text-destructive"
 									onclick={() => handleDelete(key)}
 									aria-label="Delete {key}"
 								>
-									<i class="bi bi-trash"></i>
-								</button>
-							</td>
-						</tr>
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							</Table.Cell>
+						</Table.Row>
 					{/each}
-				</tbody>
-			</table>
+				</Table.Body>
+			</Table.Root>
 		{/if}
 	</div>
 
-	<div class="divider my-0"></div>
+	<Separator class="my-2" />
 
-	<div class="form-control">
-		<h4 class="mb-2 text-sm font-bold">Add New Variable</h4>
-		<div class="flex flex-col gap-2 sm:flex-row">
-			<input
-				type="text"
-				placeholder="Key (e.g. API_TOKEN)"
-				class="input-bordered input input-sm w-full font-mono"
-				bind:value={newKey}
-			/>
-			<input
-				type={showValues ? 'text' : 'password'}
-				placeholder="Value"
-				class="input-bordered input input-sm w-full font-mono"
-				bind:value={newValue}
-			/>
-			<button class="btn btn-sm btn-primary" onclick={handleAdd}>
-				<i class="bi bi-plus-lg"></i> Add
-			</button>
+	<div class="flex flex-col gap-3">
+		<h4 class="text-sm font-semibold">Add New Variable</h4>
+		<div class="grid grid-cols-1 gap-2 sm:grid-cols-7">
+			<div class="sm:col-span-3">
+				<Input
+					type="text"
+					placeholder="Key (e.g. API_TOKEN)"
+					class="font-mono"
+					bind:value={newKey}
+				/>
+			</div>
+			<div class="sm:col-span-3">
+				<Input
+					type={showValues ? 'text' : 'password'}
+					placeholder="Value"
+					class="font-mono"
+					bind:value={newValue}
+				/>
+			</div>
+			<div class="sm:col-span-1">
+				<Button class="w-full" onclick={handleAdd}>
+					<Plus class="mr-1 h-4 w-4" /> Add
+				</Button>
+			</div>
 		</div>
 	</div>
 
 	<div class="mt-4 flex justify-end">
-		<button class="btn" onclick={onClose}>Close</button>
+		<Button variant="outline" onclick={onClose}>Close</Button>
 	</div>
 </div>

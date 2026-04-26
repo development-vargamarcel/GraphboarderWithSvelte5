@@ -3,10 +3,12 @@
 	import EndpointPicker from '$lib/components/EndpointPicker.svelte';
 	import ProxySettingsInline from '$lib/components/ProxySettingsInline.svelte';
 	import Modal from '$lib/components/Modal.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { endpoints, localStorageEndpoints, addEndpoint } from '$lib/stores/endpointsStore';
 	import { get } from 'svelte/store';
 	import { addToast } from '$lib/stores/toastStore';
 	import type { AvailableEndpoint } from '$lib/types';
+	import { Upload, Download, Plus } from 'lucide-svelte';
 
 	let showAddModal = $state(false);
 	let editingEndpoint = $state<AvailableEndpoint | null>(null);
@@ -67,7 +69,7 @@
 
 <div class="mx-auto max-w-7xl p-8">
 	<div class="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-		<h1 class="text-3xl font-bold">Select an Endpoint</h1>
+		<h1 class="text-3xl font-bold tracking-tight">Select an Endpoint</h1>
 		<div class="flex flex-wrap gap-2">
 			<input
 				type="file"
@@ -76,22 +78,22 @@
 				bind:this={fileInput}
 				onchange={handleImport}
 			/>
-			<button class="btn gap-2 btn-outline" onclick={() => fileInput?.click()}>
-				<i class="bi bi-upload"></i> Import
-			</button>
-			<button class="btn gap-2 btn-outline" onclick={handleExport}>
-				<i class="bi bi-download"></i> Export
-			</button>
-			<button
-				class="btn btn-primary"
+			<Button variant="outline" class="gap-2" onclick={() => fileInput?.click()}>
+				<Upload class="h-4 w-4" /> Import
+			</Button>
+			<Button variant="outline" class="gap-2" onclick={handleExport}>
+				<Download class="h-4 w-4" /> Export
+			</Button>
+			<Button
+				class="gap-2"
 				onclick={() => {
 					editingEndpoint = null;
 					isDuplicateMode = false;
 					showAddModal = true;
 				}}
 			>
-				<i class="bi bi-plus-lg mr-2"></i> Add Endpoint
-			</button>
+				<Plus class="h-4 w-4" /> Add Endpoint
+			</Button>
 		</div>
 	</div>
 

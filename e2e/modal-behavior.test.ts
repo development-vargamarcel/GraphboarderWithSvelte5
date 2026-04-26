@@ -5,10 +5,11 @@ test('modal behavior: close-only-via-button, nested modals stack and clean up', 
 
 	// 1. Open outer modal
 	await page.click('button:has-text("Open Outer Modal")');
-	const outerModal = page.locator('dialog[data-modal-identifier="outer"]');
+	const outerModal = page.locator('[data-modal-identifier="outer"]');
 	await expect(outerModal).toBeVisible();
 
 	// 2. Backdrop click does NOT close the modal (product decision).
+	// vaul-svelte might have an overlay. We try clicking outside.
 	await page.mouse.click(10, 10);
 	await expect(outerModal).toBeVisible();
 
@@ -18,7 +19,7 @@ test('modal behavior: close-only-via-button, nested modals stack and clean up', 
 
 	// 4. Open inner modal; both should be visible at once.
 	await page.click('button:has-text("Open Inner Modal")');
-	const innerModal = page.locator('dialog[data-modal-identifier="inner"]');
+	const innerModal = page.locator('[data-modal-identifier="inner"]');
 	await expect(innerModal).toBeVisible();
 	await expect(outerModal).toBeVisible();
 
@@ -31,7 +32,7 @@ test('modal behavior: close-only-via-button, nested modals stack and clean up', 
 	await outerModal.locator('button[aria-label="Close"]').click();
 	await expect(outerModal).not.toBeVisible();
 
-	// 7. No dialog should remain open (no leaked top-layer backdrops).
-	const openDialogs = page.locator('dialog[open]');
-	await expect(openDialogs).toHaveCount(0);
+	// 7. No modal should remain open.
+	const modals = page.locator('[data-modal-identifier]');
+	await expect(modals).toHaveCount(0);
 });

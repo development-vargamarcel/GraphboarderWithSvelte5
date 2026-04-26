@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import MainWraper from '$lib/components/MainWraper.svelte';
 	import Sidebar from '$lib/components/Sidebar.svelte';
+	import * as SidebarUI from "$lib/components/ui/sidebar/index.ts";
 	import { localEndpoints } from '$lib/stores/testData/testEndpoints';
 	import { localStorageEndpoints } from '$lib/stores/endpointsStore';
 	import type { AvailableEndpoint } from '$lib/types';
@@ -16,25 +17,17 @@
 	let endpointid = $state<string>('');
 	let isLoading = $state(true);
 
-	let forceVisibleSidebar = $state(false);
-
 	$effect(() => {
 		endpointid = $page.params.endpointid ?? '';
-		// console.debug('EndpointLayout: Resolving endpoint ID:', endpointid);
 
 		if (endpointid) {
-			// 1. Try exact match in localEndpoints (hardcoded)
 			let found = localEndpoints.find((endpoint) => endpoint.id == endpointid);
 
-			// 2. Try exact match in localStorageEndpoints
 			if (!found && $localStorageEndpoints) {
-				// console.debug('EndpointLayout: Searching in localStorageEndpoints');
 				found = $localStorageEndpoints.find((endpoint) => endpoint.id == endpointid);
 			}
 
-			// 3. Legacy: Check for prefixes (if any legacy links still exist)
 			if (!found) {
-				// console.debug('EndpointLayout: Checking for legacy ID formats');
 				if (endpointid.startsWith('localEndpoint--')) {
 					found = localEndpoints.find((endpoint) => endpoint.id == endpointid.split('--')[1]);
 				} else if (endpointid.startsWith('localstorageEndpoint--') && $localStorageEndpoints) {
@@ -45,7 +38,6 @@
 			}
 
 			endpointConfiguration = found;
-			// Redirect logic moved to +page.svelte to avoid infinite loops in layout
 			isLoading = false;
 		}
 	});
@@ -58,45 +50,23 @@
 		</div>
 	{:else if endpointConfiguration}
 		<MainWraper endpointInfoProvided={endpointConfiguration}>
-			<main class="flex w-[100vw] overflow-hidden bg-base-300">
-				<div class="  md:max-w-[300px]">
-					<Sidebar bind:forceVisibleSidebar />
-				</div>
-				<div class="flex h-screen w-full grow flex-col md:w-[65vw]">
-					<div class=" flex min-h-[50px] bg-base-100">
-						<button
-							type="button"
-							aria-label="Open sidebar"
-							class="btn btn-square btn-ghost md:hidden"
-							onclick={() => {
-								forceVisibleSidebar = true;
-							}}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								class="inline-block h-6 w-6 stroke-current"
-								><path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 6h16M4 12h16M4 18h16"
-								/></svg
-							>
-						</button>
-						<div></div>
-					</div>
-					{@render children?.()}
-				</div>
-			</main>
+			<SidebarUI.Provider>
+				<Sidebar />
+				<SidebarUI.Inset class="flex flex-col flex-1 overflow-hidden">
+					<header class="flex h-12 shrink-0 items-center gap-2 border-b bg-base-100 px-4">
+						<SidebarUI.Trigger class="-ml-1" />
+					</header>
+					<main class="flex flex-1 flex-col overflow-hidden bg-base-300">
+						{@render children?.()}
+					</main>
+				</SidebarUI.Inset>
+			</SidebarUI.Provider>
 		</MainWraper>
 	{:else}
 		<div class="flex h-screen w-full items-center justify-center">
 			<div class="text-center">
 				<h2 class="text-xl font-bold">Endpoint Not Found</h2>
 				<p class="py-4">Could not find configuration for ID: {endpointid}</p>
-				<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 				<a href="/endpoints" class="btn btn-primary">Back to Endpoints</a>
 			</div>
 		</div>

@@ -1,33 +1,23 @@
 <script lang="ts">
-	import { clickOutside } from '$lib/actions/clickOutside';
+	import * as Sidebar from "$lib/components/ui/sidebar/index.ts";
+	import * as Tooltip from "$lib/components/ui/tooltip/index.ts";
 	import TabContainer from '$lib/components/TabContainer.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import LocalStorageManager from '$lib/components/LocalStorageManager.svelte';
 	import ProxySettings from '$lib/components/ProxySettings.svelte';
 	import { getContext } from 'svelte';
-	import { fade, fly } from 'svelte/transition';
 	import type { QMSMainWraperContext } from '$lib/types';
 	import { downloadJSON } from '$lib/utils/usefulFunctions';
 	import { proxySettings } from '$lib/stores/proxySettingsStore';
 	import { addToast } from '$lib/stores/toastStore';
 
 	interface Props {
-		forceVisibleSidebar?: boolean;
-		portalSelector?: any;
-		links?: any;
 		prefix?: string;
 	}
 
 	let {
-		forceVisibleSidebar = $bindable(false),
-		portalSelector = undefined,
-		links = undefined,
 		prefix = ''
 	}: Props = $props();
-
-	// if (forceVisibleSidebar === undefined) {
-	// 	forceVisibleSidebar = false;
-	// }
 
 	let QMSContext = getContext<QMSMainWraperContext>(`${prefix}QMSMainWraperContext`);
 	const endpointInfo = QMSContext?.endpointInfo;
@@ -36,15 +26,11 @@
 	let showStorageManager = $state(false);
 	let showProxySettings = $state(false);
 
-	/**
-	 * Downloads the current schema as a JSON file.
-	 */
 	const downloadSchema = () => {
 		if (schemaData && $schemaData.isReady && $schemaData.schema) {
-			console.debug('Downloading schema...', $schemaData.schema);
 			downloadJSON($schemaData.schema, 'schema.json');
 		} else {
-			console.warn('Schema data is not ready or missing.');
+			addToast('Schema data is not ready or missing.', 'warning');
 		}
 	};
 
@@ -61,73 +47,79 @@
 <LocalStorageManager bind:show={showStorageManager} />
 <ProxySettings bind:show={showProxySettings} />
 
-<div
-	class="h-screen w-full {forceVisibleSidebar
-		? 'visible '
-		: ' invisible'} fixed left-0 z-50 flex md:visible md:static md:z-0"
-	use:clickOutside
->
-	<div class="invisible flex h-full flex-col md:visible">
+<Sidebar.Root>
+	<Sidebar.Content>
 		<TabContainer {endpointInfo} />
-		<div class="absolute bottom-2 left-2 z-50 flex items-center gap-2 md:left-4">
+	</Sidebar.Content>
+	<Sidebar.Footer class="p-2">
+		<div class="flex items-center gap-2">
 			<ThemeToggle />
-			<div class="tooltip tooltip-right" data-tip="Download Schema">
-				<button
-					class="btn btn-circle btn-ghost btn-sm"
-					onclick={downloadSchema}
-					aria-label="Download Schema"
-				>
-					<i class="bi bi-download"></i>
-				</button>
-			</div>
-			<div class="tooltip tooltip-right" data-tip="Copy Schema JSON">
-				<button
-					class="btn btn-circle btn-ghost btn-sm"
-					onclick={copySchema}
-					aria-label="Copy Schema JSON"
-				>
-					<i class="bi bi-clipboard-data"></i>
-				</button>
-			</div>
-			<div class="tooltip tooltip-right" data-tip="Storage Manager">
-				<button
-					class="btn btn-circle btn-ghost btn-sm"
-					onclick={() => (showStorageManager = true)}
-					aria-label="Storage Manager"
-				>
-					<i class="bi bi-database"></i>
-				</button>
-			</div>
-			<div class="tooltip tooltip-right" data-tip="Proxy Settings">
-				<button
-					class="btn btn-circle btn-ghost btn-sm {$proxySettings.enabled ? 'text-primary' : ''}"
-					onclick={() => (showProxySettings = true)}
-					aria-label="Proxy Settings"
-				>
-					<i class="bi bi-router"></i>
-				</button>
-			</div>
+			<Tooltip.Provider>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Sidebar.MenuButton
+								{...props}
+								size="icon-sm"
+								onclick={downloadSchema}
+								aria-label="Download Schema"
+							>
+								<i class="bi bi-download"></i>
+							</Sidebar.MenuButton>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content side="right">Download Schema</Tooltip.Content>
+				</Tooltip.Root>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Sidebar.MenuButton
+								{...props}
+								size="icon-sm"
+								onclick={copySchema}
+								aria-label="Copy Schema JSON"
+							>
+								<i class="bi bi-clipboard-data"></i>
+							</Sidebar.MenuButton>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content side="right">Copy Schema JSON</Tooltip.Content>
+				</Tooltip.Root>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Sidebar.MenuButton
+								{...props}
+								size="icon-sm"
+								onclick={() => (showStorageManager = true)}
+								aria-label="Storage Manager"
+							>
+								<i class="bi bi-database"></i>
+							</Sidebar.MenuButton>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content side="right">Storage Manager</Tooltip.Content>
+				</Tooltip.Root>
+
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Sidebar.MenuButton
+								{...props}
+								size="icon-sm"
+								isActive={$proxySettings.enabled}
+								onclick={() => (showProxySettings = true)}
+								aria-label="Proxy Settings"
+							>
+								<i class="bi bi-router"></i>
+							</Sidebar.MenuButton>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content side="right">Proxy Settings</Tooltip.Content>
+				</Tooltip.Root>
+			</Tooltip.Provider>
 		</div>
-	</div>
-</div>
-{#if forceVisibleSidebar}
-	<div
-		class=" fixed top-0 z-50 h-screen w-screen bg-base-100/50 md:hidden"
-		in:fade|global={{ duration: 300 }}
-		out:fade|global={{ duration: 300 }}
-	></div>
-	<div
-		class="fixed top-0 z-50 md:hidden"
-		in:fly|global={{ x: -300, duration: 300 }}
-		out:fly|global={{ x: -350, duration: 300 }}
-	>
-		<TabContainer
-			{endpointInfo}
-			onHideSidebar={() => {
-				if (forceVisibleSidebar) {
-					forceVisibleSidebar = false;
-				}
-			}}
-		/>
-	</div>
-{/if}
+	</Sidebar.Footer>
+</Sidebar.Root>
