@@ -30,6 +30,8 @@
 		QMSWraperContext,
 		QMSMainWraperContext
 	} from '$lib/types';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		nodes: Record<string, ContainerData | ActiveArgumentData>;
@@ -374,9 +376,9 @@
 	>
 		<div class="flex flex-col">
 			<div class="mb-2 w-full text-center text-lg">
-				<p class="badge font-bold badge-info">
+				<Badge variant="secondary" class="font-bold">
 					{groupDisplayTitle}
-				</p>
+				</Badge>
 
 				<SelectQMS bind:showSelectQMSModal {node} />
 
@@ -406,14 +408,16 @@
 					bind:QMS_info={$selectedQMS}
 				/>
 
-				<button
-					class="btn w-full btn-xs btn-accent"
+				<Button
+					variant="secondary"
+					size="sm"
+					class="w-full"
 					onclick={() => {
 						showSelectQMSModal = true;
 					}}
 				>
-					showSelectQMSModal
-				</button>
+					Select Query Source
+				</Button>
 			</div>
 	</div>
 </Modal>

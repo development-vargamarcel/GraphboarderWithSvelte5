@@ -1,4 +1,7 @@
 <script lang="ts">
+	import * as Drawer from '$lib/components/ui/drawer/index.ts';
+	import { Button } from '$lib/components/ui/button/index.ts';
+
 	interface Props {
 		show?: boolean;
 		children?: import('svelte').Snippet;
@@ -17,27 +20,7 @@
 		onApply
 	}: Props = $props();
 
-	let dialog: HTMLDialogElement | undefined = $state();
-
-	$effect(() => {
-		if (!dialog) return;
-		if (show && !dialog.open) {
-			dialog.showModal();
-		} else if (!show && dialog.open) {
-			dialog.close();
-		}
-	});
-
-	$effect(() => {
-		return () => {
-			if (dialog && dialog.open) {
-				dialog.close();
-			}
-		};
-	});
-
-	function close(e?: Event) {
-		if (e) e.stopPropagation();
+	function close() {
 		if (!show) return;
 		show = false;
 		if (onCancel) {
@@ -45,39 +28,29 @@
 		}
 	}
 
-	function apply(e: Event) {
-		e.stopPropagation();
+	function apply() {
 		if (onApply) {
 			onApply({ modalIdentifier });
 		}
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-<dialog
-	bind:this={dialog}
-	class="modal"
-	data-modal-identifier={modalIdentifier}
-	oncancel={(e) => e.preventDefault()}
-	onclose={() => (show = false)}
->
-	<div
-		class="modal-box w-11/12 max-w-5xl max-h-[calc(100vh-2rem)] overflow-y-auto"
-		onclick={(e) => e.stopPropagation()}
-	>
-		<button
-			class="btn absolute top-2 right-2 btn-circle btn-ghost btn-sm"
-			onclick={close}
-			aria-label="Close">✕</button
-		>
-		{@render children?.()}
-
-		{#if (showApplyBtn && onApply) || onApply}
-			<div class="modal-action">
-				<button class="btn btn-primary" onclick={apply}>Apply</button>
+<Drawer.Root bind:open={show}>
+	<Drawer.Content data-modal-identifier={modalIdentifier} class="max-h-[96vh]">
+		<div class="mx-auto w-full max-w-5xl overflow-y-auto px-4 pb-8 pt-4">
+			<div class="flex justify-end">
+				<Button variant="ghost" size="icon" onclick={close} aria-label="Close">
+					<i class="bi bi-x-lg"></i>
+				</Button>
 			</div>
-		{/if}
-	</div>
-	<div class="modal-backdrop"></div>
-</dialog>
+
+			{@render children?.()}
+
+			{#if (showApplyBtn && onApply) || onApply}
+				<div class="mt-4 flex justify-end gap-2">
+					<Button onclick={apply}>Apply</Button>
+				</div>
+			{/if}
+		</div>
+	</Drawer.Content>
+</Drawer.Root>

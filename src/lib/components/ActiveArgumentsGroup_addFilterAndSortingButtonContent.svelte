@@ -9,6 +9,8 @@
 	} from '$lib/utils/usefulFunctions';
 	import { add_activeArgumentOrContainerTo_activeArgumentsDataGrouped } from '$lib/stores/QMSHandling/activeArgumentsDataGrouped_Store';
 	import ManyToAllSelectInterfaceDefinition from './ManyToAllSelectInterfaceDefinition.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Plus } from 'lucide-react-svelte';
 
 	interface Props {
 		group: any;
@@ -31,11 +33,8 @@
 	}: Props = $props();
 
 	const groupName = group.group_name;
-	// notice - fade in works fine but don't add svelte's fade-out (known issue)
-	let dragDisabled = true;
 	const hasGroup_argsNode = group.group_argsNode;
-	const mainContainerOperator = group.group_argsNode?.mainContainer?.operator;
-	/////start
+
 	const OutermostQMSWraperContext = getContext(`${prefix}OutermostQMSWraperContext`) as any;
 	let pathIsInCP = false;
 	const nodeContext = getContext(`${prefix}nodeContext`) as any;
@@ -49,8 +48,7 @@
 		nodeIsInCP = true;
 	}
 	const isCPChild = CPItemContext ? true : false;
-	const visibleInCP = pathIsInCP || nodeIsInCP;
-	const visible = visibleInCP || !CPItemContext || node.isMain;
+
 	let correctQMSWraperContext;
 	if (isCPChild) {
 		correctQMSWraperContext = getQMSWraperCtxDataGivenControlPanelItem(
@@ -60,16 +58,14 @@
 	} else {
 		correctQMSWraperContext = getContext(`${prefix}QMSWraperContext`) as any;
 	}
-	const { finalGqlArgObj_Store, QMS_info, activeArgumentsDataGrouped_Store } =
-		correctQMSWraperContext;
-	/////end
+	const { activeArgumentsDataGrouped_Store } = correctQMSWraperContext;
+
 	let rootArgs = argsInfo.filter((arg: any) => {
 		return arg.dd_isRootArg;
 	});
-	let activeArgumentsContext = getContext(`${prefix}activeArgumentsContext`);
 	let QMSMainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as any;
 	const schemaData = QMSMainWraperContext?.schemaData;
-	const nodeRootType = getRootType(null, node.dd_rootName, schemaData);
+
 	let groupArgsPossibilities = $derived.by(() => {
 		let result: any[] = [];
 		if (group.group_isRoot) {
@@ -86,20 +82,17 @@
 		}
 		return result;
 	});
-	let baseFilterOperators = ['_and', '_or', '_not']; //!!!this might create problem if there is some nonBase operator with the same name as one of these
-	// groupArgsPossibilities = groupArgsPossibilities.filter((arg) => {
-	// 	return !baseFilterOperators.includes(arg.dd_displayName);
-	// });
+
 	let predefinedFirstSteps = group.group_isRoot ? [] : [group.group_name];
 	const endpointInfo = QMSMainWraperContext?.endpointInfo;
 </script>
 
-<div
-	class="flex w-full min-w-full flex-col overflow-x-auto overscroll-contain text-sm font-normal text-base-content normal-case"
->
+<div class="flex w-full min-w-full flex-col overflow-x-auto p-1">
 	{#if hasGroup_argsNode}
-		<button
-			class="btn sticky top-0 text-base font-thin normal-case btn-xs btn-primary"
+		<Button
+			variant="outline"
+			size="sm"
+			class="mb-4 h-8 w-full border-dashed"
 			onclick={() => {
 				let randomNr = Math.random();
 				const newContainerData = {
@@ -123,21 +116,12 @@
 				group = group;
 			}}
 		>
-			{OutermostQMSWraperContext?.QMSType == 'mutation' ? 'add item' : 'add container'}
-		</button>
-		<!-- <ManyToAllSelectInterfaceDefinition
-			bind:selectedRowsColValues
-			{originalNodes}
-			{type}
-			bind:nodes
-			{node}
-			{parentNode}
-			{parentNodeId}
-			{availableOperators}
-			{group}
-		/> -->
+			<Plus class="mr-2 h-4 w-4" />
+			{OutermostQMSWraperContext?.QMSType == 'mutation' ? 'Add Item' : 'Add Container'}
+		</Button>
 	{/if}
-	<div class="my-2 rounded-box border-2">
+
+	<div class="mb-4 space-y-1 rounded-md border bg-muted/20 p-2">
 		{#each groupArgsPossibilities as arg, index}
 			<Arg
 				{index}
@@ -146,9 +130,8 @@
 				{predefinedFirstSteps}
 				groupName={group.group_name}
 				onArgAddRequest={(detail: any) => {
-					let newArgData = detail;
 					activeArgumentsDataGrouped_Store.add_activeArgument(
-						newArgData,
+						detail,
 						groupName,
 						node?.id,
 						endpointInfo
@@ -162,32 +145,10 @@
 						newContainerData.dd_rootName,
 						schemaData
 					);
-					let hasBaseFilterOperators = newContainerDataRootType?.dd_baseFilterOperators;
-					let NODEhasBaseFilterOperators = getRootType(
-						null,
-						node.dd_rootName,
-						schemaData
-					)?.dd_baseFilterOperators;
-					let hasNonBaseFilterOperators = newContainerDataRootType?.dd_nonBaseFilterOperators;
 
 					let isListContainer = newContainerData?.dd_kindList;
-					let operator;
-					if (!operator && isListContainer) {
-						operator = 'list';
-					}
+					let operator = isListContainer ? 'list' : 'bonded';
 
-					// if (
-					// 	!operator &&
-					// 	hasBaseFilterOperators &&
-					// 	node.dd_rootName &&
-					// 	!NODEhasBaseFilterOperators
-					// ) {
-					// 	operator = '_and';
-					// }
-
-					if (!operator) {
-						operator = 'bonded';
-					}
 					newContainerData = {
 						...newContainerData,
 						inputFields: newContainerDataRootType?.inputFields,
@@ -210,8 +171,10 @@
 			/>
 		{/each}
 	</div>
+
 	<Description QMSInfo={node} />
-	<div class="mt-2 w-full overflow-x-auto">
+
+	<div class="mt-4 w-full overflow-x-auto rounded-md border bg-muted/10 p-2">
 		<Type index={0} type={node} template="default" depth={0} oncolAddRequest={(e) => {}} />
 	</div>
 </div>

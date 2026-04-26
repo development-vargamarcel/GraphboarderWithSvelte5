@@ -6,6 +6,12 @@
 	import { getColumnVisibility, createTableOptions, getColumnFlags } from '$lib/utils/tableUtils';
 	import ColumnInfo from './ColumnInfo.svelte';
 	import { getContext } from 'svelte';
+	import * as Table from '$lib/components/ui/table';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { RadioGroup, RadioGroupItem } from '$lib/components/ui/radio-group';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import { Button } from '$lib/components/ui/button';
+	import { ChevronDown, Files, Trash2 } from 'lucide-react-svelte';
 
 	interface Props {
 		prefix?: string;
@@ -46,8 +52,6 @@
 	if (rowSelectionState === undefined) {
 		rowSelectionState = {};
 	}
-
-	let loadMore = false;
 
 	let columnVisibility = getColumnVisibility(columns);
 
@@ -96,168 +100,135 @@
 	});
 </script>
 
-<div
-	class="  h-min max-h-[70vh] min-h-min w-[90vw] max-w-full overflow-y-auto overscroll-contain rounded-box"
->
-	<table class="table-compact table w-full rounded-none">
-		<thead class="sticky top-0 z-20 bg-base-300">
+<div class="h-min max-h-[70vh] min-h-min w-[90vw] max-w-full overflow-auto rounded-md border">
+	<Table.Root>
+		<Table.Header class="sticky top-0 z-20 bg-muted/50 backdrop-blur">
 			{#each $table.getHeaderGroups() as headerGroup}
-				<tr class="sticky top-0 z-20">
+				<Table.Row>
 					{#if enableRowSelectionState}
-						<th>
-							<label>
-								<input
-									type="checkbox"
-									class="checkbox"
-									onclick={() => {
-										$table.toggleAllRowsSelected();
-									}}
+						<Table.Head class="w-[50px]">
+							{#if enableMultiRowSelectionState}
+								<Checkbox
+									checked={$table.getIsAllRowsSelected()}
+									onCheckedChange={() => $table.toggleAllRowsSelected()}
+									aria-label="Select all"
 								/>
-							</label>
-						</th>
+							{/if}
+						</Table.Head>
 					{/if}
-					<th>#</th>
+					<Table.Head class="w-[50px]">#</Table.Head>
 					{#each headerGroup.headers as header}
 						{@const columnFlags = getColumnFlags(
 							header.column.columnDef.header as string,
 							idColName,
 							requiredColNames
 						)}
-						<th class="normal-case">
-							<div class="dropdown dropdown-end">
-								<div role="button" tabindex="0" class="cursor-pointer">
-									<div class="flex space-x-2 rounded-box hover:text-primary">
-										<div
-											class="{columnFlags.isIdColumn
-												? ' font-black text-primary underline decoration-dotted'
-												: ''} {columnFlags.isRequired ? ' font-black text-primary' : ''} "
+						<Table.Head>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									{#snippet child({ props })}
+										<Button
+											variant="ghost"
+											size="sm"
+											class="-ml-3 h-8 data-[state=open]:bg-accent"
+											{...props}
 										>
-											{#if !header.isPlaceholder}
-												{@const SvelteComponent = flexRender(
-													header.column.columnDef.header,
-													header.getContext()
-												)}
-												<SvelteComponent />
-											{/if}
-										</div>
-										<div class="bi bi-chevron-down"></div>
-									</div>
-								</div>
-								<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-								<div
-									tabindex="0"
-									class="dropdown-content menu w-max rounded-box bg-base-100 p-2 text-sm shadow shadow-2xl"
-								>
-									<div
-										class="flex w-full flex-col space-y-2 overflow-x-auto text-sm font-normal normal-case"
+											<span
+												class="{columnFlags.isIdColumn
+													? 'font-black text-primary underline decoration-dotted'
+													: ''} {columnFlags.isRequired ? 'font-black text-primary' : ''}"
+											>
+												{#if !header.isPlaceholder}
+													{@const SvelteComponent = flexRender(
+														header.column.columnDef.header,
+														header.getContext()
+													)}
+													<SvelteComponent />
+												{/if}
+											</span>
+											<ChevronDown class="ml-2 h-4 w-4" />
+										</Button>
+									{/snippet}
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content align="start">
+									<DropdownMenu.Item
+										onclick={() => {
+											onHideColumn?.({ column: header.column.columnDef.header as string });
+										}}
 									>
-										<div class="flex w-full flex-col space-y-2 rounded-box p-2">
-											<div
-												class="w-full max-w-xs cursor-pointer overflow-x-auto pr-2 hover:text-primary md:max-w-sm"
-											>
-												<!-- {columnsData[index].stepsOfFields.join(' > ')} -->
-											</div>
-											<button
-												type="button"
-												class="w-full cursor-pointer pr-2 text-left hover:text-primary"
-												onclick={() => {
-													onHideColumn?.({ column: header.column.columnDef.header as string });
-												}}
-											>
-												hide field
-											</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						</th>
+										Hide field
+									</DropdownMenu.Item>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+						</Table.Head>
 					{/each}
-					<th>Actions</th>
-				</tr>
+					<Table.Head class="text-right">Actions</Table.Head>
+				</Table.Row>
 			{/each}
-		</thead>
-		<tbody>
-			{#each $table.getRowModel().rows as row, i (row.id)}
-				<tr
-					tabindex="0"
-					class="hover z-0 cursor-pointer bg-base-100 hover:bg-base-300"
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							onRowClicked?.(row.original);
-						}
-					}}
+		</Table.Header>
+		<Table.Body>
+			{#each $table.getRowModel().rows as row (row.id)}
+				<Table.Row
+					class="cursor-pointer hover:bg-muted/50"
 					onclick={() => {
 						onRowClicked?.(row.original);
-						//goto(`${$page.url.origin}/queries/${$page.params.queryName}/${row.id}`);
 					}}
 				>
 					{#if enableRowSelectionState}
-						<th
-							class="z-0"
-							onclick={(e) => {
-								e.stopPropagation();
-							}}
-						>
-							<label>
-								<input
+						<Table.Cell onclick={(e) => e.stopPropagation()}>
+							{#if row.getCanMultiSelect()}
+								<Checkbox
 									checked={row.getIsSelected()}
-									name="rows"
-									type={row.getCanMultiSelect() ? 'checkbox' : 'radio'}
-									class={row.getCanMultiSelect() ? 'checkbox' : 'radio'}
-									onchange={(e) => {
-										const toggleSelectedHandler = row.getToggleSelectedHandler();
-										toggleSelectedHandler(e);
-									}}
+									onCheckedChange={(val) => row.toggleSelected(!!val)}
+									aria-label="Select row"
 								/>
-							</label>
-						</th>
+							{:else}
+								<RadioGroup value={row.getIsSelected() ? 'selected' : ''}>
+									<RadioGroupItem
+										value="selected"
+										onclick={() => row.toggleSelected(true)}
+										aria-label="Select row"
+									/>
+								</RadioGroup>
+							{/if}
+						</Table.Cell>
 					{/if}
 
-					<td>{row.index + 1}</td>
+					<Table.Cell>{row.index + 1}</Table.Cell>
 
 					{#each row.getVisibleCells() as cell}
-						<td class="break-no">
+						<Table.Cell class="whitespace-nowrap">
 							{cell.renderValue()}
-							<!-- <svelte:component this={flexRender(cell.column.columnDef.cell, cell.getContext())} /> -->
-						</td>
+						</Table.Cell>
 					{/each}
 
-					<td class="break-no space-x-2">
-						{#if onDuplicateRow}
-							<div class="tooltip" data-tip="Duplicate">
-								<button
-									type="button"
-									aria-label="Duplicate"
-									class="btn btn-square btn-sm btn-secondary"
-									onclick={(event) => {
-										event.stopPropagation();
-										onDuplicateRow(row.original);
-									}}
+					<Table.Cell class="text-right">
+						<div class="flex justify-end gap-2" onclick={(e) => e.stopPropagation()}>
+							{#if onDuplicateRow}
+								<Button
+									variant="ghost"
+									size="icon"
+									onclick={() => onDuplicateRow(row.original)}
+									title="Duplicate"
 								>
-									<i class="bi bi-files"></i>
-								</button>
-							</div>
-						{/if}
-						{#if onDeleteRow}
-							<div class="tooltip" data-tip="Delete">
-								<button
-									type="button"
-									aria-label="Delete"
-									class="btn btn-square btn-sm btn-error"
-									onclick={(event) => {
-										event.stopPropagation();
-										onDeleteRow(row.original);
-									}}
+									<Files class="h-4 w-4" />
+								</Button>
+							{/if}
+							{#if onDeleteRow}
+								<Button
+									variant="ghost"
+									size="icon"
+									class="text-destructive hover:text-destructive"
+									onclick={() => onDeleteRow(row.original)}
+									title="Delete"
 								>
-									<i class="bi bi-trash"></i>
-								</button>
-							</div>
-						{/if}
-					</td>
-				</tr>
+									<Trash2 class="h-4 w-4" />
+								</Button>
+							{/if}
+						</div>
+					</Table.Cell>
+				</Table.Row>
 			{/each}
-		</tbody>
-	</table>
-
-	<div class="h-4"></div>
+		</Table.Body>
+	</Table.Root>
 </div>

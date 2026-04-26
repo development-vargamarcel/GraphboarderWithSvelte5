@@ -26,6 +26,11 @@
 	import { logger } from '$lib/utils/logger';
 	import { get } from 'svelte/store';
 	import type { QMSMainWraperContext } from '$lib/types/index';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Input } from '$lib/components/ui/input';
+	import * as Alert from '$lib/components/ui/alert';
+	import { AlertCircle, RefreshCw, PlusCircle, LayoutGrid, FileJson, Code, Settings2, Variable } from 'lucide-react-svelte';
 
 	// Props interface and destructuring MUST come before getContext calls that use prefix
 	interface Props {
@@ -74,7 +79,6 @@
 	let unsubscribeQMSBody: () => void;
 
 	onDestroy(() => {
-		document.getElementById('my-drawer-3')?.click();
 		if (intervalId) clearInterval(intervalId);
 		if (unsubscribeQMSBody) unsubscribeQMSBody();
 	});
@@ -84,23 +88,11 @@
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		void goto('/queries');
 	}
-	//
-	// let activeArgumentsData = []; // Unused
+
 	const paginationTypeInfo = get_paginationTypes(endpointInfo, schemaData).find((pagType: any) => {
 		return pagType.name == currentQMS_info.dd_paginationType;
 	});
-	// let activeArgumentsDataGrouped_Store_IS_SET = $state(false); // Unused
-	$effect(() => {
-		// Just to react to changes, empty body or logging if needed
-		// But this was causing syntax error due to incorrect structure in previous content
-		const _ = {
-			qmsWraperContext,
-			val: $activeArgumentsDataGrouped_Store
-		};
-		// No-op to keep reactivity if intended, but unused variable warning
-		void _;
-	});
-	//
+
 	let scalarFields: any[] = [];
 	if (dd_relatedRoot) {
 		({ scalarFields } = getFields_Grouped(dd_relatedRoot, [], schemaData));
@@ -140,9 +132,6 @@
 			loaded();
 			complete();
 		}
-		// if (rows.length > 0) {
-		// 	paginationState.nextPage(queryData?.data, QMSName, 'query');
-		// }
 	}
 	const runQuery = (queryBody: string) => {
 		logger.debug('runQuery called', queryBody);
@@ -274,7 +263,6 @@
 	const hideColumn = (detail: { column: string }) => {
 		tableColsData_Store.removeColumn(detail.column);
 	};
-	// tableColsData_Store.subscribe((data: any) => {}); // Unused subscription
 
 	let column_stepsOfFields = $state('');
 	const addColumnFromInput = (e: any) => {
@@ -298,17 +286,10 @@
 	let showNonPrettifiedQMSBody = false;
 
 	// Auto-Refresh Logic
-	/** Whether auto-refresh is currently enabled. */
 	let autoRefresh = $state(false);
-	/** The interval for auto-refresh in milliseconds. Default is 5000ms. */
 	let refreshInterval = $state(5000);
-	/** The ID of the current interval timer, used for cleanup. */
 	let intervalId: ReturnType<typeof setInterval> | undefined = undefined;
 
-	/**
-	 * Toggles the auto-refresh feature.
-	 * Starts or stops the interval based on the new state.
-	 */
 	const toggleAutoRefresh = () => {
 		autoRefresh = !autoRefresh;
 		if (autoRefresh) {
@@ -328,7 +309,6 @@
 	};
 
 	$effect(() => {
-		// Update interval if duration changes while active
 		if (autoRefresh && intervalId) {
 			clearInterval(intervalId);
 			intervalId = setInterval(() => {
@@ -345,18 +325,9 @@
 	let showModal = $state(false);
 	let showHeadersModal = $state(false);
 	let showVarsModal = $state(false);
-	// let showActiveFilters; // Unused
 	let viewMode = $state<'table' | 'json'>('table');
 </script>
 
-<!-- <button
-	on:click={() => {
-		paginationState.nextPage(rows[rows.length - 1], queryData?.data);
-	}}
->
-	next page
-</button> -->
-<!-- main -->
 <div class="p-2">
 	<ControlPanel
 		type={currentQMS_info}
@@ -367,170 +338,157 @@
 		{currentQMS_info}
 	/>
 </div>
-<div class="mx-2 flex space-x-2">
-	<AddColumn
-		bind:column_stepsOfFields
-		{addColumnFromInput}
-		{dd_relatedRoot}
-		{QMSName}
-		QMS_info={currentQMS_info}
-		onNewColumnAddRequest={(tableColData: any) => {
-			tableColsData_Store.addColumn(tableColData);
-		}}
-	/>
-	<div class="grow==">
-		<Modal
-			bind:show={showModal}
-			modalIdentifier="activeArgumentsDataModal"
-			showApplyBtn={false}
-			onCancel={(detail: any) => {
-				if (detail.modalIdentifier == 'activeArgumentsDataModal') {
-					showModal = false;
-				}
+
+<div class="mx-2 flex flex-wrap gap-2 items-center">
+	<div class="w-[300px]">
+		<AddColumn
+			bind:column_stepsOfFields
+			{addColumnFromInput}
+			{dd_relatedRoot}
+			{QMSName}
+			QMS_info={currentQMS_info}
+			onNewColumnAddRequest={(tableColData: any) => {
+				tableColsData_Store.addColumn(tableColData);
 			}}
-			><div class="  w-full">
-				<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-					<div class="w-2"></div>
-					<ActiveArguments />
-					<div class="w-2"></div>
-				</div>
-			</div>
-		</Modal>
-
-		<!-- <div class="flex space-x-2 mb-2 px-2">
-			<button
-				class="btn btn-xs btn-block  "
-				on:click={() => {
-					showModal = !showModal;
-					//showActiveFilters = !showActiveFilters;
-					showActiveFilters = true;
-				}}
-				><i class="bi bi-funnel-fill" />
-			</button>
-		</div> -->
+		/>
 	</div>
 
-	<div class="join">
-		<button
-			class="btn join-item btn-xs {viewMode === 'table' ? 'btn-active' : ''}"
-			onclick={() => (viewMode = 'table')}>Table</button
+	<Modal
+		bind:show={showModal}
+		modalIdentifier="activeArgumentsDataModal"
+		showApplyBtn={false}
+		onCancel={(detail: any) => {
+			if (detail.modalIdentifier == 'activeArgumentsDataModal') {
+				showModal = false;
+			}
+		}}
+	>
+		<div class="w-full p-4">
+			<h3 class="mb-4 text-lg font-bold">Query Arguments</h3>
+			<ActiveArguments />
+		</div>
+	</Modal>
+
+	<div class="flex items-center rounded-md border bg-muted/50 p-1">
+		<Button
+			variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+			size="sm"
+			class="h-7 px-3"
+			onclick={() => (viewMode = 'table')}
 		>
-		<button
-			class="btn join-item btn-xs {viewMode === 'json' ? 'btn-active' : ''}"
-			onclick={() => (viewMode = 'json')}>JSON</button
+			<LayoutGrid class="mr-2 h-4 w-4" /> Table
+		</Button>
+		<Button
+			variant={viewMode === 'json' ? 'secondary' : 'ghost'}
+			size="sm"
+			class="h-7 px-3"
+			onclick={() => (viewMode = 'json')}
 		>
+			<FileJson class="mr-2 h-4 w-4" /> JSON
+		</Button>
 	</div>
 
-	<button
-		class=" btn grow normal-case btn-xs"
-		onclick={() => {
-			showQMSBody = !showQMSBody;
-		}}>QMS body</button
-	>
-	<button
-		class="btn grow normal-case btn-xs"
-		onclick={() => {
-			showHeadersModal = true;
-		}}
-	>
-		Headers
-	</button>
-	<button
-		class="btn grow normal-case btn-xs"
-		onclick={() => {
-			showVarsModal = true;
-		}}
-	>
-		Variables
-	</button>
+	<div class="flex gap-1">
+		<Button variant="outline" size="sm" onclick={() => (showQMSBody = !showQMSBody)}>
+			<Code class="mr-2 h-4 w-4" /> GQL Body
+		</Button>
+		<Button variant="outline" size="sm" onclick={() => (showHeadersModal = true)}>
+			<Settings2 class="mr-2 h-4 w-4" /> Headers
+		</Button>
+		<Button variant="outline" size="sm" onclick={() => (showVarsModal = true)}>
+			<Variable class="mr-2 h-4 w-4" /> Variables
+		</Button>
+	</div>
 
 	<!-- Auto-Refresh UI -->
-	<div class="join" title="Auto-Refresh Query">
-		<button
-			class="btn join-item btn-xs {autoRefresh ? 'btn-active btn-success' : ''}"
+	<div class="flex items-center gap-1 rounded-md border bg-muted/50 p-1">
+		<Button
+			variant={autoRefresh ? 'default' : 'ghost'}
+			size="sm"
+			class="h-7 w-7 p-0"
 			onclick={toggleAutoRefresh}
 			aria-label="Toggle Auto-Refresh"
 		>
-			<i class="bi bi-arrow-repeat {autoRefresh ? 'animate-spin' : ''}"></i>
-		</button>
+			<RefreshCw class="h-4 w-4 {autoRefresh ? 'animate-spin' : ''}" />
+		</Button>
 		{#if autoRefresh}
-			<input
+			<Input
 				type="number"
-				class="input input-xs join-item w-20"
+				class="h-7 w-20 border-0 bg-transparent text-xs focus-visible:ring-0"
 				bind:value={refreshInterval}
 				min="1000"
 				step="1000"
 				aria-label="Refresh Interval (ms)"
-				title="Interval (ms)"
 			/>
 		{/if}
 	</div>
 
 	<Modal bind:show={showHeadersModal} modalIdentifier="headersModal" showApplyBtn={false}>
-		<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
+		<div class="p-4">
+			<HeadersEditor {endpointInfo} onClose={() => (showHeadersModal = false)} />
+		</div>
 	</Modal>
 	<Modal bind:show={showVarsModal} modalIdentifier="varsModal" showApplyBtn={false}>
-		<EnvVarsManager onClose={() => (showVarsModal = false)} />
+		<div class="p-4">
+			<EnvVarsManager onClose={() => (showVarsModal = false)} />
+		</div>
 	</Modal>
 
 	{#if QMS_bodyPart_StoreDerived_rowsCount}
-		<div class="badge flex space-x-2 badge-primary">
-			{rows.length}/
+		<Badge variant="outline" class="flex gap-2 bg-primary/10 text-primary border-primary/20">
+			{rows.length} /
 			<RowCount
 				QMS_bodyPart_StoreDerived={QMS_bodyPart_StoreDerived_rowsCount}
 				QMS_info={currentQMS_info}
 			/>
-		</div>
+		</Badge>
 	{/if}
-	<button class="btn btn-xs btn-primary" aria-label="Add">
-		<i class="bi bi-plus-circle-fill"></i>
-	</button>
+
+	<Button size="sm" class="h-8 w-8 p-0" aria-label="Add">
+		<PlusCircle class="h-5 w-5" />
+	</Button>
 </div>
 
 {@render children?.()}
-{#if queryData.error}
-	<div class="mx-auto mb-2 px-4">
-		<div class="alert alert-error shadow-lg">
-			<div>
-				<button
-					type="button"
-					aria-label="Clear error"
-					class="btn p-0 btn-ghost btn-sm"
-					onclick={() => {
-						queryData.error = null;
-					}}
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-6 w-6 flex-shrink-0 stroke-current"
-						fill="none"
-						viewBox="0 0 24 24"
-						><path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/></svg
-					>
-				</button>
 
-				<span class="max-h-20 overflow-auto">{queryData.error}</span>
-			</div>
-		</div>
+{#if queryData.error}
+	<div class="mx-2 mt-4">
+		<Alert.Root variant="destructive">
+			<AlertCircle class="h-4 w-4" />
+			<Alert.Title>Query Error</Alert.Title>
+			<Alert.Description class="max-h-32 overflow-auto">
+				{queryData.error}
+			</Alert.Description>
+			<Button
+				variant="ghost"
+				size="sm"
+				class="absolute right-2 top-2 h-6 w-6 p-0"
+				onclick={() => { queryData.error = null; }}
+			>
+				<X class="h-4 w-4" />
+			</Button>
+		</Alert.Root>
 	</div>
 {/if}
+
 {#if queryData.fetching}
-	<p>Loading...</p>
-{/if}
-{#if showQMSBody}
-	<GraphqlCodeDisplay
-		{showNonPrettifiedQMSBody}
-		{prefix}
-		value={$QMS_bodyPartsUnifier_StoreDerived}
-	/>
+	<div class="flex items-center justify-center p-12">
+		<RefreshCw class="h-8 w-8 animate-spin text-muted-foreground" />
+		<span class="ml-3 text-muted-foreground">Fetching data...</span>
+	</div>
 {/if}
 
-<div class="md:px-2">
+{#if showQMSBody}
+	<div class="mx-2 mt-4 overflow-hidden rounded-md border">
+		<GraphqlCodeDisplay
+			{showNonPrettifiedQMSBody}
+			{prefix}
+			value={$QMS_bodyPartsUnifier_StoreDerived}
+		/>
+	</div>
+{/if}
+
+<div class="mt-4 md:px-2">
 	{#if viewMode === 'table'}
 		<Table
 			{rowSelectionState}
@@ -546,7 +504,7 @@
 			{onRowClicked}
 		/>
 	{:else if queryData.data}
-		<div class="mt-2">
+		<div class="mt-2 rounded-md border overflow-hidden">
 			<GraphqlCodeDisplay
 				value={JSON.stringify(queryData.data, null, 2)}
 				enableSyncToUI={false}
@@ -555,7 +513,9 @@
 				queryName={QMSName}
 			/>
 		</div>
-	{:else}
-		<div class="p-4 text-center opacity-50">No data available</div>
+	{:else if !queryData.fetching}
+		<div class="p-12 text-center text-muted-foreground border rounded-md mx-2">
+			No data available. Run a query to see results.
+		</div>
 	{/if}
 </div>

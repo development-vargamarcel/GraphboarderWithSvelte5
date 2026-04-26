@@ -5,6 +5,12 @@
 	import { headerPresetsStore, type HeaderPreset } from '$lib/stores/headerPresetsStore';
 	import { logger } from '$lib/utils/logger';
 	import { v4 as uuid } from '@lukeed/uuid';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Alert from '$lib/components/ui/alert';
+	import { X, AlertCircle } from 'lucide-react-svelte';
 
 	interface Props {
 		endpointInfo: EndpointInfoStore;
@@ -68,56 +74,62 @@
 
 <div class="flex flex-col gap-4">
 	<h3 class="text-lg font-bold">Edit Headers</h3>
-	<p class="text-sm text-gray-500">
+	<p class="text-sm text-muted-foreground">
 		Modify headers for the current session. These headers will be used for all subsequent requests.
 	</p>
 
 	<!-- Presets Section -->
-	<div class="rounded border bg-base-200 p-2">
-		<h4 class="mb-2 text-sm font-bold">Presets</h4>
-		<div class="mb-2 flex flex-wrap gap-2">
+	<div class="rounded-md border bg-muted/50 p-4">
+		<h4 class="mb-3 text-sm font-semibold">Presets</h4>
+		<div class="mb-4 flex flex-wrap gap-2">
 			{#each $headerPresetsStore as preset}
-				<div class="badge gap-2 p-3 badge-neutral">
-					<button class="hover:underline" onclick={() => loadPreset(preset)}>{preset.name}</button>
+				<Badge variant="secondary" class="flex items-center gap-1 px-2 py-1">
+					<button class="hover:underline text-xs" onclick={() => loadPreset(preset)}>{preset.name}</button>
 					<button
-						class="btn btn-circle btn-ghost btn-xs"
+						class="ml-1 rounded-full p-0.5 hover:bg-muted"
 						onclick={() => deletePreset(preset.id)}
-						aria-label="Delete preset">✕</button
-					>
-				</div>
+						aria-label="Delete preset">
+						<X class="h-3 w-3" />
+					</button>
+				</Badge>
 			{/each}
 			{#if $headerPresetsStore.length === 0}
-				<span class="text-xs text-gray-500 italic">No presets saved.</span>
+				<span class="text-xs text-muted-foreground italic">No presets saved.</span>
 			{/if}
 		</div>
 		<div class="flex gap-2">
-			<input
+			<Input
 				type="text"
-				class="input-bordered input input-sm grow"
+				class="h-9 grow"
 				placeholder="New preset name..."
 				bind:value={presetName}
 			/>
-			<button
-				class="btn btn-sm btn-secondary"
+			<Button
+				size="sm"
+				variant="outline"
 				onclick={savePreset}
 				disabled={!presetName}
-				aria-label="Save Preset">Save Current as Preset</button
+				aria-label="Save Preset">Save Preset</Button
 			>
 		</div>
 	</div>
 
-	<textarea
-		class="textarea-bordered textarea h-64 font-mono text-sm"
+	<Textarea
+		class="h-64 font-mono text-sm"
 		bind:value={headersString}
 		placeholder={'{ "Authorization": "Bearer ..." }'}
-	></textarea>
+	/>
+
 	{#if error}
-		<div class="alert alert-error">
-			<span>{error}</span>
-		</div>
+		<Alert.Root variant="destructive">
+			<AlertCircle class="h-4 w-4" />
+			<Alert.Title>Error</Alert.Title>
+			<Alert.Description>{error}</Alert.Description>
+		</Alert.Root>
 	{/if}
+
 	<div class="flex justify-end gap-2">
-		<button class="btn btn-ghost" onclick={onClose}>Cancel</button>
-		<button class="btn btn-primary" onclick={save}>Save Headers</button>
+		<Button variant="ghost" onclick={onClose}>Cancel</Button>
+		<Button onclick={save}>Save Headers</Button>
 	</div>
 </div>

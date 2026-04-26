@@ -9,6 +9,10 @@
 	import { setContext, getContext } from 'svelte';
 	import { get, writable, type Writable } from 'svelte/store';
 	import Type from './Type.svelte';
+	import * as Popover from '$lib/components/ui/popover';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { PlusCircle } from 'lucide-react-svelte';
 
 	/**
 	 * Props for AddColumn component.
@@ -32,18 +36,11 @@
 		QMS_info,
 		onNewColumnAddRequest
 	}: Props = $props();
-	//stepsOfFieldsOBJ
+
 	setContext(`${prefix}stepsOfFieldsOBJ`, writable({}));
 	const stepsOfFieldsOBJ = getContext(`${prefix}stepsOfFieldsOBJ`) as Writable<any>;
-	stepsOfFieldsOBJ.subscribe((value) => {});
 	setContext(`${prefix}stepsOfFieldsOBJFull`, writable({}));
 	const stepsOfFieldsOBJFull = getContext(`${prefix}stepsOfFieldsOBJFull`) as Writable<any>;
-	//activeArgumentsDataGrouped_Store
-	setContext(`${prefix}activeArgumentsDataGrouped_Store`, writable({}));
-	const activeArgumentsDataGrouped_Store = getContext(
-		`${prefix}activeArgumentsDataGrouped_Store`
-	) as Writable<any>;
-	activeArgumentsDataGrouped_Store.subscribe((value) => {});
 
 	const tableColsData_Store = (getContext(`${prefix}QMSWraperContext`) as any).tableColsData_Store;
 	tableColsData_Store.subscribe((cols: any) => {
@@ -54,43 +51,37 @@
 			})
 		);
 	});
-	stepsOfFieldsOBJFull.subscribe((stepsOfFieldsOBJFull) => {});
 	setContext(`${prefix}StepsOfFieldsSelected`, writable(new Set([])));
 	const StepsOfFieldsSelected = getContext(`${prefix}StepsOfFieldsSelected`) as Writable<any>;
-	StepsOfFieldsSelected.subscribe((value: any) => {});
 </script>
 
-<div class="dropdown grow">
-	<!-- svelte-ignore a11y_label_has_associated_control -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<label
-		tabindex="0"
-		data-testid="add-column-button"
-		class="bi bi-node-plus-fill btn w-full p-1 text-lg btn-xs"
-	></label>
-	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-	<div
-		tabindex="0"
-		data-testid="add-column-dropdown"
-		class="dropdown-content ==w-max menu z-[9999] max-w-screen rounded-box bg-base-100 p-2 text-sm shadow-2xl"
-	>
-		<div
-			class="max-h-[70vh] max-w-xs overflow-auto overscroll-contain sm:max-h-[80vh] sm:max-w-md md:max-h-[80vh] md:max-w-xl lg:max-w-2xl"
-		>
-			<div
-				class="flex w-full min-w-max flex-col space-y-1 overflow-x-auto text-sm font-normal normal-case"
+<Popover.Root>
+	<Popover.Trigger>
+		{#snippet child({ props })}
+			<Button
+				variant="outline"
+				size="icon"
+				class="h-6 w-full"
+				{...props}
+				data-testid="add-column-button"
 			>
-				<input
-					type="text"
-					class="input-bordered input m-2 input-sm input-accent"
-					placeholder="(> or .) producer>films>title "
-					bind:value={column_stepsOfFields}
-					onkeypress={addColumnFromInput}
-				/>
-				<div class="bg-black= sticky left-0 mx-auto text-center">
-					<button
-						class="btn w-min btn-xs btn-primary"
+				<PlusCircle class="h-4 w-4" />
+			</Button>
+		{/snippet}
+	</Popover.Trigger>
+	<Popover.Content class="w-[300px] sm:w-[450px] md:w-[600px] lg:w-[800px] p-0" data-testid="add-column-dropdown">
+		<div class="max-h-[70vh] overflow-auto p-4 overscroll-contain">
+			<div class="flex flex-col space-y-4">
+				<div class="flex gap-2">
+					<Input
+						type="text"
+						placeholder="(> or .) producer>films>title"
+						bind:value={column_stepsOfFields}
+						onkeypress={addColumnFromInput}
+						class="h-8"
+					/>
+					<Button
+						size="sm"
 						onclick={() => {
 							let stepsOfFields: string[] = [];
 							let tableColData = {
@@ -105,36 +96,23 @@
 							$stepsOfFieldsOBJ = {};
 						}}
 					>
-						add
-					</button>
+						Add
+					</Button>
 				</div>
 
 				{#if QMS_info}
-					<Type
-						type={QMS_info}
-						template="columnAddDisplay"
-						depth={0}
-						isOnMainList={true}
-						index={0}
-						oncolAddRequest={onNewColumnAddRequest}
-					/>
-					<!-- <TypeList
-						types={dd_relatedRoot.fields}
-						template="columnAddDisplay"
-						stepsOfFields={[QMSName]}
-						depth={0}
-					/> -->
-					<!-- {#each dd_relatedRoot.fields as type, index (index)}
-							<Type
-								{index}
-								{type}
-								template="columnAddDisplay"
-								stepsOfFields={[QMSName]}
-								depth={0}
-							/>
-						{/each} -->
+					<div class="text-sm font-normal normal-case">
+						<Type
+							type={QMS_info}
+							template="columnAddDisplay"
+							depth={0}
+							isOnMainList={true}
+							index={0}
+							oncolAddRequest={onNewColumnAddRequest}
+						/>
+					</div>
 				{/if}
 			</div>
 		</div>
-	</div>
-</div>
+	</Popover.Content>
+</Popover.Root>

@@ -2,6 +2,8 @@
 	import Modal from '$lib/components/Modal.svelte';
 	import CodeEditor from '$lib/components/fields/CodeEditor.svelte';
 	import { browser } from '$app/environment';
+	import * as Table from '$lib/components/ui/table';
+	import { Button } from '$lib/components/ui/button';
 
 	interface Props {
 		show?: boolean;
@@ -70,36 +72,38 @@
 			<p class="text-gray-500">No managed keys found in Local Storage.</p>
 		{:else}
 			<div class="overflow-x-auto">
-				<table class="table w-full">
-					<thead>
-						<tr>
-							<th>Key</th>
-							<th>Size (chars)</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
+				<Table.Root>
+					<Table.Header>
+						<Table.Row>
+							<Table.Head>Key</Table.Head>
+							<Table.Head>Size (chars)</Table.Head>
+							<Table.Head>Actions</Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
 						{#each Object.entries(storageItems) as [key, value]}
-							<tr>
-								<td>{key}</td>
-								<td>{value.length}</td>
-								<td class="flex gap-2">
-									<button class="btn btn-xs btn-info" onclick={() => handleView(key)}>View</button>
-									<button class="btn btn-xs btn-error" onclick={() => handleDelete(key)}
-										>Delete</button
-									>
-								</td>
-							</tr>
+							<Table.Row>
+								<Table.Cell>{key}</Table.Cell>
+								<Table.Cell>{value.length}</Table.Cell>
+								<Table.Cell>
+									<div class="flex gap-2">
+										<Button variant="outline" size="sm" onclick={() => handleView(key)}>View</Button>
+										<Button variant="destructive" size="sm" onclick={() => handleDelete(key)}
+											>Delete</Button
+										>
+									</div>
+								</Table.Cell>
+							</Table.Row>
 						{/each}
-					</tbody>
-				</table>
+					</Table.Body>
+				</Table.Root>
 			</div>
 		{/if}
 	{:else}
 		<div class="flex h-full flex-col gap-2">
 			<div class="flex items-center justify-between">
 				<h4 class="font-bold">{selectedKey}</h4>
-				<button class="btn btn-xs" onclick={handleBack}>Back</button>
+				<Button variant="ghost" size="sm" onclick={handleBack}>Back</Button>
 			</div>
 			<div class="h-64 rounded border">
 				<CodeEditor rawValue={selectedValue} language="json" readonly={true} />

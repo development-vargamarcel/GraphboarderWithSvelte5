@@ -344,14 +344,14 @@
 	>
 			<div class="flex flex-col">
 				<div class="mb-2 w-full text-center text-lg">
-					<p class="badge font-bold badge-info">
+					<p class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary text-primary-foreground hover:bg-primary/80">
 						{groupDisplayTitle}
 					</p>
 				</div>
 
 				{#if (node as ContainerData)?.isMain}
 					<button
-						class="btn mb-6 flex-1 normal-case btn-xs btn-info"
+						class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 mb-6 flex-1 normal-case btn-xs btn-info"
 						onclick={() => {
 							nodeAddDefaultFields(
 								node as ContainerData,
@@ -395,7 +395,7 @@
 						{/if}
 
 						<button
-							class="btn mb-6 flex-1 normal-case btn-xs btn-info"
+							class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 mb-6 flex-1 normal-case btn-xs btn-info"
 							onclick={() => {
 								nodeAddDefaultFields(
 									node as ContainerData,
@@ -411,7 +411,7 @@
 						</button>
 
 						<button
-							class="btn mb-1 flex-1 text-sm normal-case btn-xs"
+							class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 mb-1 flex-1 text-sm normal-case btn-xs"
 							onclick={() => {
 								const _node = node as ContainerData;
 								if (_node?.operator && !_node?.isMain) {
@@ -432,7 +432,7 @@
 						</button>
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<button
-							class="btn mb-6 flex-1 btn-xs btn-warning"
+							class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 mb-6 flex-1 btn-xs btn-warning"
 							aria-label="Delete group"
 							onclick={() => {
 								addToast('Delete group not yet implemented', 'warning');
@@ -612,7 +612,7 @@
 			{#if $mutationVersion && !(node as ContainerData)?.isMain}
 				<div class="pointer-events-auto flex">
 					<button
-						class="btn rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {getManyQMS ||
+						class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 rounded-full px-[1px] text-xs font-light normal-case btn-ghost transition-all duration-500 btn-xs {getManyQMS ||
 						$selectedQMSAAA
 							? 'text-secondary'
 							: ''}   {(node as ContainerData)?.operator == 'bonded' ||
@@ -649,13 +649,13 @@
 				{#if (inputColumnsLocation && inputColumnsLocationQMS_Info.dd_displayName == node.dd_displayName) || forceShowSelectAndAddButtons || getManyQMS}
 					<!-- {getManyQMS?.dd_displayName} -->
 					<!-- <button
-						class="btn btn-xs normal-case"
+						class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 btn-xs normal-case"
 						on:click={() => {
 							showSelectModal = true;
 						}}>select</button
 					>
 					<button
-						class="btn btn-xs normal-case"
+						class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 btn-xs normal-case"
 						on:click={() => {
 							showAddModal = true;
 						}}>add</button
