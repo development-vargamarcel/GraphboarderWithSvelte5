@@ -10,7 +10,7 @@
 	import { add_activeArgumentOrContainerTo_activeArgumentsDataGrouped } from '$lib/stores/QMSHandling/activeArgumentsDataGrouped_Store';
 	import ManyToAllSelectInterfaceDefinition from './ManyToAllSelectInterfaceDefinition.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { Plus } from 'lucide-react-svelte';
+	import { Plus } from 'lucide-svelte';
 
 	interface Props {
 		group: any;

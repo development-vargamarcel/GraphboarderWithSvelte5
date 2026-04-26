@@ -11,7 +11,7 @@
 	import { RadioGroup, RadioGroupItem } from '$lib/components/ui/radio-group';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
-	import { ChevronDown, Files, Trash2 } from 'lucide-react-svelte';
+	import { ChevronDown, Files, Trash2 } from 'lucide-svelte';
 
 	interface Props {
 		prefix?: string;
@@ -203,7 +203,12 @@
 					{/each}
 
 					<Table.Cell class="text-right">
-						<div class="flex justify-end gap-2" onclick={(e) => e.stopPropagation()}>
+						<div
+							class="flex justify-end gap-2"
+							onclick={(e) => e.stopPropagation()}
+							onkeydown={(e) => e.stopPropagation()}
+							role="presentation"
+						>
 							{#if onDuplicateRow}
 								<Button
 									variant="ghost"

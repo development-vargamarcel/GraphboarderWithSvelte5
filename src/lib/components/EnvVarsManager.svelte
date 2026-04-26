@@ -9,7 +9,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Table from '$lib/components/ui/table';
 	import { Separator } from '$lib/components/ui/separator';
-	import { Download, Upload, Trash2, Plus, Eye, EyeOff } from 'lucide-react-svelte';
+	import { Download, Upload, Trash2, Plus, Eye, EyeOff } from 'lucide-svelte';
 
 	interface Props {
 		onClose: () => void;
