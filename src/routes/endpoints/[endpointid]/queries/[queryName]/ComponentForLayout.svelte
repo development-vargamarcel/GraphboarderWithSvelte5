@@ -30,7 +30,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import * as Alert from '$lib/components/ui/alert';
-	import { AlertCircle, RefreshCw, PlusCircle, LayoutGrid, FileJson, Code, Settings2, Variable } from 'lucide-react-svelte';
+	import { AlertCircle, RefreshCw, PlusCircle, LayoutGrid, FileJson, Code, Settings2, Variable, X } from 'lucide-svelte';
 
 	// Props interface and destructuring MUST come before getContext calls that use prefix
 	interface Props {

@@ -12,7 +12,7 @@
 	import * as Popover from '$lib/components/ui/popover';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { PlusCircle } from 'lucide-react-svelte';
+	import { PlusCircle } from 'lucide-svelte';
 
 	/**
 	 * Props for AddColumn component.
@@ -42,7 +42,8 @@
 	setContext(`${prefix}stepsOfFieldsOBJFull`, writable({}));
 	const stepsOfFieldsOBJFull = getContext(`${prefix}stepsOfFieldsOBJFull`) as Writable<any>;
 
-	const tableColsData_Store = (getContext(`${prefix}QMSWraperContext`) as any).tableColsData_Store;
+	const qmsWraperContext = getContext(`${prefix}QMSWraperContext`) as any;
+	const { tableColsData_Store, activeArgumentsDataGrouped_Store } = qmsWraperContext;
 	tableColsData_Store.subscribe((cols: any) => {
 		$stepsOfFieldsOBJFull = _.merge(
 			{},

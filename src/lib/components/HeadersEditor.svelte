@@ -10,7 +10,7 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Alert from '$lib/components/ui/alert';
-	import { X, AlertCircle } from 'lucide-react-svelte';
+	import { X, AlertCircle } from 'lucide-svelte';
 
 	interface Props {
 		endpointInfo: EndpointInfoStore;
