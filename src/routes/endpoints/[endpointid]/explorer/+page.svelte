@@ -7,6 +7,10 @@
 	import EditTableBaseNameModal from '$lib/components/EditTableBaseNameModal.svelte';
 	import { addToast } from '$lib/stores/toastStore';
 	import type { QMSMainWraperContext } from '$lib/types/index';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { Search, ListFilter, LayoutList, Table as TableIcon, Clipboard, Pencil, RefreshCw, CaseSensitive } from 'lucide-svelte';
 
 	const prefix = '';
 
@@ -65,12 +69,7 @@
 		whatToShow = rootTypes?.sort((a: any, b: any) => {
 			let ea = a.dd_rootName;
 			let eb = b.dd_rootName;
-			// let ga = a.dd_displayName;
-			// let gb = b.dd_displayName;
-			return sortingFunctionMutipleColumnsGivenArray([
-				[ea, eb]
-				// [ga, gb]
-			]);
+			return sortingFunctionMutipleColumnsGivenArray([[ea, eb]]);
 		});
 		whatToShowLastUsed = showRootTypes;
 		filterByWord();
@@ -159,16 +158,7 @@
 		whatToShowLastUsed = showQueriesAndMutations;
 		filterByWord();
 	};
-	const queryFieldByName = (name: string) => {
-		return $schemaData.queryFields.filter((item: any) => {
-			return item.name == name;
-		})[0];
-	};
-	const mutationFieldByName = (name: string) => {
-		return $schemaData.mutationFields.filter((item: any) => {
-			return item.name == name;
-		})[0];
-	};
+
 	let columns = $state<any[]>([]);
 
 	$effect(() => {
@@ -176,38 +166,32 @@
 			columns = [
 				{
 					accessorFn: (row: any) => row.dd_displayName,
-					header: 'dd_displayName',
-					footer: 'dd_displayName',
+					header: 'Name',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => row.dd_rootName,
-					header: 'dd_rootName',
-					footer: 'dd_rootName',
+					header: 'Root',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => (row.dd_kindList_NON_NULL ? '!' : ''),
 					header: 'L',
-					footer: 'L',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => (row.dd_kindList ? 'list' : ''),
-					header: 'LL',
-					footer: 'LL',
+					header: 'List',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => (row.dd_kindEl_NON_NULL ? '!' : ''),
 					header: 'E',
-					footer: 'E',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => row.dd_kindEl,
-					header: 'EE',
-					footer: 'EE',
+					header: 'Kind',
 					enableHiding: true
 				},
 
@@ -220,19 +204,16 @@
 							)
 							.join('; '),
 					header: 'Arguments',
-					footer: 'Arguments',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => row.description?.replaceAll(',', ';'),
-					header: 'description',
-					footer: 'description',
+					header: 'Description',
 					enableHiding: true
 				},
 				{
 					accessorFn: (row: any) => row?.tableBaseName,
-					header: 'tableBaseName',
-					footer: 'tableBaseName',
+					header: 'Table Base',
 					enableHiding: true
 				}
 			];
@@ -270,142 +251,156 @@
 		selectedRowsOriginal.forEach((row) => {
 			row.tableBaseName = newValue;
 		});
-		whatToShow = [...whatToShow]; // trigger reactivity
+		whatToShow = [...whatToShow];
 	};
 </script>
 
 <Page MenuItem={true}>
-	<section class="ml-4 h-screen w-screen overflow-auto pb-20">
-		<div class="sticky top-0 z-10 mb-4 space-y-3 rounded-b-box bg-base-300 p-3 shadow-md">
-			<!-- Row 1: Filter and View Toggles -->
-			<div class="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center">
-				<div class="join w-full md:w-auto">
-					<input
-						class="input-bordered input input-sm join-item flex-grow md:w-64"
-						placeholder="Filter (e.g. +user -id)"
-						bind:value={sortingInputValue}
-						onkeydown={(e) => e.key === 'Enter' && filterByWord()}
-					/>
-					<button class="btn join-item btn-sm btn-primary" onclick={filterByWord} title="Filter">
-						<i class="bi bi-funnel"></i>
-					</button>
-					<button
-						class="btn join-item btn-sm"
-						class:btn-active={caseSensitive}
-						onclick={() => {
-							caseSensitive = !caseSensitive;
-						}}
-						title={caseSensitive ? 'Case Sensitive: ON' : 'Case Sensitive: OFF'}
+	<section class="ml-4 h-screen w-screen overflow-auto pb-20 pr-8">
+		<div class="sticky top-0 z-20 mb-6 space-y-4 rounded-xl border bg-background/95 p-4 shadow-sm backdrop-blur">
+			<div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+				<div class="flex w-full items-center gap-2 md:max-w-md">
+					<div class="relative flex-1">
+						<Search class="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+						<Input
+							class="pl-9 h-9"
+							placeholder="Filter (e.g. +user -id)"
+							bind:value={sortingInputValue}
+							onkeydown={(e) => e.key === 'Enter' && filterByWord()}
+						/>
+					</div>
+					<Button size="icon" variant="secondary" class="h-9 w-9" onclick={filterByWord} title="Filter">
+						<ListFilter class="h-4 w-4" />
+					</Button>
+					<Button
+						size="icon"
+						variant={caseSensitive ? 'default' : 'outline'}
+						class="h-9 w-9"
+						onclick={() => (caseSensitive = !caseSensitive)}
+						title="Case Sensitive"
 					>
-						<span class="font-bold">Aa</span>
-					</button>
+						<CaseSensitive class="h-5 w-5" />
+					</Button>
 				</div>
 
-				<div class="join shadow-sm">
-					<button
-						class="btn join-item btn-sm"
-						class:btn-neutral={showExplorer}
+				<div class="flex items-center gap-1 rounded-lg border bg-muted/50 p-1">
+					<Button
+						variant={showExplorer ? 'secondary' : 'ghost'}
+						size="sm"
+						class="h-7 px-3 gap-2"
 						onclick={toggleExplorer}
 					>
-						<i class="bi bi-list-nested"></i> Explorer
-					</button>
-					<button class="btn join-item btn-sm" class:btn-neutral={showTable} onclick={toggleTable}>
-						<i class="bi bi-table"></i> Table
-					</button>
+						<LayoutList class="h-3.5 w-3.5" /> Explorer
+					</Button>
+					<Button
+						variant={showTable ? 'secondary' : 'ghost'}
+						size="sm"
+						class="h-7 px-3 gap-2"
+						onclick={toggleTable}
+					>
+						<TableIcon class="h-3.5 w-3.5" /> Table
+					</Button>
 				</div>
 			</div>
 
-			<!-- Row 2: Scope and Actions -->
-			<div class="flex flex-col items-center justify-between gap-3 overflow-x-auto md:flex-row">
-				<div class="join shadow-sm">
-					<button
-						class="btn join-item btn-sm"
-						onclick={showRootTypes}
-						class:btn-active={whatToShowLastUsed === showRootTypes}>Root</button
-					>
-					<button
-						class="btn join-item btn-sm"
-						onclick={showQueries}
-						class:btn-active={whatToShowLastUsed === showQueries}>Queries</button
-					>
-					<button
-						class="btn join-item btn-sm"
-						onclick={showMutations}
-						class:btn-active={whatToShowLastUsed === showMutations}>Mutations</button
-					>
-					<button
-						class="btn join-item btn-sm"
-						onclick={showQueriesAndMutations}
-						class:btn-active={whatToShowLastUsed === showQueriesAndMutations}>Q&M</button
-					>
-					<button
-						class="btn join-item btn-sm"
-						onclick={showAll}
-						class:btn-active={whatToShowLastUsed === showAll}>All</button
-					>
+			<Separator />
+
+			<div class="flex flex-col items-center justify-between gap-4 md:flex-row">
+				<div class="flex flex-wrap items-center gap-1 rounded-lg border bg-muted/50 p-1">
+					{#each [
+						{ label: 'Root', fn: showRootTypes },
+						{ label: 'Queries', fn: showQueries },
+						{ label: 'Mutations', fn: showMutations },
+						{ label: 'Q&M', fn: showQueriesAndMutations },
+						{ label: 'All', fn: showAll }
+					] as opt}
+						<Button
+							variant={whatToShowLastUsed === opt.fn ? 'secondary' : 'ghost'}
+							size="xs"
+							class="h-7 px-3 text-xs"
+							onclick={opt.fn}
+						>
+							{opt.label}
+						</Button>
+					{/each}
 				</div>
 
-				<div class="join shadow-sm">
-					<button
-						class="btn join-item btn-sm"
+				<div class="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
+						class="h-9 gap-2"
 						onclick={() => navigator.clipboard.writeText(csvData)}
-						title="Copy CSV"
 						disabled={!csvData}
 					>
-						<i class="bi bi-clipboard"></i> Copy CSV
-					</button>
-					<button class="btn join-item btn-sm" onclick={handleEdit} title="Edit Table Name">
-						<i class="bi bi-pencil"></i> Edit
-					</button>
-					<button
-						class="btn join-item btn-sm"
+						<Clipboard class="h-4 w-4" /> Copy CSV
+					</Button>
+					<Button variant="outline" size="sm" class="h-9 gap-2" onclick={handleEdit}>
+						<Pencil class="h-4 w-4" /> Edit
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						class="h-9 w-9"
 						onclick={() => {
-							whatToShow = whatToShow;
+							whatToShow = [...whatToShow];
 							showTable = false;
 							setTimeout(() => {
 								showTable = true;
-							}, 200);
+							}, 100);
 						}}
 						title="Rerender Table"
 					>
-						<i class="bi bi-arrow-repeat"></i>
-					</button>
+						<RefreshCw class="h-4 w-4" />
+					</Button>
 				</div>
 			</div>
 		</div>
 
-		{#if showTable && whatToShow.length > 0}
-			<!-- content here -->
-			<ExplorerTable
-				data={whatToShow}
-				{columns}
-				onRowSelectionChange={(detail: any) => {
-					selectedRowsOriginal = detail.rows.map((row: any) => row.original);
-					let columnNames: string[] = [];
-					let rowsData: string[];
-					rowsData = detail.rows.map((row: any, i: number) => {
-						return row
-							.getVisibleCells()
-							.map((cell: any) => {
-								if (i == 0) {
-									columnNames.push(cell.column.id);
-								}
-								return cell.getValue();
-							})
-							.join(`,`);
-					});
-					csvData = `${columnNames.join(`,`)}\n${rowsData.join(`\n`)}`;
-				}}
-			/>
-		{/if}
-		{#if showExplorer}
-			<div class="">
-				{#key whatToShow}
-					{#each whatToShow as type, index (index)}
-						<Type {index} {type} template="default" depth={0} />
-					{/each}
-				{/key}
-			</div>{/if}
+		<div class="rounded-xl border bg-card">
+			{#if showTable && whatToShow.length > 0}
+				<ExplorerTable
+					data={whatToShow}
+					{columns}
+					onRowSelectionChange={(detail: any) => {
+						selectedRowsOriginal = detail.rows.map((row: any) => row.original);
+						let columnNames: string[] = [];
+						let rowsData: string[];
+						rowsData = detail.rows.map((row: any, i: number) => {
+							return row
+								.getVisibleCells()
+								.map((cell: any) => {
+									if (i == 0) {
+										columnNames.push(cell.column.id);
+									}
+									return cell.getValue();
+								})
+								.join(`,`);
+						});
+						csvData = `${columnNames.join(',')}\n${rowsData.join('\n')}`;
+					}}
+				/>
+			{/if}
+
+			{#if showExplorer}
+				<div class="p-6 space-y-2">
+					{#key whatToShow}
+						{#each whatToShow as type, index (index)}
+							<div class="rounded-lg border bg-muted/30 p-2 transition-colors hover:bg-muted/50">
+								<Type {index} {type} template="default" depth={0} />
+							</div>
+						{/each}
+					{/key}
+				</div>
+			{/if}
+
+			{#if whatToShow.length === 0}
+				<div class="flex flex-col items-center justify-center p-20 text-muted-foreground">
+					<ListFilter class="h-12 w-12 opacity-20 mb-4" />
+					<p class="text-lg font-medium opacity-50">Select a scope to start exploring</p>
+				</div>
+			{/if}
+		</div>
 	</section>
 
 	<EditTableBaseNameModal
@@ -415,6 +410,3 @@
 		onCancel={() => (showEditModal = false)}
 	/>
 </Page>
-
-<style>
-</style>

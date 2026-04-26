@@ -17,6 +17,9 @@
 	import QMSWraper from '$lib/components/QMSWraper.svelte';
 	import { get, type Writable } from 'svelte/store';
 	import type { QMSWraperContext } from '$lib/types';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Checkbox } from '$lib/components/ui/checkbox';
 
 	interface Props {
 		canExpand: any;
@@ -41,11 +44,6 @@
 	}: Props = $props();
 
 	let { dd_kindsArray, dd_namesArray, dd_displayName, dd_rootName, args } = type;
-	let isSubset = (parentArray: any[], subsetArray: any[]) => {
-		return subsetArray.every((el, index) => {
-			return parentArray[index] === el;
-		});
-	};
 
 	const wraperContext = getContext(`${prefix}QMSWraperContext`) as any;
 	let mainWraperContext = getContext(`${prefix}QMSMainWraperContext`) as any;
@@ -58,7 +56,6 @@
 		stepsOfFields,
 		false
 	);
-	//getValueAtPath
 	let isSelected = $state(false);
 	let hasSelected = $state(false);
 
@@ -81,7 +78,7 @@
 			hasSelected = true;
 		}
 	});
-	///////
+
 	let isUsedInSomeColumn = $derived.by(() => {
 		if (!$stepsOfFieldsOBJFull) return false;
 		const valueAtPath = getValueAtPath($stepsOfFieldsOBJFull, stepsOfFields);
@@ -97,11 +94,7 @@
 
 	let showJsonInfo = $state(false);
 	let showModal = $state(false);
-	let finalGqlArgObj_Store: any;
-	let paginationState_derived: any;
-	let finalGqlArgObjValue;
 	let activeArgumentsQMSWraperContext = $state<QMSWraperContext>();
-	let QMSarguments;
 	let canAcceptArguments = $derived(canExpand && args?.length > 0);
 
 	const mergedChildren_finalGqlArgObj_Store = wraperContext.mergedChildren_finalGqlArgObj_Store;
@@ -109,20 +102,6 @@
 	let activeArgumentsDataGrouped_Store = getContext(
 		`${prefix}activeArgumentsDataGrouped_Store`
 	) as Writable<any>;
-
-	// //S//move to QMSWraper (outermost if possible)
-	// $: if (finalGqlArgObj_StoreValue && finalGqlArgObj_StoreValue.final_canRunQuery) {
-	// 	finalGqlArgObjValue = finalGqlArgObj_StoreValue.finalGqlArgObj;
-
-	// 	QMSarguments = { ...finalGqlArgObjValue, ...paginationState_derivedValue };
-	// }
-
-	// $: if (QMSarguments || paginationState_derivedValue) {
-	// 	mergedChildren_finalGqlArgObj_Store.update((value) => {
-	// 		return setValueAtPath(value, [...stepsOfFields, 'QMSarguments'], QMSarguments);
-	// 	});
-	// }
-	// //E//move to QMSWraper (outermost if possible)
 
 	$effect(() => {
 		const ctx = activeArgumentsQMSWraperContext;
@@ -137,78 +116,75 @@
 			}
 
 			$activeArgumentsDataGrouped_Store = get(ctx.activeArgumentsDataGrouped_Store);
-
-			finalGqlArgObj_Store = ctx.finalGqlArgObj_Store;
-			paginationState_derived = ctx.paginationState_derived;
 		});
 	});
 
-	let currentQMSWraperCtxData = $derived(
-		$mergedChildren_QMSWraperCtxData_Store
-			? mergedChildren_QMSWraperCtxData_Store.getObj(stepsOfFields)
-			: undefined
-	);
 	let currentQMSArguments = $derived(
 		getValueAtPath($mergedChildren_finalGqlArgObj_Store, [...stepsOfFields, 'QMSarguments'])
 	);
 </script>
 
 {#if template == 'default'}
-	<div class="flex w-full min-w-max space-x-2">
-		<div class="flex w-1/3 w-full min-w-max space-x-2">
+	<div class="flex w-full min-w-max items-center space-x-2 py-1">
+		<div class="flex w-1/3 min-w-max items-center space-x-2">
 			{#if canExpand}
-				<button
-					type="button"
-					class="pointer-events-auto btn rounded p-1 normal-case btn-xs"
+				<Button
+					variant="outline"
+					size="icon-xs"
+					class="h-6 w-6"
 					onclick={expand}
 				>
 					{showExpand ? '-' : '+'}
-				</button>
+				</Button>
 			{:else}
-				<button
-					type="button"
-					class="btn btn-disabled rounded p-1 normal-case btn-xs"
-					onclick={expand}>+</button
+				<Button
+					variant="outline"
+					size="icon-xs"
+					class="h-6 w-6 opacity-50"
+					disabled
 				>
+					+
+				</Button>
 			{/if}
-			<div class="rounded bg-secondary p-1">{index + 1}</div>
-			<div class="btn font-light normal-case btn-xs btn-info">
+			<Badge variant="secondary" class="h-6 px-1.5 font-mono text-[10px]">{index + 1}</Badge>
+			<Badge variant="default" class="h-6 px-2 font-medium">
 				{dd_displayName}
-			</div>
+			</Badge>
 		</div>
 		{#if !canExpand}
-			<div class="btn rounded bg-base-200 p-1 btn-xs">
+			<Badge variant="outline" class="h-6 bg-muted/30 px-2 text-[10px]">
 				{#if dd_displayName == dd_namesArray[dd_namesArray.length - 1]}{:else}
 					{dd_namesArray[dd_namesArray.length - 1]}
 				{/if}
-			</div>
+			</Badge>
 		{/if}
 		{#if canExpand}
-			<div class="btn rounded px-2 py-1 normal-case btn-xs btn-accent">
+			<Badge variant="secondary" class="h-6 bg-accent/20 px-2 text-[10px] text-accent-foreground">
 				{#if dd_namesArray?.[1] && dd_namesArray?.[1] !== dd_displayName}
 					{dd_namesArray?.[1]}
 				{:else}
 					{dd_namesArray?.[0]}
 				{/if}
-			</div>
+			</Badge>
 		{/if}
-		<div class="w-1/2">
-			<div class="flex">
-				<div class="rounded bg-secondary p-1">{dd_kindsArray?.join(' of ')}</div>
+		<div class="flex-1">
+			<div class="flex items-center gap-1 overflow-hidden">
+				{#each dd_kindsArray as kind}
+					<Badge variant="outline" class="h-5 px-1 text-[9px] uppercase tracking-tighter opacity-70">{kind}</Badge>
+				{/each}
 			</div>
-
-			<div class="flex"></div>
 		</div>
-		<div class="pointer-events-auto w-1/8 text-center text-xs">
-			<button
-				type="button"
-				class="btn btn-ghost btn-xs rounded px-1"
+		<div class="pointer-events-auto flex items-center pr-2">
+			<Button
+				variant="ghost"
+				size="icon-xs"
+				class="h-7 w-7"
 				onclick={() => (showJsonInfo = true)}
 				title="Show type info as JSON"
 				aria-label="Show type info as JSON"
 			>
 				<i class="bi bi-braces"></i>
-			</button>
+			</Button>
 		</div>
 	</div>
 
@@ -218,63 +194,55 @@
 		showApplyBtn={false}
 		onCancel={() => (showJsonInfo = false)}
 	>
-		<h3 class="mb-2 font-bold">{dd_displayName} — type info</h3>
-		<pre class="max-h-96 overflow-auto rounded bg-base-200 p-3 text-xs">{typeToSchemaJson(type)}</pre>
+		<h3 class="mb-4 text-lg font-semibold tracking-tight">{dd_displayName} — type info</h3>
+		<pre class="max-h-[60vh] overflow-auto rounded-lg border bg-muted/50 p-4 font-mono text-xs leading-relaxed">{typeToSchemaJson(type)}</pre>
 	</Modal>
 {:else if template == 'columnAddDisplay'}
 	<div
-		class="pointer-events-auto flex w-full min-w-max cursor-pointer rounded-box text-base select-none hover:text-primary"
+		class="group flex w-full min-w-max cursor-pointer items-center rounded-md p-1 text-sm transition-colors hover:bg-muted/50"
+		role="presentation"
 	>
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-
 		{#if canExpand}
-			<div class="grid-col grid h-2 w-6 gap-[-10px] overflow-visible">
-				<button
-					type="button"
+			<div class="flex w-8 items-center justify-center">
+				<Button
+					variant="ghost"
+					size="icon-xs"
+					class="h-6 w-6 transition-transform {showExpand ? 'rotate-90' : ''}"
+					onclick={(e) => {
+						e.stopPropagation();
+						expand();
+					}}
 					aria-label={showExpand ? 'Collapse' : 'Expand'}
-					class="pointer-events-auto mx-auto w-10 w-min pl-1 duration-100 {hasSelected
-						? 'text-secondary'
-						: ''} {showExpand ? 'bi-arrow-90deg-down mt-2 ' : 'bi-chevron-expand'}"
-					onclick={expand}
-				></button>
+				>
+					<i class="bi bi-chevron-right text-[10px]"></i>
+				</Button>
 			</div>
 		{/if}
-		{#if !canExpand}
-			<!-- {$StepsOfFieldsSelected.has(JSON.stringify(stepsOfFields))}
-			{isSelected} -->
-			<input
-				type="checkbox"
-				class="pointer-events-auto checkbox mr-1 ml-1 self-center checkbox-xs input-accent"
-				bind:checked={isSelected}
-				onchange={() => {
-					if (isSelected) {
-						$stepsOfFieldsOBJ = _.merge($stepsOfFieldsOBJ, stepsOFieldsAsQueryFragmentObject);
-						///
-						//	$StepsOfFieldsSelected.add(JSON.stringify(stepsOfFields));
-						//	$StepsOfFieldsSelected = $StepsOfFieldsSelected;
-					} else {
-						$stepsOfFieldsOBJ = deleteValueAtPath($stepsOfFieldsOBJ, stepsOfFields);
 
-						///
-						//	$StepsOfFieldsSelected.delete(JSON.stringify(stepsOfFields));
-						//$StepsOfFieldsSelected = $StepsOfFieldsSelected;
-					}
-				}}
-				name=""
-				id=""
-			/>
-			<!-- <p class="badge badge-xs badge-accent">
-				{JSON.stringify(stepsOfFields)}
-			</p> -->
+		{#if !canExpand}
+			<div class="flex w-8 items-center justify-center">
+				<Checkbox
+					checked={isSelected}
+					onCheckedChange={(checked) => {
+						isSelected = !!checked;
+						if (isSelected) {
+							$stepsOfFieldsOBJ = _.merge($stepsOfFieldsOBJ, stepsOFieldsAsQueryFragmentObject);
+						} else {
+							$stepsOfFieldsOBJ = deleteValueAtPath($stepsOfFieldsOBJ, stepsOfFields);
+						}
+					}}
+					class="h-4 w-4"
+				/>
+			</div>
 		{/if}
 
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
 			role="button"
 			tabindex="0"
-			class="text-md duration-100== w-full min-w-max pr-2"
+			class="flex flex-1 items-center gap-2 pr-2 font-medium"
 			onkeydown={(e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
 					if (canExpand) {
 						expand();
 					} else {
@@ -304,33 +272,33 @@
 				}
 			}}
 		>
-			{dd_displayName}
+			<span class="truncate">{dd_displayName}</span>
+
 			{#if isUsedInSomeColumn}
-				<sup class="text-xs text-accent">
-					<i class="bi bi-check"></i>
-				</sup>
+				<i class="bi bi-check-circle-fill text-[10px] text-primary"></i>
 			{/if}
 
 			{#if canAcceptArguments}
-				<button
-					class="btn rounded px-2 normal-case btn-ghost btn-xs {hasQMSarguments
-						? 'text-success'
-						: ''} "
+				<Button
+					variant="ghost"
+					size="icon-xs"
+					class="h-6 w-6 ml-auto {hasQMSarguments ? 'text-primary bg-primary/10' : 'opacity-0 group-hover:opacity-100 transition-opacity'}"
 					data-testid="funnel-button-{dd_displayName}"
 					onclick={(e) => {
 						e.stopPropagation();
 						showModal = true;
 					}}
+					title="Configure Arguments"
 				>
-					<icon class=" {currentQMSArguments ? 'bi-funnel-fill' : 'bi-funnel'} "></icon>
-				</button>
+					<i class="bi {currentQMSArguments ? 'bi-funnel-fill' : 'bi-funnel'} text-[10px]"></i>
+				</Button>
 
 				<QMSWraper
 					bind:QMSWraperContext={activeArgumentsQMSWraperContext}
 					QMSName={type.dd_displayName}
 					QMSType="query"
 					QMS_info={type}
-					QMSWraperContextGiven={currentQMSWraperCtxData}
+					QMSWraperContextGiven={wraperContext ? wraperContext.mergedChildren_QMSWraperCtxData_Store.getObj(stepsOfFields) : undefined}
 				>
 					<Modal
 						bind:show={showModal}
@@ -341,10 +309,14 @@
 								showModal = false;
 							}
 						}}
-						><div class="  w-full">
-							<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-								<div class="w-2"></div>
+					>
+						<div class="w-full">
+							<div class="mb-4 flex items-center gap-2 border-b pb-4">
+								<i class="bi bi-arrow-return-right text-muted-foreground"></i>
+								<h2 class="text-xl font-bold tracking-tight">Arguments for {dd_displayName}</h2>
+							</div>
 
+							<div class="mx-auto space-y-4 py-2">
 								<ActiveArguments
 									stepsOfFieldsThisAppliesTo={stepsOfFields}
 									QMSarguments={getValueAtPath($mergedChildren_finalGqlArgObj_Store, [
@@ -352,18 +324,11 @@
 										'QMSarguments'
 									])}
 								/>
-
-								<div class="w-2"></div>
 							</div>
 						</div>
 					</Modal>
 				</QMSWraper>
 			{/if}
 		</div>
-		<!-- {#if canExpand && args?.length > 0}
-			<button class="btn btn-xs btn-ghost normal-case  rounded px-2 py-1">
-				<icon class="bi-funnel" />
-			</button>
-		{/if} -->
 	</div>
 {/if}

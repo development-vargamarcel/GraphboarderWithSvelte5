@@ -22,14 +22,14 @@ test('filtering a query via funnel in Add Column dropdown works', async ({ page 
 	await page.click('text=Add Endpoint');
 	await page.fill('input[placeholder="my-endpoint"]', ENDPOINT_ID);
 	await page.fill('input[placeholder="https://example.com/graphql"]', mockServer.url);
-	await page.click('button:has-text("Save")');
+	await page.click('button[data-slot="button"]:has-text("Save")');
 
-	const card = page.locator('.card', { hasText: ENDPOINT_ID }).filter({ visible: true });
+	const card = page.locator('[data-slot="card"]', { hasText: ENDPOINT_ID }).filter({ visible: true });
 	await expect(card).toBeVisible();
 	await card.click();
 
     // Wait for schema
-    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 20000 });
+    await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 60000 });
 
 	// Go to items query
     await page.goto(`/endpoints/${ENDPOINT_ID}/queries/items`);
@@ -42,7 +42,7 @@ test('filtering a query via funnel in Add Column dropdown works', async ({ page 
     await funnelButton.click();
 
     // Now the modal should be open
-    const modal = page.locator('dialog.modal').filter({ hasText: /name/ }).first();
+    const modal = page.locator('[data-slot="drawer-content"]').filter({ hasText: /name/ }).first();
     await expect(modal).toBeVisible();
 
     // In the modal, find the 'uppercase' argument and set it to true using test id

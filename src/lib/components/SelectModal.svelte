@@ -353,6 +353,7 @@
 <Modal
 	bind:show={showSelectModal}
 	showApplyBtn={true}
+	modalIdentifier="activeArgumentsDataModal"
 	onApply={() => {
 			$rowSelectionState = getRowSelectionState(selectedRowsModel);
 			$requiredColNames = getRequiredColumnNames(node);

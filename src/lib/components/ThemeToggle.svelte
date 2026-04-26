@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Moon, Sun } from 'lucide-svelte';
 
 	let theme = $state('light');
 
@@ -10,25 +12,31 @@
 		} else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
 			theme = 'dark';
 		}
-		document.documentElement.setAttribute('data-theme', theme);
+		updateTheme(theme);
 	});
+
+	function updateTheme(newTheme: string) {
+		document.documentElement.classList.toggle('dark', newTheme === 'dark');
+		document.documentElement.setAttribute('data-theme', newTheme);
+	}
 
 	const toggleTheme = () => {
 		theme = theme === 'light' ? 'dark' : 'light';
-		document.documentElement.setAttribute('data-theme', theme);
+		updateTheme(theme);
 		localStorage.setItem('theme', theme);
 	};
 </script>
 
-<button
-	class="btn btn-circle btn-ghost"
+<Button
+	variant="ghost"
+	size="icon"
 	onclick={toggleTheme}
 	aria-label="Toggle Theme"
 	title="Toggle Theme"
 >
 	{#if theme === 'light'}
-		<i class="bi bi-moon-fill text-lg"></i>
+		<Moon class="h-5 w-5" />
 	{:else}
-		<i class="bi bi-sun-fill text-lg text-warning"></i>
+		<Sun class="h-5 w-5 text-yellow-500" />
 	{/if}
-</button>
+</Button>

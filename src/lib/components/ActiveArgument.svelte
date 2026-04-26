@@ -27,6 +27,11 @@
 	import SelectModal from './SelectModal.svelte';
 	import ExplorerTable from './ExplorerTable.svelte';
 	import SelectedRowsDisplay from './SelectedRowsDisplay.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Switch } from '$lib/components/ui/switch';
+	import { Label } from '$lib/components/ui/label';
+	import { Trash2, Plus, Info, ChevronRight, Asterisk, MoreVertical } from 'lucide-svelte';
 
 	interface Props {
 		setNotInUseIfNotValid?: boolean;
@@ -264,83 +269,71 @@
 		showModal = false;
 	}}
 >
-		<div class="flex flex-col">
-			<div class="mb-2 w-full text-center text-lg">
-				<p class="badge font-bold badge-info">
-					<!-- {#if group.group_name == 'root'}
-						{activeArgumentData.stepsOfFields?.join(' > ')}
-					{:else}
-						{activeArgumentData.stepsOfFields?.slice(1)?.join(' > ')}
-					{/if} -->
-					{activeArgumentData.stepsOfFields[activeArgumentData.stepsOfFields.length - 1]}
-				</p>
-			</div>
+	<div class="space-y-6">
+		<div class="flex items-center justify-center">
+			<Badge variant="secondary" class="px-3 py-1 text-base font-bold">
+				{activeArgumentData.stepsOfFields[activeArgumentData.stepsOfFields.length - 1]}
+			</Badge>
+		</div>
 
-			<div class="mb-6 flex space-x-4">
-				{#if parentNode?.inputFields?.some((inputField) => {
-					return inputField.dd_displayName == '_not';
-				})}
-					<div class="form-control">
-						<label class="label w-min cursor-pointer py-0">
-							<span class="label-text pr-1">Not</span>
-							<input
-								type="checkbox"
-								class="toggle toggle-sm"
-								bind:checked={isNot}
-								onchange={() => {
-									onContextmenuUsed?.();
-								}}
-							/>
-						</label>
-					</div>
-				{/if}
-
-				<div class="form-control mr-1">
-					<label class="label w-min cursor-pointer py-0">
-						<span class="label-text pr-1">active</span>
-						<input
-							type="checkbox"
-							class="toggle toggle-xs"
-							checked={activeArgumentData?.inUse}
-							onchangecapture={(e) => {
-								e.stopPropagation();
-								inUse_toggle();
-							}}
-						/>
-					</label>
+		<div class="flex flex-wrap items-center justify-center gap-6">
+			{#if parentNode?.inputFields?.some((inputField) => inputField.dd_displayName == '_not')}
+				<div class="flex items-center space-x-2">
+					<Switch id="not-toggle" bind:checked={isNot} onCheckedChange={() => onContextmenuUsed?.()} />
+					<Label for="not-toggle">Not</Label>
 				</div>
-				<button
-					class="btn flex-1 btn-xs btn-warning"
-					aria-label="Delete argument"
-					onclick={() => {
-						activeArgumentsDataGrouped_Store.delete_activeArgument(
-							activeArgumentData,
-							group.group_name
-						);
-						finalGqlArgObj_Store.regenerate_groupsAndfinalGqlArgObj();
-					}}
-				>
-					<i class="bi bi-trash-fill"></i>
-				</button>
-				{#if !CPItemContext}
-					<AddNodeToControlPanel {node} />
-				{/if}
-				{#if CPItemContext}
-					<GroupDescriptionAndControls hasGroup_argsNode={undefined} />
-				{/if}
+			{/if}
+
+			<div class="flex items-center space-x-2">
+				<Switch
+					id="active-toggle"
+					checked={activeArgumentData?.inUse}
+					onCheckedChange={(checked) => inUse_set(checked)}
+				/>
+				<Label for="active-toggle">Active</Label>
 			</div>
 
-			<div class="px-2">
-				<AutoInterface
-					alwaysOn_interfacePicker
-					typeInfo={activeArgumentData}
-					onChanged={(detail: any) => {
-						handleChanged(detail);
-					}}
-				/>
-			</div>
+			<Button
+				variant="destructive"
+				size="sm"
+				class="gap-2"
+				onclick={() => {
+					activeArgumentsDataGrouped_Store.delete_activeArgument(
+						activeArgumentData,
+						group.group_name
+					);
+					finalGqlArgObj_Store.regenerate_groupsAndfinalGqlArgObj();
+					showModal = false;
+				}}
+			>
+				<Trash2 class="h-4 w-4" /> Delete
+			</Button>
+
+			{#if !CPItemContext}
+				<AddNodeToControlPanel {node} />
+			{/if}
+			{#if CPItemContext}
+				<GroupDescriptionAndControls hasGroup_argsNode={undefined} />
+			{/if}
+		</div>
+
+		<div class="rounded-lg border bg-muted/30 p-4">
+			<AutoInterface
+				alwaysOn_interfacePicker
+				typeInfo={activeArgumentData}
+				onChanged={(detail: any) => {
+					handleChanged(detail);
+				}}
+			/>
+		</div>
+
+		<div class="text-sm text-muted-foreground">
 			<Description QMSInfo={activeArgumentData} {parentNode} {node} />
-			<div class="mt-2 w-full overflow-x-auto">
+		</div>
+
+		<div class="mt-4 rounded-lg border bg-background p-4">
+			<Label class="mb-2 block text-xs uppercase tracking-wider text-muted-foreground">Type Definition</Label>
+			<div class="overflow-x-auto">
 				<Type
 					index={0}
 					type={activeArgumentData}
@@ -349,6 +342,7 @@
 					oncolAddRequest={(e) => {}}
 				/>
 			</div>
+		</div>
 	</div>
 </Modal>
 
@@ -356,55 +350,30 @@
 <label
 	use:clickOutside
 	onclick_outside={handleClickOutside}
-	class="pointer-events-auto rounded-box {group.group_isRoot
+	class="group/arg pointer-events-auto relative flex items-center rounded-lg border transition-all hover:border-primary/50 {group.group_isRoot
 		? ' w-min min-w-fit'
-		: 'w-min-fit '}  {!expandedVersion
-		? ' pr-1 '
-		: ' '} 
-	{expandedVersion ? ' pr-2 ' : ' '}
-	{$mutationVersion ? ' pr-2 pb-2 ' : ' '} 
-		{!expandedVersion && !$mutationVersion ? ' md:max-w-[25vw]' : ' '} 
-		 dnd-item my-1 flex
-		 {activeArgumentData?.inUse && !$mutationVersion
+		: 'w-min-fit '} {!expandedVersion ? ' pr-1 ' : ' '} {expandedVersion ? ' pr-2 ' : ' '} {$mutationVersion
+		? ' pr-2 pb-2 '
+		: ' '} {!expandedVersion && !$mutationVersion ? ' md:max-w-[25vw]' : ' '} dnd-item my-1 {activeArgumentData?.inUse &&
+	!$mutationVersion
 		? activeArgumentData.canRunQuery
-			? 'bg-base-200/75 ring  ring-[1px] ring-primary/25 '
-			: 'bg-error/0 ring  ring-[1px] ring-primary/100'
-		: 'bg-base-200/50'} 
-		{$mutationVersion ? 'min-w-[80vw] p-1 md:min-w-[50vw]' : 'pr-[1px]'}
-		"
+			? 'border-primary/20 bg-primary/5 ring-1 ring-primary/20'
+			: 'border-destructive bg-destructive/5'
+		: 'border-transparent bg-muted/40'} {$mutationVersion ? 'min-w-[80vw] p-1 md:min-w-[50vw]' : 'pr-[1px]'}"
 	bind:this={labelEl}
 >
-	<div class="grow">
-		<div class="  flex {$mutationVersion ? 'flex-col' : ''}  space-x-0">
-			<input
-				type="checkbox"
-				class="checkbox hidden input-primary"
-				onchange={(e) => {
-					if (e.target === e.currentTarget) {
-						//leave this here,will prevent the click to go trough
-					}
-				}}
-			/>
-			<div
-				class="   flex grow flex-nowrap text-xs select-none
-											"
-			>
-				<button
-					class="pointer-events-auto {activeArgumentData.inUse
-						? activeArgumentData.canRunQuery
-							? 'outline outline-1  outline-success/30 '
-							: 'outline outline-2 outline-error'
-						: ' '} 
-						{activeArgumentData.inUse ? 'font-semibold' : 'font-normal outline-0'}
-						{$mutationVersion ? 'mb-1 ml-1' : ''}
-						
-						btn h-full min-h-min rounded-box py-0 pl-1 text-xs text-base-content normal-case btn-ghost btn-xs
-						{isNot ? ' bg-gradient-to-r from-secondary/30 outline-dashed' : 'bg-error/0'} {selectedQMS
-						? 'text-secondary'
-						: ''}"
-					onclick={() => {
-						showModal = true;
-					}}
+	<div class="flex grow items-center">
+		<div class="flex {$mutationVersion ? 'flex-col' : ''} w-full items-center space-x-0">
+			<div class="flex grow items-center text-xs select-none">
+				<Button
+					variant="ghost"
+					size="xs"
+					class="h-7 rounded-md px-2 text-[10px] font-medium transition-colors {activeArgumentData.inUse
+						? 'text-foreground'
+						: 'text-muted-foreground hover:text-foreground'} {isNot
+						? 'bg-destructive/10 text-destructive'
+						: ''} {selectedQMS ? 'text-secondary font-bold' : ''}"
+					onclick={() => (showModal = true)}
 					oncontextmenu={(e) => {
 						if (e.target === e.currentTarget) {
 							e.stopPropagation();
@@ -414,55 +383,45 @@
 						}
 					}}
 				>
-					<!-- {#if group.group_name == 'root'}
-						{activeArgumentData.stepsOfFields?.join(' > ') + ':'}
-					{:else}
-						{activeArgumentData.stepsOfFields?.slice(1)?.join(' > ') + ':'}
-					{/if} -->
-					{activeArgumentData.stepsOfFields[activeArgumentData.stepsOfFields.length - 1]}
+					<span class="truncate">{activeArgumentData.stepsOfFields[activeArgumentData.stepsOfFields.length - 1]}</span>
 					{#if activeArgumentData.dd_NON_NULL}
-						<sup>
-							<i class="bi bi-asterisk text-primary"></i>
-						</sup>
+						<Asterisk class="ml-0.5 h-2 w-2 text-primary" />
 					{/if}
-					<!-- {#if selectedRowsColValuesProcessed}
-						: {Object.values(selectedRowsColValuesProcessed[0])[0]}
-					{/if} -->
-				</button>
+				</Button>
 
-				<div
-					class="flex max-w-[65vw] flex-nowrap overflow-x-auto
-								"
-				>
-					{#if !expandedVersion && !$mutationVersion && !$showInputField}
-						<button
-							class="pointer-events-auto btn mx-2 shrink-0 pt-[1px] text-xs font-light text-base-content normal-case btn-ghost btn-xs"
-							onclick={(e) => {
-								if (e.target === e.currentTarget) {
-									e.stopPropagation();
-									e.preventDefault();
-									expandedVersion = true;
-								}
-							}}
-						>
-							{valueToDisplay}
-						</button>
+				{#if !expandedVersion && !$mutationVersion && !$showInputField}
+					<Button
+						variant="ghost"
+						size="xs"
+						class="mx-1 h-6 shrink-0 truncate px-1 text-[10px] font-normal text-muted-foreground hover:bg-muted hover:text-foreground"
+						onclick={(e) => {
+							if (e.target === e.currentTarget) {
+								e.stopPropagation();
+								e.preventDefault();
+								expandedVersion = true;
+							}
+						}}
+					>
+						{valueToDisplay || '...'}
+					</Button>
+				{/if}
+			</div>
+
+			{#if expandedVersion || $mutationVersion || $showInputField}
+				<div class="flex-1">
+					{#if $selectedRowsColValues?.length > 0}
+						<SelectedRowsDisplay />
+					{:else}
+						<div class="pl-1">
+							<AutoInterface
+								typeInfo={activeArgumentData}
+								onChanged={(detail: any) => {
+									handleChanged(detail);
+								}}
+							/>
+						</div>
 					{/if}
 				</div>
-			</div>
-			{#if expandedVersion || $mutationVersion || $showInputField}
-				{#if $selectedRowsColValues?.length > 0}
-					<SelectedRowsDisplay />
-				{:else}
-					<div class="pl-1">
-						<AutoInterface
-							typeInfo={activeArgumentData}
-							onChanged={(detail: any) => {
-								handleChanged(detail);
-							}}
-						/>
-					</div>
-				{/if}
 			{/if}
 		</div>
 	</div>
@@ -470,7 +429,7 @@
 
 {#if activeArgumentData[SHADOW_ITEM_MARKER_PROPERTY_NAME]}
 	<div
-		class="pointer-events-none absolute top-0 left-0 ml-8 h-0 w-11/12"
+		class="pointer-events-none absolute top-0 left-0 z-50 ml-8 h-full w-11/12 rounded-lg border-2 border-dashed border-primary bg-primary/5"
 		id="shadowEl"
 		bind:this={shadowEl}
 	></div>

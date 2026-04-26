@@ -10,15 +10,15 @@ test('debug DND zone after adding filter arg', async ({ page }) => {
   await page.click('text=Add Endpoint');
   await page.fill('input[placeholder="my-endpoint"]', 'mock-graphql');
   await page.fill('input[placeholder="https://example.com/graphql"]', mockServer.url);
-  await page.click('button:has-text("Save")');
+  await page.click('button[data-slot="button"]:has-text("Save")');
   await page.goto('/endpoints/mock-graphql/queries/items');
 
-  await page.locator('.bi-node-plus-fill').first().click();
-  await page.locator('button:has(icon.bi-funnel), button:has(icon.bi-funnel-fill)').first().click();
-  await expect(page.locator('dialog[open]')).toBeVisible();
+  await page.locator('[data-testid="add-column-button"]').first().click();
+  await page.locator('[data-testid^="funnel-button-"]').first().click({ force: true });
+  await expect(page.locator('[data-modal-identifier="activeArgumentsDataModal"]')).toBeVisible();
 
-  await page.locator('dialog[open] button.btn-ghost', { hasText: 'items' }).first().click();
-  const innerDialog = page.locator('dialog[open]').nth(1);
+  await page.locator('[data-modal-identifier="activeArgumentsDataModal"] [data-testid^="funnel-button-items"]').first().click({ force: true });
+  const innerDialog = page.locator('[data-modal-identifier="activeArgumentsDataModal"]').nth(1);
   await expect(innerDialog).toBeVisible();
   await innerDialog.locator('button', { hasText: 'addDefaultFields' }).click();
 
@@ -27,11 +27,11 @@ test('debug DND zone after adding filter arg', async ({ page }) => {
   await page.screenshot({ path: '/tmp/after-filter-add.png', fullPage: true });
 
   // Check DND zone - it's a section[role=list] inside the outer dialog
-  const dndZone = page.locator('dialog[open]').first().locator('section[role="list"]');
+  const dndZone = page.locator('[data-slot="drawer-content"]').first().locator('section[role="list"]');
   console.log('DND zone content:', await dndZone.innerHTML().catch(() => 'not found'));
 
-  // Also check what's inside dialog[open] first's section
-  const firstDialogContent = await page.locator('dialog[open]').first().locator('section').innerHTML().catch(() => 'no section');
+  // Also check what's inside [data-slot="drawer-content"] first's section
+  const firstDialogContent = await page.locator('[data-slot="drawer-content"]').first().locator('section').innerHTML().catch(() => 'no section');
   console.log('Section in first dialog:', firstDialogContent.substring(0, 1000));
 
   // Look for filter arg button in DND area

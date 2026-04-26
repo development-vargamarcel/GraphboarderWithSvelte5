@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
-	//import { cubicInOut } from 'svelte/easing';
 	import { browser } from '$app/environment';
-
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { showTabs } from '$lib/stores/showTabs';
+	import { Button } from '$lib/components/ui/button';
+	import { ChevronLeft, LogOut, Home } from 'lucide-svelte';
+
 	interface Props {
 		backPath?: any;
 		CustomId?: string;
@@ -23,7 +24,6 @@
 		title,
 		children
 	}: Props = $props();
-	//showTabs.set(true); // must change this line !!!!!!!!!!!!!!
 
 	let hasPreviousPage = $state(false);
 	if (browser) {
@@ -38,22 +38,6 @@
 				let path = backPath ? backPath : '/';
 				goto(`${path}`, { replaceState: true });
 			}
-		}
-	};
-
-	/// scroll logic start b
-	const storeScroll = () => {
-		let mainEl = document.getElementById(CustomId);
-		if (mainEl) {
-			localStorage.setItem(CustomId, mainEl.scrollTop.toString());
-		}
-	};
-	const revertLastScroll = () => {
-		let mainEl = document.getElementById(CustomId);
-
-		let lastScroll = localStorage.getItem(CustomId);
-		if (lastScroll && mainEl) {
-			mainEl.scrollTop = parseInt(lastScroll, 10);
 		}
 	};
 
@@ -84,8 +68,6 @@
 			}
 		}
 	});
-
-	/// scroll logic end
 </script>
 
 {#if MenuItem}
@@ -102,24 +84,22 @@
 		in:scale|global={{ duration: 300, opacity: 1, start: 0.97 }}
 		out:scale|global={{ duration: 300, opacity: 0, start: 0.97 }}
 		id={CustomId}
-		class="  fixed top-0 z-40 h-full w-full overflow-y-scroll bg-base-100 pb-96"
+		class="  fixed top-0 z-40 h-full w-full overflow-y-scroll bg-background pb-96"
 	>
-		<div class="navbar sticky top-0 z-50 mb-2 w-full bg-base-100 text-base-content shadow-md">
-			<div class="flex-none">
-				<button class="btn btn-square btn-ghost" onclick={backButtonClick} aria-label="Go Back">
+		<header class="sticky top-0 z-50 mb-2 flex h-14 w-full items-center border-b bg-background/95 px-4 backdrop-blur shadow-sm">
+			<div class="flex items-center gap-4">
+				<Button variant="ghost" size="icon" onclick={backButtonClick} aria-label="Go Back">
 					{#if hasPreviousPage}
-						<i class="bi bi-chevron-left text-3xl font-black text-success"></i>
+						<ChevronLeft class="h-6 w-6 text-success" />
 					{:else if backPath}
-						<i class="bi bi-box-arrow-left text-3xl font-black text-success"></i>
+						<LogOut class="h-6 w-6 text-success" />
 					{:else}
-						<i class="bi bi-house text-3xl font-black text-success"></i>
+						<Home class="h-6 w-6 text-success" />
 					{/if}
-				</button>
+				</Button>
+				<h1 class="text-lg font-bold tracking-tight"> {title} </h1>
 			</div>
-			<div class="mx-2 flex-1 px-2">
-				<span class="  text-lg font-bold"> {title} </span>
-			</div>
-		</div>
+		</header>
 		<div class="w-full p-2 md:w-[70vw]">
 			{@render children?.()}
 		</div>

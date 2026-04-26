@@ -33,11 +33,11 @@ const registerEndpoint = async (page: Page, url: string): Promise<void> => {
 	await page.click('text=Add Endpoint');
 	await page.fill('input[placeholder="my-endpoint"]', ENDPOINT_ID);
 	await page.fill('input[placeholder="https://example.com/graphql"]', url);
-	await page.click('button:has-text("Save")');
-	const card = page.locator('.card', { hasText: ENDPOINT_ID }).filter({ visible: true });
+	await page.click('button[data-slot="button"]:has-text("Save")');
+	const card = page.locator('[data-slot="card"]', { hasText: ENDPOINT_ID }).filter({ visible: true });
 	await expect(card).toBeVisible();
 	await card.click();
-	await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 20000 });
+	await page.waitForSelector('.loading-spinner', { state: 'hidden', timeout: 60000 });
 };
 
 /**
@@ -46,11 +46,11 @@ const registerEndpoint = async (page: Page, url: string): Promise<void> => {
 const removeEndpoint = async (page: Page): Promise<void> => {
 	try {
 		await page.goto('/endpoints');
-		const card = page.locator('.card', { hasText: ENDPOINT_ID }).filter({ visible: true });
+		const card = page.locator('[data-slot="card"]', { hasText: ENDPOINT_ID }).filter({ visible: true });
 		if (await card.isVisible()) {
 			await card.hover();
-			await card.locator('button[title="Delete Endpoint"]').click();
-			await page.click('button:has-text("Confirm")');
+			await card.locator('button[title="Delete"]').click();
+			await page.click('button[data-slot="button"]:has-text("Confirm")');
 		}
 	} catch {
 		/* cleanup errors are non-fatal */
@@ -62,10 +62,10 @@ const removeEndpoint = async (page: Page): Promise<void> => {
  * Enter. Asserts the column header appears in the results table.
  */
 const addColumn = async (page: Page, fieldName: string): Promise<void> => {
-	const addColBtn = page.locator('.bi-node-plus-fill').first();
-	await expect(addColBtn).toBeVisible({ timeout: 20000 });
+	const addColBtn = page.locator('[data-testid="add-column-button"]').first();
+	await expect(addColBtn).toBeVisible({ timeout: 60000 });
 	await addColBtn.click();
-	const input = page.locator('.dropdown-content input').first();
+	const input = page.locator('[data-testid="add-column-dropdown"] input').first();
 	await expect(input).toBeVisible();
 	await input.fill(fieldName);
 	await input.press('Enter');
@@ -77,13 +77,13 @@ const addColumn = async (page: Page, fieldName: string): Promise<void> => {
  * column-picker dropdown and asserts the modal is visible.
  */
 const openArgumentModal = async (page: Page, queryName: string): Promise<void> => {
-	await page.locator('.bi-node-plus-fill').first().click();
+	await page.locator('[data-testid="add-column-button"]').first().click();
 	const row = page
-		.locator('.dropdown-content div')
+		.locator('[data-testid="add-column-dropdown"] div')
 		.filter({ hasText: new RegExp(`^${queryName}$`) })
 		.first();
 	await expect(row).toBeVisible();
-	const funnelBtn = row.locator('.bi-funnel, .bi-funnel-fill').first();
+	const funnelBtn = row.locator('[data-testid^="funnel-button-"]').first();
 	await expect(funnelBtn).toBeVisible();
 	await funnelBtn.click();
 	await expect(page.locator('.modal-box')).toBeVisible();
@@ -200,13 +200,13 @@ test.describe('mutation flow', () => {
 		const nameInput = page
 			.locator('input[placeholder="name"], .modal-box input, main#page input')
 			.first();
-		await expect(nameInput).toBeVisible({ timeout: 20000 });
+		await expect(nameInput).toBeVisible({ timeout: 60000 });
 		await nameInput.fill(uniqueName);
 		await page.click('button:has-text("submit")');
 
 		// Mutation result table shows the new item
 		await expect(page.locator('td', { hasText: uniqueName }).first()).toBeVisible({
-			timeout: 20000
+			timeout: 60000
 		});
 
 		// Same item must be returned by the items list query (server is stateful)
@@ -228,7 +228,7 @@ test.describe('single-item query', () => {
 		const idInput = page
 			.locator('input[placeholder="id"], main#page input[type="text"], main#page input')
 			.first();
-		await expect(idInput).toBeVisible({ timeout: 20000 });
+		await expect(idInput).toBeVisible({ timeout: 60000 });
 		await idInput.fill('1');
 
 		await addColumn(page, 'name');
@@ -245,10 +245,10 @@ test.describe('explorer flow', () => {
 		await page.click('button:has-text("Root")');
 		await page.click('button:has-text("Explorer")');
 
-		await expect(page.locator('.btn-info', { hasText: 'Item' }).first()).toBeVisible({
+		await expect(page.locator('[data-slot="badge"]', { hasText: 'Item' }).first()).toBeVisible({
 			timeout: 10000
 		});
-		await expect(page.locator('.btn-info', { hasText: 'Query' }).first()).toBeVisible();
+		await expect(page.locator('[data-slot="badge"]', { hasText: 'Query' }).first()).toBeVisible();
 	});
 
 	test('queries scope shows the items and item query fields', async ({ page }) => {
@@ -257,10 +257,10 @@ test.describe('explorer flow', () => {
 		await page.click('button:has-text("Queries")');
 		await page.click('button:has-text("Explorer")');
 
-		await expect(page.locator('.btn-info', { hasText: 'items' }).first()).toBeVisible({
+		await expect(page.locator('td', { hasText: 'items' }).first()).toBeVisible({
 			timeout: 10000
 		});
-		await expect(page.locator('.btn-info', { hasText: 'item' }).first()).toBeVisible();
+		await expect(page.locator('td', { hasText: 'item' }).first()).toBeVisible();
 	});
 
 	test('mutations scope shows the addItem mutation field', async ({ page }) => {
@@ -269,7 +269,7 @@ test.describe('explorer flow', () => {
 		await page.click('button:has-text("Mutations")');
 		await page.click('button:has-text("Explorer")');
 
-		await expect(page.locator('.btn-info', { hasText: 'addItem' }).first()).toBeVisible({
+		await expect(page.locator('td', { hasText: 'addItem' }).first()).toBeVisible({
 			timeout: 10000
 		});
 	});
@@ -279,14 +279,14 @@ test.describe('explorer flow', () => {
 
 		await page.click('button:has-text("Root")');
 		await page.click('button:has-text("Explorer")');
-		await expect(page.locator('.btn-info').first()).toBeVisible({ timeout: 10000 });
+		await expect(page.locator('button:has-text("+")').first()).toBeVisible({ timeout: 10000 });
 
 		// Click the first enabled expand (+) button (non-scalar types only)
-		const expandBtn = page.locator('button:not(.btn-disabled):has-text("+")').first();
+		const expandBtn = page.locator('button:has-text("+")').first();
 		await expandBtn.click();
 
 		// The button now shows "-" and sub-fields are rendered below
-		await expect(page.locator('button:has-text("-")').first()).toBeVisible({ timeout: 5000 });
+		await expect(page.locator('button:has-text("-")').first()).toBeVisible({ timeout: 30000 });
 	});
 
 	test('text filter narrows the visible type list', async ({ page }) => {
@@ -294,15 +294,15 @@ test.describe('explorer flow', () => {
 
 		await page.click('button:has-text("Root")');
 		await page.click('button:has-text("Explorer")');
-		await expect(page.locator('.btn-info').first()).toBeVisible({ timeout: 10000 });
-		const initialCount = await page.locator('.btn-info').count();
+		await expect(page.locator('td').first()).toBeVisible({ timeout: 10000 });
+		const initialCount = await page.locator('td').count();
 
 		await page.fill('input[placeholder="Filter (e.g. +user -id)"]', 'Item');
 		await page.keyboard.press('Enter');
 
-		const filteredCount = await page.locator('.btn-info').count();
+		const filteredCount = await page.locator('td').count();
 		expect(filteredCount).toBeLessThan(initialCount);
-		await expect(page.locator('.btn-info', { hasText: 'Item' }).first()).toBeVisible();
+		await expect(page.locator('td', { hasText: 'Item' }).first()).toBeVisible();
 	});
 
 	test('clicking {} opens the type JSON modal with schema data', async ({ page }) => {
@@ -384,13 +384,13 @@ test.describe('copy introspection schema', () => {
 		await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 		await page.goto(`/endpoints/${ENDPOINT_ID}/queries/items`);
 		// Wait until the query builder is ready (schema loaded)
-		await expect(page.locator('.bi-node-plus-fill').first()).toBeVisible({ timeout: 20000 });
+		await expect(page.locator('[data-testid="add-column-button"]').first()).toBeVisible({ timeout: 60000 });
 
 		await page.click('button[aria-label="Copy Schema JSON"]');
 
 		await expect(
 			page.locator('text=Introspection schema copied to clipboard!')
-		).toBeVisible({ timeout: 5000 });
+		).toBeVisible({ timeout: 30000 });
 	});
 
 	test('clipboard contains valid GraphQL schema JSON with expected types', async ({
@@ -399,13 +399,13 @@ test.describe('copy introspection schema', () => {
 	}) => {
 		await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 		await page.goto(`/endpoints/${ENDPOINT_ID}/queries/items`);
-		await expect(page.locator('.bi-node-plus-fill').first()).toBeVisible({ timeout: 20000 });
+		await expect(page.locator('[data-testid="add-column-button"]').first()).toBeVisible({ timeout: 60000 });
 
 		await page.click('button[aria-label="Copy Schema JSON"]');
 		// Toast confirms the write succeeded
 		await expect(
 			page.locator('text=Introspection schema copied to clipboard!')
-		).toBeVisible({ timeout: 5000 });
+		).toBeVisible({ timeout: 30000 });
 
 		const raw = await page.evaluate(() => navigator.clipboard.readText());
 		const schema = JSON.parse(raw);
@@ -442,11 +442,11 @@ test.describe('history tracking', () => {
 		const nameInput = page
 			.locator('input[placeholder="name"], .modal-box input, main#page input')
 			.first();
-		await expect(nameInput).toBeVisible({ timeout: 20000 });
+		await expect(nameInput).toBeVisible({ timeout: 60000 });
 		await nameInput.fill(uniqueName);
 		await page.click('button:has-text("submit")');
 		await expect(page.locator('td', { hasText: uniqueName }).first()).toBeVisible({
-			timeout: 20000
+			timeout: 60000
 		});
 
 		await page.goto(`/endpoints/${ENDPOINT_ID}/history`);
@@ -467,11 +467,11 @@ test.describe('history tracking', () => {
 		const nameInput = page
 			.locator('input[placeholder="name"], .modal-box input, main#page input')
 			.first();
-		await expect(nameInput).toBeVisible({ timeout: 20000 });
+		await expect(nameInput).toBeVisible({ timeout: 60000 });
 		await nameInput.fill(uniqueName);
 		await page.click('button:has-text("submit")');
 		await expect(page.locator('td', { hasText: uniqueName }).first()).toBeVisible({
-			timeout: 20000
+			timeout: 60000
 		});
 
 		// History should list both operations

@@ -1,19 +1,10 @@
 <script module>
-	/**
-	 * Formats bytes into a human-readable string.
-	 * @param bytes - The number of bytes.
-	 * @param decimals - The number of decimal places (default 2).
-	 * @returns Formatted string (e.g., "1.5 MB").
-	 */
 	function formatBytes(bytes: number, decimals = 2) {
 		if (!+bytes) return '0 Bytes';
-
 		const k = 1024;
 		const dm = decimals < 0 ? 0 : decimals;
 		const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
-
 		return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 	}
 </script>
@@ -25,8 +16,7 @@
 	import {
 		getDataGivenStepsOfFields,
 		getFields_Grouped,
-		getRootType,
-		getPreciseType
+		getRootType
 	} from '$lib/utils/usefulFunctions';
 	import { onDestroy, onMount, getContext } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -40,18 +30,13 @@
 	import { browser } from '$app/environment';
 	import GraphqlCodeDisplay from './GraphqlCodeDisplay.svelte';
 	import type { QMSWraperContext, QMSMainWraperContext } from '$lib/types';
-	import JSON5 from 'json5';
 	import HeadersEditor from '$lib/components/HeadersEditor.svelte';
 	import EnvVarsManager from '$lib/components/EnvVarsManager.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
+	import * as Alert from '$lib/components/ui/alert';
+	import { ListChecks, Braces, Code, Timer, HardDrive, PlusCircle, XCircle } from 'lucide-svelte';
 
-	/**
-	 * Component that displays a list of results from a GraphQL endpoint.
-	 * Handles data fetching, pagination, and switching between table and JSON views.
-	 */
-
-	/**
-	 * Props for EndpointsList
-	 */
 	interface Props {
 		prefix?: string;
 		QMSName: any;
@@ -67,7 +52,6 @@
 	const WraperContext = getContext('QMSWraperContext') as QMSWraperContext;
 	const {
 		QMS_bodyPart_StoreDerived_rowsCount = null,
-		activeArgumentsDataGrouped_Store,
 		tableColsData_Store,
 		QMS_bodyPartsUnifier_StoreDerived,
 		paginationOptions,
@@ -97,12 +81,10 @@
 		data: null
 	});
 	let rows = $state<any[]>([]);
-	let rowsCurrent: any[] = [];
 	let loadedF: any;
 	let completeF: any;
 	let infiniteId = $state(Math.random());
 
-	// Metrics
 	let executionTime = $state<number | null>(null);
 	let responseSize = $state<number | null>(null);
 	let viewMode = $state<'table' | 'json'>('table');
@@ -113,10 +95,6 @@
 		}
 	});
 
-	/**
-	 * Handles infinite scrolling events.
-	 * @param detail - Event detail containing loaded and complete callbacks.
-	 */
 	function infiniteHandler({ detail: { loaded, complete } }: any) {
 		loadedF = loaded;
 		completeF = complete;
@@ -127,7 +105,7 @@
 		);
 		if (
 			rowLimitingArgNames?.some((argName: any) => {
-				return rows.length / ($paginationState as any)?.[argName] >= 1; //means that all previous pages contained nr of items == page items size
+				return rows.length / ($paginationState as any)?.[argName] >= 1;
 			}) ||
 			paginationTypeInfo?.name == 'pageBased'
 		) {
@@ -138,20 +116,14 @@
 		}
 	}
 
-	/**
-	 * Executes the GraphQL query.
-	 * @param queryBody - The GraphQL query string.
-	 */
 	const runQuery = (queryBody: string) => {
 		let fetching = true;
 		let error: any = false;
 		let data = false;
 
-		console.debug('Running query:', queryBody);
 		const startTime = performance.now();
 
 		if (!urqlCoreClient || !currentQMS_info) {
-			console.warn('Missing client or QMS info');
 			return;
 		}
 
@@ -165,11 +137,9 @@
 				fetching = false;
 
 				if (result.error) {
-					console.error('Query error:', result.error);
 					error = result.error.message;
 				}
 				if (result.data) {
-					console.debug('Query data received');
 					data = result.data;
 					const jsonString = JSON.stringify(result.data);
 					responseSize = new Blob([jsonString]).size;
@@ -180,7 +150,7 @@
 					...endpointInfo.get_rowsLocation(currentQMS_info!, schemaData)
 				];
 				const rawData = getDataGivenStepsOfFields(undefined, queryData.data, stepsOfFieldsInput);
-				rowsCurrent = Array.isArray(rawData) ? rawData : rawData ? [rawData] : [];
+				let rowsCurrent = Array.isArray(rawData) ? rawData : rawData ? [rawData] : [];
 
 				if ($paginationOptions.infiniteScroll) {
 					if (
@@ -225,8 +195,6 @@
 				} else {
 					completeF && completeF();
 				}
-
-				rowsCurrent = [];
 			});
 	};
 
@@ -242,11 +210,7 @@
 	};
 
 	let column_stepsOfFields = $state('');
-
-	//Active arguments logic
 	let showQMSBody = $state(false);
-	let showNonPrettifiedQMSBody = false;
-
 	let showHeadersModal = $state(false);
 	let showVarsModal = $state(false);
 
@@ -259,8 +223,7 @@
 
 {@render children?.()}
 
-<!-- main -->
-<div class="z-50 mx-2 flex flex-wrap items-center space-x-2 gap-y-2">
+<div class="z-50 mx-2 flex flex-wrap items-center space-x-2 gap-y-2 py-2">
 	<AddColumn
 		bind:column_stepsOfFields
 		{dd_relatedRoot}
@@ -277,12 +240,10 @@
 					showModal = false;
 				}
 			}}
-			><div class="  w-full">
-				<div class="mx-auto mt-2 w-full space-y-2 pb-2">
-					<div class="w-2"></div>
-					<ActiveArguments />
-					<div class="w-2"></div>
-				</div>
+		>
+			<div class="w-full space-y-4">
+				<h2 class="text-xl font-bold tracking-tight">Active Arguments</h2>
+				<ActiveArguments />
 			</div>
 		</Modal>
 		<Modal bind:show={showHeadersModal} modalIdentifier="headers-modal" showApplyBtn={false}>
@@ -292,105 +253,112 @@
 			<EnvVarsManager onClose={() => (showVarsModal = false)} />
 		</Modal>
 	</div>
-	<div class="join">
-		<button
-			class="btn join-item btn-xs {viewMode === 'table' ? 'btn-active' : ''}"
-			onclick={() => (viewMode = 'table')}>Table</button
+
+	<div class="inline-flex h-8 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+		<Button
+			variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+			size="xs"
+			class="h-6 rounded-md px-3 text-xs shadow-none"
+			onclick={() => (viewMode = 'table')}>Table</Button
 		>
-		<button
-			class="btn join-item btn-xs {viewMode === 'json' ? 'btn-active' : ''}"
-			onclick={() => (viewMode = 'json')}>JSON</button
+		<Button
+			variant={viewMode === 'json' ? 'secondary' : 'ghost'}
+			size="xs"
+			class="h-6 rounded-md px-3 text-xs shadow-none"
+			onclick={() => (viewMode = 'json')}>JSON</Button
 		>
 	</div>
 
-	<button
-		class="btn normal-case btn-xs"
+	<Button
+		variant="outline"
+		size="xs"
 		onclick={() => (showHeadersModal = true)}
 		title="Edit Request Headers"
 	>
-		<i class="bi bi-list-check"></i> Headers
-	</button>
-	<button
-		class="btn normal-case btn-xs"
+		<ListChecks class="mr-1 h-3 w-3" /> Headers
+	</Button>
+	<Button
+		variant="outline"
+		size="xs"
 		onclick={() => (showVarsModal = true)}
 		title="Manage Environment Variables"
 	>
-		<i class="bi bi-braces"></i> Variables
-	</button>
+		<Braces class="mr-1 h-3 w-3" /> Variables
+	</Button>
 
-	<button
-		class=" btn grow normal-case btn-xs"
+	<Button
+		variant="outline"
+		size="xs"
+		class="grow"
 		onclick={() => {
 			showQMSBody = !showQMSBody;
-		}}>QMS body</button
+		}}><Code class="mr-1 h-3 w-3" /> QMS body</Button
 	>
+
 	{#if executionTime !== null}
-		<div class="badge gap-2 badge-ghost">
-			<i class="bi bi-stopwatch"></i>
+		<Badge variant="secondary" class="gap-1.5 py-1">
+			<Timer class="h-3 w-3" />
 			{executionTime}ms
-		</div>
+		</Badge>
 	{/if}
 	{#if responseSize !== null}
-		<div class="badge gap-2 badge-ghost">
-			<i class="bi bi-hdd-network"></i>
+		<Badge variant="secondary" class="gap-1.5 py-1">
+			<HardDrive class="h-3 w-3" />
 			{formatBytes(responseSize)}
-		</div>
+		</Badge>
 	{/if}
 
 	{#if QMS_bodyPart_StoreDerived_rowsCount && currentQMS_info}
-		<div class="badge flex space-x-2 badge-primary">
+		<Badge variant="default" class="gap-1.5 py-1">
 			{rows.length}/
 			<RowCount
 				QMS_bodyPart_StoreDerived={QMS_bodyPart_StoreDerived_rowsCount}
 				QMS_info={currentQMS_info}
 			/>
-		</div>
+		</Badge>
 	{/if}
 
-	<button class="btn btn-xs btn-primary" aria-label="Add">
-		<i class="bi bi-plus-circle-fill"></i>
-	</button>
+	<Button variant="default" size="icon-xs" aria-label="Add" onclick={() => (showModal = true)}>
+		<PlusCircle class="h-3 w-3" />
+	</Button>
 </div>
 
 {@render children?.()}
+
 {#if queryData.error}
-	<div class="mx-auto mb-2 px-4">
-		<div class="alert alert-error shadow-lg">
-			<div>
-				<button
-					class="btn p-0 btn-ghost btn-sm"
-					aria-label="Dismiss error"
+	<div class="mx-auto mb-4 px-4">
+		<Alert.Root variant="destructive" class="shadow-sm">
+			<XCircle class="h-4 w-4" />
+			<Alert.Description class="flex items-center justify-between gap-4">
+				<span class="max-h-24 overflow-auto font-mono text-xs">{queryData.error}</span>
+				<Button
+					variant="ghost"
+					size="icon-xs"
 					onclick={() => {
 						queryData.error = null;
 					}}
 				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-6 w-6 flex-shrink-0 cursor-pointer stroke-current"
-						fill="none"
-						viewBox="0 0 24 24"
-						><path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/></svg
-					>
-				</button>
+					<XCircle class="h-4 w-4" />
+				</Button>
+			</Alert.Description>
+		</Alert.Root>
+	</div>
+{/if}
 
-				<span class="max-h-20 overflow-auto">{queryData.error}</span>
-			</div>
+{#if queryData.fetching}
+	<div class="flex items-center justify-center p-12 text-muted-foreground">
+		<div class="flex items-center gap-2">
+			<Timer class="h-5 w-5 animate-pulse" />
+			<span class="animate-pulse font-medium">Fetching data...</span>
 		</div>
 	</div>
 {/if}
-{#if queryData.fetching}
-	<p>Loading...</p>
-{/if}
+
 {#if showQMSBody}
-	<GraphqlCodeDisplay {showNonPrettifiedQMSBody} value={$QMS_bodyPartsUnifier_StoreDerived} />
+	<GraphqlCodeDisplay value={$QMS_bodyPartsUnifier_StoreDerived} />
 {/if}
 
-<div class="md:px-2">
+<div class="px-2">
 	{#if viewMode === 'table'}
 		<Table
 			{infiniteId}
@@ -415,4 +383,3 @@
 		</div>
 	{/if}
 </div>
-<div></div>
