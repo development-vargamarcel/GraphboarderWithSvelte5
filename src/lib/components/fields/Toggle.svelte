@@ -48,8 +48,9 @@
 		{/if}
 		<input
 			type="checkbox"
-			class="pointer-events-auto toggle {otherClases}"
-			data-testid="toggle-{label}"
+			class="pointer-events-auto toggle {otherClases} min-h-4 min-w-8"
+			data-testid="toggle-{label.toLowerCase()}"
+			id="toggle-{label.toLowerCase()}"
 			bind:checked={value}
 			{disabled}
 			onchange={handleChange}

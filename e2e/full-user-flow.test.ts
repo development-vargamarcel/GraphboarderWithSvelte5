@@ -78,15 +78,12 @@ const addColumn = async (page: Page, fieldName: string): Promise<void> => {
  */
 const openArgumentModal = async (page: Page, queryName: string): Promise<void> => {
 	await page.locator('[data-testid="add-column-button"]').first().click();
-	const row = page
-		.locator('[data-testid="add-column-dropdown"] div')
-		.filter({ hasText: new RegExp(`^${queryName}$`) })
-		.first();
-	await expect(row).toBeVisible();
-	const funnelBtn = row.locator('[data-testid^="funnel-button-"]').first();
+	const funnelBtn = page.locator(`[data-testid="funnel-button-${queryName}-COL_ADD"]`).first();
 	await expect(funnelBtn).toBeVisible();
 	await funnelBtn.click();
-	await expect(page.locator('.modal-box')).toBeVisible();
+	await expect(
+		page.locator('[data-modal-identifier="activeArgumentsDataModal"]').filter({ visible: true })
+	).toBeVisible();
 };
 
 // ─── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -138,7 +135,8 @@ test.describe('full query flow', () => {
 
 		// Apply filter for "Alpha"
 		await openArgumentModal(page, 'items');
-		await page.locator('.modal-box input').first().fill('Alpha');
+		const modal = page.locator('[data-modal-identifier="activeArgumentsDataModal"]').filter({ visible: true });
+		await modal.locator('[data-testid="toggle-input-filter"]').first().fill('Alpha');
 		await page.keyboard.press('Escape');
 
 		await expect(page.locator('td', { hasText: 'Alpha' }).first()).toBeVisible({ timeout: 10000 });
@@ -151,14 +149,15 @@ test.describe('full query flow', () => {
 
 		// Set filter → Alpha
 		await openArgumentModal(page, 'items');
-		await page.locator('.modal-box input').first().fill('Alpha');
+		const modal = page.locator('[data-modal-identifier="activeArgumentsDataModal"]').filter({ visible: true });
+		await modal.locator('[data-testid="toggle-input-filter"]').first().fill('Alpha');
 		await page.keyboard.press('Escape');
 		await expect(page.locator('td', { hasText: 'Alpha' }).first()).toBeVisible({ timeout: 10000 });
 		await expect(page.locator('td', { hasText: 'Beta' }).first()).not.toBeVisible();
 
 		// Change filter → Beta
 		await openArgumentModal(page, 'items');
-		const input = page.locator('.modal-box input').first();
+		const input = modal.locator('[data-testid="toggle-input-filter"]').first();
 		await input.clear();
 		await input.fill('Beta');
 		await page.keyboard.press('Escape');
@@ -173,13 +172,14 @@ test.describe('full query flow', () => {
 
 		// Apply filter so Beta disappears
 		await openArgumentModal(page, 'items');
-		await page.locator('.modal-box input').first().fill('Alpha');
+		const modal = page.locator('[data-modal-identifier="activeArgumentsDataModal"]').filter({ visible: true });
+		await modal.locator('[data-testid="toggle-input-filter"]').first().fill('Alpha');
 		await page.keyboard.press('Escape');
 		await expect(page.locator('td', { hasText: 'Beta' }).first()).not.toBeVisible();
 
 		// Clear filter
 		await openArgumentModal(page, 'items');
-		await page.locator('.modal-box input').first().clear();
+		await modal.locator('[data-testid="toggle-input-filter"]').first().clear();
 		await page.keyboard.press('Escape');
 
 		await expect(page.locator('td', { hasText: 'Alpha' }).first()).toBeVisible({ timeout: 10000 });
@@ -197,9 +197,7 @@ test.describe('mutation flow', () => {
 
 		// Execute mutation
 		await page.goto(`/endpoints/${ENDPOINT_ID}/mutations/addItem`);
-		const nameInput = page
-			.locator('input[placeholder="name"], .modal-box input, main#page input')
-			.first();
+		const nameInput = page.locator('[data-testid="toggle-input-name"]').first();
 		await expect(nameInput).toBeVisible({ timeout: 60000 });
 		await nameInput.fill(uniqueName);
 		await page.click('button:has-text("submit")');
@@ -225,9 +223,7 @@ test.describe('single-item query', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/queries/item`);
 
 		// The required "id: ID!" argument input should be visible on the page
-		const idInput = page
-			.locator('input[placeholder="id"], main#page input[type="text"], main#page input')
-			.first();
+		const idInput = page.locator('[data-testid="toggle-input-id"]').first();
 		await expect(idInput).toBeVisible({ timeout: 60000 });
 		await idInput.fill('1');
 
@@ -243,7 +239,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Root")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 
 		await expect(page.locator('[data-slot="badge"]', { hasText: 'Item' }).first()).toBeVisible({
 			timeout: 10000
@@ -255,7 +251,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Queries")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 
 		await expect(page.locator('td', { hasText: 'items' }).first()).toBeVisible({
 			timeout: 10000
@@ -267,7 +263,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Mutations")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 
 		await expect(page.locator('td', { hasText: 'addItem' }).first()).toBeVisible({
 			timeout: 10000
@@ -278,7 +274,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Root")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 		await expect(page.locator('button:has-text("+")').first()).toBeVisible({ timeout: 10000 });
 
 		// Click the first enabled expand (+) button (non-scalar types only)
@@ -293,7 +289,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Root")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 		await expect(page.locator('td').first()).toBeVisible({ timeout: 10000 });
 		const initialCount = await page.locator('td').count();
 
@@ -309,7 +305,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Root")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 		await expect(
 			page.locator('button[aria-label="Show type info as JSON"]').first()
 		).toBeVisible({ timeout: 10000 });
@@ -317,10 +313,11 @@ test.describe('explorer flow', () => {
 		await page.locator('button[aria-label="Show type info as JSON"]').first().click();
 
 		// Modal must open and contain a <pre> with JSON
-		await expect(page.locator('.modal-box')).toBeVisible();
-		await expect(page.locator('.modal-box pre')).toBeVisible();
+		const modal = page.locator('[data-modal-identifier="typeJsonInfoModal"]').filter({ visible: true });
+		await expect(modal).toBeVisible();
+		await expect(modal.locator('pre')).toBeVisible();
 
-		const json = await page.locator('.modal-box pre').textContent();
+		const json = await modal.locator('pre').textContent();
 		// Standard GraphQL schema fields must be present
 		expect(json).toContain('"name"');
 		expect(json).toContain('"kind"');
@@ -328,15 +325,15 @@ test.describe('explorer flow', () => {
 		expect(json).not.toContain('"dd_');
 
 		// Closing the modal via the × button works
-		await page.locator('.modal-box button[aria-label="Close"]').click();
-		await expect(page.locator('.modal-box')).not.toBeVisible();
+		await modal.locator('button[aria-label="Close"]').click();
+		await expect(modal).not.toBeVisible();
 	});
 
 	test('type JSON modal for Item shows OBJECT kind and its fields', async ({ page }) => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Root")');
-		await page.click('button:has-text("Explorer")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Explorer' }).first().click();
 
 		// Narrow to just the Item type so the first {} button is unambiguous
 		await page.fill('input[placeholder="Filter (e.g. +user -id)"]', 'Item');
@@ -347,9 +344,10 @@ test.describe('explorer flow', () => {
 		).toBeVisible({ timeout: 10000 });
 		await page.locator('button[aria-label="Show type info as JSON"]').first().click();
 
-		await expect(page.locator('.modal-box h3', { hasText: 'type info' })).toBeVisible();
+		const modal = page.locator('[data-modal-identifier="typeJsonInfoModal"]').filter({ visible: true });
+		await expect(modal.locator('h3', { hasText: 'type info' })).toBeVisible();
 
-		const rawJson = await page.locator('.modal-box pre').textContent();
+		const rawJson = await modal.locator('pre').textContent();
 		const parsed = JSON.parse(rawJson ?? '{}');
 
 		expect(parsed.name).toBe('Item');
@@ -367,7 +365,7 @@ test.describe('explorer flow', () => {
 		await page.goto(`/endpoints/${ENDPOINT_ID}/explorer`);
 
 		await page.click('button:has-text("Queries")');
-		await page.click('button:has-text("Table")');
+		await page.locator('div[role="tablist"] button').filter({ hasText: 'Table' }).first().click();
 
 		// Table header and data rows must be present
 		await expect(page.locator('th').first()).toBeVisible({ timeout: 10000 });
@@ -439,9 +437,7 @@ test.describe('history tracking', () => {
 	test('executing a mutation records it in the history page', async ({ page }) => {
 		const uniqueName = `HistTest-${Date.now()}`;
 		await page.goto(`/endpoints/${ENDPOINT_ID}/mutations/addItem`);
-		const nameInput = page
-			.locator('input[placeholder="name"], .modal-box input, main#page input')
-			.first();
+		const nameInput = page.locator('[data-testid="toggle-input-name"]').first();
 		await expect(nameInput).toBeVisible({ timeout: 60000 });
 		await nameInput.fill(uniqueName);
 		await page.click('button:has-text("submit")');
@@ -464,9 +460,7 @@ test.describe('history tracking', () => {
 		// Run a mutation
 		const uniqueName = `TypeTest-${Date.now()}`;
 		await page.goto(`/endpoints/${ENDPOINT_ID}/mutations/addItem`);
-		const nameInput = page
-			.locator('input[placeholder="name"], .modal-box input, main#page input')
-			.first();
+		const nameInput = page.locator('[data-testid="toggle-input-name"]').first();
 		await expect(nameInput).toBeVisible({ timeout: 60000 });
 		await nameInput.fill(uniqueName);
 		await page.click('button:has-text("submit")');

@@ -81,6 +81,11 @@
 		onDeleteSubNode
 	}: Props = $props();
 
+	// Derived properties for reactivity
+	let dd_displayName = $derived(node.dd_displayName);
+	let dd_rootName = $derived(node.dd_rootName);
+	let dd_NON_NULL = $derived(node.dd_NON_NULL);
+
 	let stepsOfNodes = $state<unknown[]>([]);
 	let stepsOfFieldsFull = $derived(stepsOfNodesToStepsOfFields(stepsOfNodes as any[]));
 	let stepsOfFields = $derived(filterElFromArr(stepsOfFieldsFull, ['list', 'bonded']));
@@ -555,8 +560,7 @@
 						}}
 					>
 						{groupDisplayTitle}
-						<!-- <sub>{stepsOfFields.join('->')}</sub> -->
-						{#if node.dd_NON_NULL}
+						{#if dd_NON_NULL}
 							<sup>
 								<i class="bi bi-asterisk text-primary"></i>
 							</sup>
@@ -633,7 +637,7 @@
 						}}
 					>
 						{groupDisplayTitle}
-						{#if node.dd_NON_NULL}
+						{#if dd_NON_NULL}
 							<sup>
 								<i class="bi bi-asterisk text-primary"></i>
 							</sup>
@@ -646,7 +650,7 @@
 				</div>
 				<!-- {#if inputColumnsLocation && inputColumnsLocationQMS_Info.dd_displayName == node.dd_displayName} -->
 
-				{#if (inputColumnsLocation && inputColumnsLocationQMS_Info.dd_displayName == node.dd_displayName) || forceShowSelectAndAddButtons || getManyQMS}
+				{#if (inputColumnsLocation && inputColumnsLocationQMS_Info.dd_displayName == dd_displayName) || forceShowSelectAndAddButtons || getManyQMS}
 					<!-- {getManyQMS?.dd_displayName} -->
 					<!-- <button
 						class="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-3 btn-xs normal-case"
@@ -682,7 +686,7 @@
 						}}
 					>
 						{groupDisplayTitle}
-						{#if node.dd_NON_NULL}
+						{#if dd_NON_NULL}
 							<sup>
 								<i class="bi bi-asterisk text-primary"></i>
 							</sup>
@@ -737,7 +741,7 @@
 					flipDurationMs,
 					transformDraggedElement,
 					centreDraggedOnCursor: true,
-					type: node?.dd_rootName || 'default'
+					type: dd_rootName || 'default'
 				}}
 				onconsider={handleDndConsider}
 				onfinalize={handleDndFinalize}
@@ -775,7 +779,7 @@
 			</section>
 		{/if}
 	</div>
-	{#if node.id == SHADOW_PLACEHOLDER_ITEM_ID}
+	{#if (node as any).id == SHADOW_PLACEHOLDER_ITEM_ID}
 		<div
 			class="pointer-events-none absolute top-0 left-0 ml-8 h-0"
 			id="shadowEl"
