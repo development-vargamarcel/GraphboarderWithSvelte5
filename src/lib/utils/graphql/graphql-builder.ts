@@ -211,9 +211,10 @@ const validItems = (
 ): { id: string }[] => {
 	return items.filter((item) => {
 		const itemData = nodes[item.id];
+		const isContainer = Object.prototype.hasOwnProperty.call(itemData, 'items');
 		return (
 			itemData.inUse ||
-			(itemData.operator && validItems(itemData.items, nodes).length > 0) ||
+			(isContainer && validItems(itemData.items, nodes).length > 0) ||
 			itemData.selectedRowsColValues
 		);
 	});
@@ -254,7 +255,9 @@ export const generate_group_gqlArgObj_forHasOperators = (
 		const itemData = nodes[item.id];
 		const isContainer = Object.prototype.hasOwnProperty.call(itemData, 'items');
 		const nodeStep = itemData?.stepsOfNodes?.[itemData?.stepsOfNodes.length - 1];
-		const nodeStepClean = filterElFromArr(nodeStep as any, [null, undefined, 'bonded', 'list']);
+		const nodeStepClean = nodeStep
+			? filterElFromArr(nodeStep as any, [null, undefined, 'bonded', 'list'])
+			: [];
 
 		const operator = itemData.operator;
 		let itemObj = {};
