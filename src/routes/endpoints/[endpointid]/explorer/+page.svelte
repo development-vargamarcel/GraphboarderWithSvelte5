@@ -20,23 +20,24 @@
 	let rootTypes = $schemaData.rootTypes;
 	let queries = $schemaData.queryFields;
 	let mutations = $schemaData.mutationFields;
-	let whatToShow = $state<any[]>([]);
+	let baseDataToShow = $state<any[]>([]);
 	let whatToShowLastUsed = $state();
 	let sortingInputValue = $state('');
 	let sortingArray = $derived(sortingInputValue.split(' '));
 	let caseSensitive = $state(false);
 
-	const filterByWord = () => {
+	let whatToShow = $derived.by(() => {
 		if (sortingArray.length == 1 && sortingArray[0] == '') {
-			return;
+			return baseDataToShow;
 		}
 
 		const positiveWords: string[] = [];
 		const negativeWords: string[] = [];
 		sortingArray.forEach((word) => {
+			if (!word) return;
 			if (word.startsWith('-') || word.startsWith('!')) {
 				const processedWord = word.slice(1);
-				negativeWords.push(processedWord);
+				if (processedWord) negativeWords.push(processedWord);
 			} else {
 				let processedWord;
 				if (word.startsWith('+')) {
@@ -44,40 +45,47 @@
 				} else {
 					processedWord = word;
 				}
-				positiveWords.push(processedWord);
+				if (processedWord) positiveWords.push(processedWord);
 			}
 		});
 
-		whatToShow = whatToShow.filter((type) => {
-			return (
-				positiveWords.find((word) => {
+		if (positiveWords.length === 0 && negativeWords.length === 0) {
+			return baseDataToShow;
+		}
+
+		return baseDataToShow.filter((type) => {
+			const matchesPositive =
+				positiveWords.length === 0 ||
+				positiveWords.some((word) => {
 					if (caseSensitive) {
 						return type.dd_displayName.includes(word);
 					}
 					return type.dd_displayName.toLowerCase().includes(word.toLowerCase());
-				}) &&
-				!negativeWords.find((word) => {
-					if (caseSensitive) {
-						return type.dd_displayName.includes(word);
-					}
-					return type.dd_displayName.toLowerCase().includes(word.toLowerCase());
-				})
-			);
+				});
+
+			const matchesNegative = negativeWords.some((word) => {
+				if (caseSensitive) {
+					return type.dd_displayName.includes(word);
+				}
+				return type.dd_displayName.toLowerCase().includes(word.toLowerCase());
+			});
+
+			return matchesPositive && !matchesNegative;
 		});
-	};
+	});
+
 	const showRootTypes = () => {
-		whatToShow = rootTypes?.sort((a: any, b: any) => {
+		baseDataToShow = rootTypes?.sort((a: any, b: any) => {
 			let ea = a.dd_rootName;
 			let eb = b.dd_rootName;
 			return sortingFunctionMutipleColumnsGivenArray([[ea, eb]]);
-		});
+		}) || [];
 		whatToShowLastUsed = showRootTypes;
-		filterByWord();
 	};
 
 	const showQueries = () => {
 		if (queries) {
-			whatToShow = queries?.sort((a: any, b: any) => {
+			baseDataToShow = queries?.sort((a: any, b: any) => {
 				let ea = a.dd_rootName;
 				let eb = b.dd_rootName;
 				let ga = a.dd_displayName;
@@ -86,17 +94,16 @@
 					[ea, eb],
 					[ga, gb]
 				]);
-			});
+			}) || [];
 		} else {
-			whatToShow = [];
+			baseDataToShow = [];
 		}
 		whatToShowLastUsed = showQueries;
-		filterByWord();
 	};
 
 	const showMutations = () => {
 		if (mutations) {
-			whatToShow = mutations?.sort((a: any, b: any) => {
+			baseDataToShow = mutations?.sort((a: any, b: any) => {
 				let ea = a.dd_rootName;
 				let eb = b.dd_rootName;
 				let fa = a.dd_displayName.substring(6);
@@ -108,17 +115,16 @@
 					[fa, fb],
 					[ga, gb]
 				]);
-			});
+			}) || [];
 		} else {
-			whatToShow = [];
+			baseDataToShow = [];
 		}
 		whatToShowLastUsed = showMutations;
-		filterByWord();
 	};
 
 	const showAll = () => {
 		if (mutations) {
-			whatToShow = [...rootTypes, ...queries, ...mutations]?.sort((a: any, b: any) => {
+			baseDataToShow = [...rootTypes, ...queries, ...mutations]?.sort((a: any, b: any) => {
 				let ea = a.dd_rootName;
 				let eb = b.dd_rootName;
 				let fa = a.dd_displayName.substring(6);
@@ -130,16 +136,15 @@
 					[fa, fb],
 					[ga, gb]
 				]);
-			});
+			}) || [];
 		} else {
-			whatToShow = [];
+			baseDataToShow = [];
 		}
 		whatToShowLastUsed = showAll;
-		filterByWord();
 	};
 	const showQueriesAndMutations = () => {
 		if (mutations) {
-			whatToShow = [...queries, ...mutations]?.sort((a: any, b: any) => {
+			baseDataToShow = [...queries, ...mutations]?.sort((a: any, b: any) => {
 				let ea = a.dd_rootName;
 				let eb = b.dd_rootName;
 				let fa = a.dd_displayName.substring(6);
@@ -151,12 +156,11 @@
 					[fa, fb],
 					[ga, gb]
 				]);
-			});
+			}) || [];
 		} else {
-			whatToShow = [];
+			baseDataToShow = [];
 		}
 		whatToShowLastUsed = showQueriesAndMutations;
-		filterByWord();
 	};
 
 	let columns = $state<any[]>([]);
@@ -266,12 +270,8 @@
 							class="pl-9 h-9"
 							placeholder="Filter (e.g. +user -id)"
 							bind:value={sortingInputValue}
-							onkeydown={(e) => e.key === 'Enter' && filterByWord()}
 						/>
 					</div>
-					<Button size="icon" variant="secondary" class="h-9 w-9" onclick={filterByWord} title="Filter">
-						<ListFilter class="h-4 w-4" />
-					</Button>
 					<Button
 						size="icon"
 						variant={caseSensitive ? 'default' : 'outline'}
@@ -343,7 +343,7 @@
 						size="icon"
 						class="h-9 w-9"
 						onclick={() => {
-							whatToShow = [...whatToShow];
+							baseDataToShow = [...baseDataToShow];
 							showTable = false;
 							setTimeout(() => {
 								showTable = true;
@@ -383,10 +383,10 @@
 			{/if}
 
 			{#if showExplorer}
-				<div class="p-6 space-y-2">
+				<div class="pointer-events-none p-6 space-y-2">
 					{#key whatToShow}
 						{#each whatToShow as type, index (index)}
-							<div class="rounded-lg border bg-muted/30 p-2 transition-colors hover:bg-muted/50">
+							<div class="pointer-events-none rounded-lg border bg-muted/30 p-2 transition-colors hover:bg-muted/50">
 								<Type {index} {type} template="default" depth={0} />
 							</div>
 						{/each}
@@ -406,7 +406,10 @@
 	<EditTableBaseNameModal
 		bind:show={showEditModal}
 		initialValue={editModalInitialValue}
-		onConfirm={confirmEdit}
+		onConfirm={(val) => {
+			confirmEdit(val);
+			baseDataToShow = [...baseDataToShow];
+		}}
 		onCancel={() => (showEditModal = false)}
 	/>
 </Page>

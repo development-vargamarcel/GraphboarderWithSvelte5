@@ -43,26 +43,19 @@
 	const isForExplorer = OutermostQMSWraperContext?.extraInfo?.isForExplorer;
 	const schemaData = mainWraperContext?.schemaData;
 
-	// Destructure type properties
-	let {
-		dd_kindsArray,
-		dd_namesArray,
-		dd_rootName,
-		dd_displayName,
-		dd_kindEl,
-		dd_kindEl_NON_NULL,
-		dd_kindList,
-		dd_kindList_NON_NULL,
-		dd_NON_NULL
-	} = type;
+	// Destructure type properties - Refactored to derived for Svelte 5 reactivity
+	let dd_displayName = $derived(type.dd_displayName);
+	let dd_rootName = $derived(type.dd_rootName);
+	let dd_kindsArray = $derived(type.dd_kindsArray || []);
 
 	// Update stepsOfFields
-	let currentStepsOfFields = $state<string[]>([]);
-	if (!stepsOfFields) {
-		currentStepsOfFields = [dd_displayName];
-	} else {
-		currentStepsOfFields = [...stepsOfFields, dd_displayName];
-	}
+	let currentStepsOfFields = $derived.by(() => {
+		if (!stepsOfFields) {
+			return [dd_displayName];
+		} else {
+			return [...stepsOfFields, dd_displayName];
+		}
+	});
 
 	let inDuration = $state(300);
 	let expandData: any = $state({});

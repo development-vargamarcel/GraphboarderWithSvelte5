@@ -81,6 +81,10 @@
 		onChildrenStartDrag
 	}: Props = $props();
 
+	// Derived properties for reactivity
+	let dd_displayName = $derived(activeArgumentData.dd_displayName);
+	let dd_NON_NULL = $derived(activeArgumentData.dd_NON_NULL);
+
 	const { activeArgumentsDataGrouped_Store } = getContext(
 		`${prefix}QMSWraperContext`
 	) as QMSWraperContext;
@@ -368,6 +372,7 @@
 				<Button
 					variant="ghost"
 					size="xs"
+					data-testid="active-arg-{activeArgumentData.stepsOfFields.join('-')}"
 					class="h-7 rounded-md px-2 text-[10px] font-medium transition-colors {activeArgumentData.inUse
 						? 'text-foreground'
 						: 'text-muted-foreground hover:text-foreground'} {isNot
@@ -384,7 +389,7 @@
 					}}
 				>
 					<span class="truncate">{activeArgumentData.stepsOfFields[activeArgumentData.stepsOfFields.length - 1]}</span>
-					{#if activeArgumentData.dd_NON_NULL}
+					{#if dd_NON_NULL}
 						<Asterisk class="ml-0.5 h-2 w-2 text-primary" />
 					{/if}
 				</Button>

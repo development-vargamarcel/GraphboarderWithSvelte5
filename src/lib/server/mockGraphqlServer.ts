@@ -10,7 +10,7 @@ export interface MockGraphqlServer {
 const schema = buildSchema(`
 	type Item {
 		id: ID!
-		name: String!
+		name(uppercase: Boolean): String!
 		createdAt: String!
 	}
 
@@ -88,16 +88,21 @@ export const startMockGraphqlServer = async (): Promise<MockGraphqlServer> => {
 				const { query, variables } = JSON.parse(body);
 				const rootValue = {
 					items: ({ filter }: { filter?: string }) => {
-						if (filter) {
-							return db
-								.prepare(
-									'SELECT id, name, created_at as createdAt FROM items WHERE name LIKE ? ORDER BY id ASC'
-								)
-								.all(`%${filter}%`);
-						}
-						return db
-							.prepare('SELECT id, name, created_at as createdAt FROM items ORDER BY id ASC')
-							.all();
+						const items = filter
+							? db
+									.prepare(
+										'SELECT id, name, created_at as createdAt FROM items WHERE name LIKE ? ORDER BY id ASC'
+									)
+									.all(`%${filter}%`)
+							: db
+									.prepare('SELECT id, name, created_at as createdAt FROM items ORDER BY id ASC')
+									.all();
+
+						return items.map((item: any) => ({
+							...item,
+							name: ({ uppercase }: { uppercase?: boolean }) =>
+								uppercase ? item.name.toUpperCase() : item.name
+						}));
 					},
 					users: () => {
 						return [{ id: '1', name: 'Alice' }];
