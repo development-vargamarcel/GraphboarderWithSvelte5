@@ -458,6 +458,8 @@ export const generateContainerData = (
 	const lastDefiningData: any = {};
 	if (type && type.dd_kindList) {
 		lastDefiningData.operator = 'list';
+	} else {
+		lastDefiningData.operator = 'bonded';
 	}
 
 	return {

@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { build_QMS_bodyPart } from './graphql-builder';
+import {
+	build_QMS_bodyPart,
+	generate_group_gqlArgObjAndCanRunQuery_forHasOperators
+} from './graphql-builder';
 
 describe('build_QMS_bodyPart', () => {
 	it('should include arguments in the generated query', () => {
@@ -55,5 +58,51 @@ describe('build_QMS_bodyPart', () => {
 		);
 		expect(result).toContain('uppercase:true');
 		expect(result).toContain('name(uppercase:true)');
+	});
+
+	it('should include arguments from nested containers even if operator is missing', () => {
+		const group = {
+			group_name: 'all',
+			group_hasAllArgs: true,
+			group_args: [{ id: 'arg-id', inUse: true, canRunQuery: true }],
+			group_argsNode: {
+				mainContainer: {
+					id: 'mainContainer',
+					isMain: true,
+					dd_displayName: 'all',
+					operator: 'bonded',
+					items: [{ id: 'container-id' }],
+					stepsOfNodes: [[undefined, 'search_users', 'bonded']]
+				},
+				'container-id': {
+					id: 'container-id',
+					dd_displayName: 'where',
+					// operator: undefined, // Missing operator!
+					items: [{ id: 'arg-id' }],
+					stepsOfNodes: [
+						[undefined, 'search_users', 'bonded'],
+						[undefined, 'where', undefined]
+					]
+				},
+				'arg-id': {
+					id: 'arg-id',
+					dd_displayName: 'id',
+					inUse: true,
+					gqlArgObj: { id: { _eq: 1 } },
+					stepsOfNodes: [
+						[undefined, 'search_users', 'bonded'],
+						[undefined, 'where', undefined],
+						[undefined, 'id', undefined]
+					]
+				}
+			}
+		};
+
+		const result = generate_group_gqlArgObjAndCanRunQuery_forHasOperators(group as any);
+
+		// Now it should include the arguments
+		expect(result.group_gqlArgObj).toHaveProperty('search_users');
+		expect((result.group_gqlArgObj as any).search_users).toHaveProperty('where');
+		expect((result.group_gqlArgObj as any).search_users.where).toHaveProperty('id');
 	});
 });
